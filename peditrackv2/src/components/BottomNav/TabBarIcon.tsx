@@ -1,0 +1,29 @@
+import React from 'react';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { Colors } from '@/constants/Colors';
+
+export type IconName = 'home' | 'health' | 'feeding' | 'location' | 'ai';
+
+interface TabBarIconProps {
+  name: IconName;
+  focused: boolean;
+  size?: number;
+}
+
+export const TabBarIcon: React.FC<TabBarIconProps> = ({
+  name,
+  focused,
+  size = 24,
+}) => {
+  const color = focused ? Colors.primary.DEFAULT : Colors.inactive;
+
+  const iconMap: Record<IconName, JSX.Element> = {
+    home: <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />,
+    health: <Ionicons name={focused ? 'heart' : 'heart-outline'} size={size} color={color} />,
+    feeding: <Ionicons name={focused ? 'restaurant' : 'restaurant-outline'} size={size} color={color} />,
+    location: <Ionicons name={focused ? 'location' : 'location-outline'} size={size} color={color} />,
+    ai: <Ionicons name={focused ? 'sparkles' : 'sparkles-outline'} size={size} color={color} />,
+  };
+
+  return iconMap[name];
+};

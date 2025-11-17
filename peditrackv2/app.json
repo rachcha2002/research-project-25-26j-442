@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "PediTrack V2",
+    "slug": "peditrackv2",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#8B7FE8"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.octagonit.peditrack"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#8B7FE8"
+      },
+      "package": "com.octagonit.peditrack"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "scheme": "peditrack"
+  }
+}
