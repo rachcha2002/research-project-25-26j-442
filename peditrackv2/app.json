@@ -1,30 +1,39 @@
 {
   "expo": {
-    "name": "PediTrack V2",
-    "slug": "peditrackv2",
+    "name": "PediTrack",
+    "slug": "peditrack",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
+    "scheme": "peditrack",
     "splash": {
+      "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#8B7FE8"
+      "backgroundColor": "#7C3AED"
     },
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.octagonit.peditrack"
+      "bundleIdentifier": "com.peditrack.app"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#8B7FE8"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#7C3AED"
       },
-      "package": "com.octagonit.peditrack"
+      "package": "com.peditrack.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "expo-router"
     ],
-    "scheme": "peditrack"
+    "experiments": {
+      "typedRoutes": true
+    }
   }
 }

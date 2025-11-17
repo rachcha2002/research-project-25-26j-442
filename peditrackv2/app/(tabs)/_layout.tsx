@@ -1,84 +1,99 @@
 import { Tabs } from 'expo-router';
-import { View, Text, StyleSheet } from 'react-native';
+import React from 'react';
+import { Platform, StyleSheet } from 'react-native';
+import { TabBarIcon } from '@/components/BottomNav';
+import { TopBar } from '@/components/TopBar';
+import { Colors } from '@/constants/Colors';
 
-function TabIcon({ focused, icon, label }: { focused: boolean; icon: string; label: string }) {
-  const color = focused ? '#8B7FE8' : '#9CA3AF';
-  
+export default function TabLayout() {
   return (
-    <View style={styles.tabIcon}>
-      <Text style={{ color, fontSize: 24 }}>{icon}</Text>
-      <Text style={[styles.tabLabel, { color }]}>
-        {label}
-      </Text>
-    </View>
-  );
-}
-
-export default function TabsLayout() {
-  return (
-    <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarShowLabel: false,
-        tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopWidth: 1,
-          borderTopColor: '#E5E7EB',
-          height: 70,
-        },
-      }}
-    >
-      <Tabs.Screen
-        name="home"
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} icon="🏠" label="Home" />
-          ),
-        }}
+    <>
+      <TopBar 
+        username="Amanda"
+        childName="Thisal"
+        onProfilePress={() => console.log('Profile pressed')}
+        onNotificationPress={() => console.log('Notification pressed')}
       />
-      <Tabs.Screen
-        name="health"
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} icon="💜" label="Health" />
-          ),
+      <Tabs
+        screenOptions={{
+          tabBarActiveTintColor: Colors.primary.DEFAULT,
+          tabBarInactiveTintColor: Colors.inactive,
+          tabBarStyle: {
+            backgroundColor: Colors.white,
+            borderTopWidth: 0,
+            height: Platform.OS === 'ios' ? 85 : 70,
+            paddingBottom: Platform.OS === 'ios' ? 25 : 10,
+            paddingTop: 10,
+            ...styles.tabBarShadow,
+          },
+          tabBarLabelStyle: {
+            fontSize: 12,
+            fontWeight: '500',
+            marginTop: 4,
+          },
+          headerShown: false,
+          tabBarHideOnKeyboard: true,
         }}
-      />
-      <Tabs.Screen
-        name="vaccine"
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} icon="💉" label="Vaccine" />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="feeding"
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} icon="🍼" label="Feeding" />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="location"
-        options={{
-          tabBarIcon: ({ focused }) => (
-            <TabIcon focused={focused} icon="📍" label="Location" />
-          ),
-        }}
-      />
-    </Tabs>
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Home',
+            tabBarIcon: ({ focused }) => (
+              <TabBarIcon name="home" focused={focused} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="health"
+          options={{
+            title: 'Health',
+            tabBarIcon: ({ focused }) => (
+              <TabBarIcon name="health" focused={focused} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="feeding"
+          options={{
+            title: 'Feeding',
+            tabBarIcon: ({ focused }) => (
+              <TabBarIcon name="feeding" focused={focused} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="location"
+          options={{
+            title: 'Location',
+            tabBarIcon: ({ focused }) => (
+              <TabBarIcon name="location" focused={focused} />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="ai"
+          options={{
+            title: 'AI',
+            tabBarIcon: ({ focused }) => (
+              <TabBarIcon name="ai" focused={focused} />
+            ),
+          }}
+        />
+      </Tabs>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  tabIcon: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-  },
-  tabLabel: {
-    fontSize: 12,
+  tabBarShadow: {
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 10,
   },
 });
