@@ -68,6 +68,71 @@ class ChatController {
     }
 
     /**
+     * Send a message with image attachment and get AI response
+     */
+    async sendMessageWithImage(req, res, next) {
+        try {
+            const { message, conversationId, userId, provider = 'openai' } = req.body;
+
+            // Check if file was uploaded
+            if (!req.file) {
+                return res.status(400).json({
+                    success: false,
+                    error: { message: 'No image file provided' }
+                });
+            }
+
+            const messageText = message?.trim() || 'What can you tell me about this image?';
+
+            // Generate or use existing conversation ID
+            const convId = conversationId || uuidv4();
+
+            // Get conversation history
+            const history = conversationStore.getHistory(convId);
+
+            // Add user message to history (with image indicator)
+            const userMessage = {
+                id: uuidv4(),
+                role: 'user',
+                content: `[Image attached] ${messageText}`,
+                timestamp: new Date().toISOString()
+            };
+            conversationStore.addMessage(convId, userMessage);
+
+            // For now, we'll process the text message
+            // In a full implementation, you would pass the image to a vision model
+            const aiResponse = await llmService.generateResponse(
+                `User shared an image with the following context: \"${messageText}\". Please acknowledge that you received the image and respond appropriately to their message.`,
+                history,
+                provider
+            );
+
+            // Add AI response to history
+            const assistantMessage = {
+                id: uuidv4(),
+                role: 'assistant',
+                content: aiResponse,
+                timestamp: new Date().toISOString()
+            };
+            conversationStore.addMessage(convId, assistantMessage);
+
+            // Return response
+            res.status(200).json({
+                success: true,
+                data: {
+                    conversationId: convId,
+                    message: assistantMessage,
+                    provider: provider
+                }
+            });
+
+        } catch (error) {
+            console.error('Error in sendMessageWithImage:', error);
+            next(error);
+        }
+    }
+
+    /**
      * Stream message response (for real-time streaming)
      */
     async streamMessage(req, res, next) {

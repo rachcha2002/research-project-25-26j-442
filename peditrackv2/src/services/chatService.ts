@@ -122,6 +122,54 @@ export const clearConversationHistory = async (
 };
 
 /**
+ * Send a message with an image attachment
+ */
+export const sendChatMessageWithImage = async (
+    message: string,
+    imageUri: string,
+    conversationId?: string,
+    provider: string = 'openai'
+): Promise<SendMessageResponse> => {
+    try {
+        const formData = new FormData();
+
+        // Add image file
+        const imageFile = {
+            uri: imageUri,
+            type: 'image/jpeg',
+            name: 'image.jpg',
+        } as any;
+
+        formData.append('image', imageFile);
+        formData.append('message', message);
+
+        if (conversationId) {
+            formData.append('conversationId', conversationId);
+        }
+
+        formData.append('provider', provider);
+
+        const response = await fetch(`${API_BASE_URL}/chat/message-with-image`, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error sending chat message with image:', error);
+        throw error;
+    }
+};
+
+/**
  * Check service health
  */
 export const checkServiceHealth = async (): Promise<boolean> => {
