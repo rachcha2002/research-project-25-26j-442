@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const chatRoutes = require('./routes/chat.routes');
 const healthRoutes = require('./routes/health.routes');
+const voiceRoutes = require('./routes/voice.routes');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -24,6 +25,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 // Routes
 app.use('/api/health', healthRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/voice', voiceRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

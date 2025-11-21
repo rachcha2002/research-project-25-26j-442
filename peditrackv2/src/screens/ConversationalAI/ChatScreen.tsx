@@ -1,29 +1,60 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Audio } from 'expo-av';
+import * as ImagePicker from 'expo-image-picker';
 import { Colors } from '@/constants/Colors';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar';
-import { sendChatMessage } from '@/services/chatService';
+import { sendChatMessage, sendChatMessageWithImage } from '@/services/chatService';
+import { sendVoiceMessage } from '@/services/voiceService';
 
 interface Message {
     id: string;
     text: string;
     sender: 'user' | 'assistant';
     timestamp: string;
+    imageUri?: string;
+    isVoice?: boolean;
 }
 
-export const ChatScreen: React.FC = () => {
+export default function ChatScreen() {
     const [messages, setMessages] = useState<Message[]>([]);
     const [inputText, setInputText] = useState('');
     const [isTyping, setIsTyping] = useState(false);
-    const [conversationId, setConversationId] = useState<string | undefined>(undefined);
+    const [conversationId, setConversationId] = useState<string>();
+    const [isRecording, setIsRecording] = useState(false);
+    const [recording, setRecording] = useState<Audio.Recording | null>(null);
+    const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const scrollViewRef = useRef<ScrollView>(null);
 
-    // Auto-scroll to bottom when new messages arrive
+    // Request permissions on mount
+    useEffect(() => {
+        requestPermissions();
+    }, []);
+
+    // Auto-scroll to bottom when messages change
     useEffect(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
     }, [messages]);
+
+    const requestPermissions = async () => {
+        try {
+            // Request audio recording permission
+            const audioPermission = await Audio.requestPermissionsAsync();
+            if (!audioPermission.granted) {
+                Alert.alert('Permission Required', 'Please grant microphone permission to use voice messages.');
+            }
+
+            // Request image library permission
+            const imagePermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (!imagePermission.granted) {
+                Alert.alert('Permission Required', 'Please grant photo library permission to send images.');
+            }
+        } catch (error) {
+            console.error('Error requesting permissions:', error);
+        }
+    };
 
     const formatTimestamp = (date: Date): string => {
         return date.toLocaleTimeString('en-US', {
@@ -34,24 +65,42 @@ export const ChatScreen: React.FC = () => {
     };
 
     const handleSend = async () => {
-        if (inputText.trim()) {
-            const userMessageText = inputText.trim();
+        if (inputText.trim() || selectedImage) {
+            // Prepare message text based on content
+            let userMessageText = inputText.trim();
+            
+            // If there's an image but no text, use placeholder
+            if (selectedImage && !userMessageText) {
+                userMessageText = '[Image attached]';
+            }
+            // If there's both image and text, mention image in message
+            else if (selectedImage && userMessageText) {
+                userMessageText = `[Image: ${userMessageText}]`;
+            }
+
             const newMessage: Message = {
                 id: Date.now().toString(),
                 text: userMessageText,
                 sender: 'user',
                 timestamp: formatTimestamp(new Date()),
+                imageUri: selectedImage || undefined,
             };
 
             // Add user message to UI
             setMessages(prev => [...prev, newMessage]);
+            const currentText = inputText.trim();
+            const currentImage = selectedImage;
             setInputText('');
+            setSelectedImage(null);
             setIsTyping(true);
 
             try {
-                // Call the chat API
-                const response = await sendChatMessage(
-                    userMessageText,
+                let response;
+                
+                // For now, always use text endpoint (image endpoint needs backend restart)
+                // If there's an image, we mention it in the text
+                response = await sendChatMessage(
+                    currentText || (currentImage ? 'I have shared an image with you.' : ''),
                     conversationId,
                     'openai'
                 );
@@ -94,6 +143,123 @@ export const ChatScreen: React.FC = () => {
         }
     };
 
+    const startRecording = async () => {
+        try {
+            // Request permissions
+            const permission = await Audio.requestPermissionsAsync();
+            if (!permission.granted) {
+                Alert.alert('Permission Required', 'Please grant microphone permission to record voice messages.');
+                return;
+            }
+
+            // Configure audio mode
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: true,
+                playsInSilentModeIOS: true,
+            });
+
+            // Start recording
+            const { recording } = await Audio.Recording.createAsync(
+                Audio.RecordingOptionsPresets.HIGH_QUALITY
+            );
+
+            setRecording(recording);
+            setIsRecording(true);
+        } catch (error) {
+            console.error('Failed to start recording:', error);
+            Alert.alert('Error', 'Failed to start recording. Please try again.');
+        }
+    };
+
+    const stopRecording = async () => {
+        if (!recording) return;
+
+        try {
+            setIsRecording(false);
+            await recording.stopAndUnloadAsync();
+            const uri = recording.getURI();
+
+            if (uri) {
+                // Add voice message to UI
+                const voiceMessage: Message = {
+                    id: Date.now().toString(),
+                    text: '[Voice Message]',
+                    sender: 'user',
+                    timestamp: formatTimestamp(new Date()),
+                    isVoice: true,
+                };
+                setMessages(prev => [...prev, voiceMessage]);
+                setIsTyping(true);
+
+                try {
+                    // Send voice message to API
+                    const response = await sendVoiceMessage(uri, conversationId);
+
+                    // Update conversation ID if new
+                    if (!conversationId) {
+                        setConversationId(response.data.conversationId);
+                    }
+
+                    // Update the voice message with transcription
+                    setMessages(prev => prev.map(msg =>
+                        msg.id === voiceMessage.id
+                            ? { ...msg, text: response.data.transcription }
+                            : msg
+                    ));
+
+                    // Add AI response
+                    const aiMessage: Message = {
+                        id: response.data.messageId,
+                        text: response.data.responseText,
+                        sender: 'assistant',
+                        timestamp: formatTimestamp(new Date()),
+                    };
+                    setMessages(prev => [...prev, aiMessage]);
+                } catch (error) {
+                    console.error('Failed to send voice message:', error);
+                    Alert.alert('Error', 'Failed to process voice message. Please try again.');
+                } finally {
+                    setIsTyping(false);
+                }
+            }
+
+            setRecording(null);
+        } catch (error) {
+            console.error('Failed to stop recording:', error);
+            Alert.alert('Error', 'Failed to stop recording. Please try again.');
+        }
+    };
+
+    const handleVoicePress = () => {
+        if (isRecording) {
+            stopRecording();
+        } else {
+            startRecording();
+        }
+    };
+
+    const pickImage = async () => {
+        try {
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 0.8,
+            });
+
+            if (!result.canceled && result.assets[0]) {
+                setSelectedImage(result.assets[0].uri);
+            }
+        } catch (error) {
+            console.error('Error picking image:', error);
+            Alert.alert('Error', 'Failed to pick image. Please try again.');
+        }
+    };
+
+    const removeSelectedImage = () => {
+        setSelectedImage(null);
+    };
+
     return (
         <View style={styles.container}>
             <SecondaryTopBar
@@ -119,6 +285,18 @@ export const ChatScreen: React.FC = () => {
                                 {message.sender === 'user' ? (
                                     <View style={styles.userMessageContainer}>
                                         <View style={styles.userBubble}>
+                                            {message.imageUri && (
+                                                <Image
+                                                    source={{ uri: message.imageUri }}
+                                                    style={styles.messageImage}
+                                                    resizeMode="cover"
+                                                />
+                                            )}
+                                            {message.isVoice && (
+                                                <View style={styles.voiceMessageIndicator}>
+                                                    <Ionicons name="mic" size={16} color={Colors.white} />
+                                                </View>
+                                            )}
                                             <Text style={styles.userMessageText}>{message.text}</Text>
                                         </View>
                                         <Text style={styles.timestamp}>{message.timestamp}</Text>
@@ -160,36 +338,71 @@ export const ChatScreen: React.FC = () => {
                         )}
                     </ScrollView>
 
+                    {/* Image Preview */}
+                    {selectedImage && (
+                        <View style={styles.imagePreviewContainer}>
+                            <View style={styles.imagePreviewWrapper}>
+                                <Image
+                                    source={{ uri: selectedImage }}
+                                    style={styles.imagePreview}
+                                    resizeMode="cover"
+                                />
+                                <TouchableOpacity
+                                    style={styles.removeImageButton}
+                                    onPress={removeSelectedImage}
+                                >
+                                    <Ionicons name="close-circle" size={24} color={Colors.white} />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    )}
+
                     {/* Input Area */}
                     <View style={styles.inputContainer}>
-                        <TouchableOpacity style={styles.iconButton}>
-                            <Ionicons name="happy-outline" size={28} color={Colors.inactive} />
+                        <TouchableOpacity
+                            style={styles.iconButton}
+                            onPress={pickImage}
+                        >
+                            <Ionicons 
+                                name="image-outline" 
+                                size={26} 
+                                color={selectedImage ? Colors.primary.DEFAULT : Colors.inactive} 
+                            />
                         </TouchableOpacity>
 
                         <View style={styles.inputWrapper}>
                             <TextInput
                                 style={styles.input}
-                                placeholder="Reply ..."
+                                placeholder={selectedImage ? "Add a caption..." : "Type a message..."}
                                 placeholderTextColor={Colors.inactive}
                                 value={inputText}
                                 onChangeText={setInputText}
                                 multiline
+                                maxLength={1000}
                             />
                         </View>
-
-                        <TouchableOpacity style={styles.iconButton}>
-                            <Ionicons name="image-outline" size={28} color={Colors.inactive} />
-                        </TouchableOpacity>
 
                         <TouchableOpacity
                             style={styles.sendButton}
                             onPress={handleSend}
+                            disabled={isTyping || (!inputText.trim() && !selectedImage)}
                         >
                             <Ionicons name="send" size={20} color={Colors.white} />
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.iconButton}>
-                            <Ionicons name="mic-outline" size={28} color={Colors.primary.DEFAULT} />
+                        <TouchableOpacity
+                            style={[
+                                styles.voiceButton,
+                                isRecording && styles.recordingButton
+                            ]}
+                            onPress={handleVoicePress}
+                            disabled={isTyping}
+                        >
+                            <Ionicons
+                                name={isRecording ? "stop-circle" : "mic"}
+                                size={22}
+                                color={Colors.white}
+                            />
                         </TouchableOpacity>
                     </View>
                 </KeyboardAvoidingView>
@@ -318,38 +531,96 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingVertical: 10,
         backgroundColor: Colors.white,
         borderTopWidth: 1,
         borderTopColor: '#E5E7EB',
-        gap: 8,
+        gap: 10,
     },
     inputWrapper: {
         flex: 1,
-        backgroundColor: Colors.background,
-        borderRadius: 24,
-        paddingHorizontal: 16,
-        paddingVertical: 10,
-        minHeight: 44,
+        backgroundColor: '#F3F4F6',
+        borderRadius: 20,
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        minHeight: 40,
+        maxHeight: 80,
         justifyContent: 'center',
     },
     input: {
-        fontSize: 15,
+        fontSize: 14,
         color: Colors.dark,
-        maxHeight: 100,
+        maxHeight: 60,
     },
     iconButton: {
-        width: 40,
-        height: 40,
+        width: 36,
+        height: 36,
         alignItems: 'center',
         justifyContent: 'center',
     },
     sendButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 44,
+        height: 44,
+        borderRadius: 22,
         backgroundColor: '#6366F1',
         alignItems: 'center',
         justifyContent: 'center',
+        shadowColor: '#6366F1',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 4,
+    },
+    voiceButton: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: '#6366F1',
+        alignItems: 'center',
+        justifyContent: 'center',
+        shadowColor: '#6366F1',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 4,
+    },
+    messageImage: {
+        width: '100%',
+        height: 200,
+        borderRadius: 12,
+        marginBottom: 8,
+    },
+    voiceMessageIndicator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 4,
+    },
+    imagePreviewContainer: {
+        paddingHorizontal: 16,
+        paddingVertical: 12,
+        backgroundColor: Colors.white,
+        borderTopWidth: 1,
+        borderTopColor: '#E5E7EB',
+    },
+    imagePreviewWrapper: {
+        position: 'relative',
+        width: 120,
+        height: 120,
+        borderRadius: 12,
+        overflow: 'hidden',
+    },
+    imagePreview: {
+        width: '100%',
+        height: '100%',
+    },
+    removeImageButton: {
+        position: 'absolute',
+        top: 4,
+        right: 4,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        borderRadius: 12,
+    },
+    recordingButton: {
+        backgroundColor: '#EF4444',
     },
 });

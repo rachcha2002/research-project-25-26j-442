@@ -1,3 +1,3 @@
-import { ChatScreen } from '@/screens/ConversationalAI';
+import ChatScreen from '@/screens/ConversationalAI/ChatScreen';
 
 export default ChatScreen;
