@@ -32,11 +32,10 @@ wheels/
 # RAG Service
 services/peditrack-rag-service/vector_store/
 services/peditrack-rag-service/logs/
-services/peditrack-rag-service/.env
 services/peditrack-rag-service/venv/
 
 # Environment variables
-.env
+
 .env.local
 .env.*.local
 

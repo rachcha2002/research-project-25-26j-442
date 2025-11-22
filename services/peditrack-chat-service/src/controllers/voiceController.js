@@ -1,5 +1,5 @@
 const voiceService = require('../services/voiceService');
-const llmService = require('../services/llm.service');
+const { getLLMService } = require('../services/llm.service');
 const conversationStore = require('../utils/conversationStore');
 const { v4: uuidv4 } = require('uuid');
 
@@ -22,7 +22,7 @@ class VoiceController {
                 });
             }
 
-            const { conversationId, voice = 'nova', provider = 'openai' } = req.body;
+            const { conversationId, voice = 'nova' } = req.body;
             const audioBuffer = req.file.buffer;
             const filename = req.file.originalname;
 
@@ -36,7 +36,7 @@ class VoiceController {
             console.log('Transcribed text:', transcribedText);
 
             // Get conversation history
-            const history = conversationStore.getHistory(convId);
+            const history = conversationStore.getHistory(convId) || [];
 
             // Add user message to history
             const userMessage = {
@@ -47,12 +47,21 @@ class VoiceController {
             };
             conversationStore.addMessage(convId, userMessage);
 
+            // Prepare messages for LLM (convert to format expected by LLM service)
+            const messages = conversationStore.getHistory(convId).map(msg => ({
+                role: msg.role,
+                content: msg.content
+            }));
+
             // Step 2: Get AI response using LLM service
-            const aiResponseText = await llmService.generateResponse(
-                transcribedText,
-                history,
-                provider
-            );
+            const llmService = getLLMService();
+            const result = await llmService.generateResponse(messages, {
+                useRAG: true,
+                temperature: 0.7,
+                maxTokens: 1000
+            });
+            
+            const aiResponseText = result.response;
             console.log('AI response:', aiResponseText);
 
             // Add AI response to history

@@ -7,11 +7,10 @@ import { Audio } from 'expo-av';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { sendVoiceMessage, saveBase64Audio } from '@/services/voiceService';
+import { AnimatedRobot } from '@/components/AnimatedRobot';
 
 export const VoiceScreen: React.FC = () => {
     const router = useRouter();
-    const pulseAnim = useRef(new Animated.Value(1)).current;
-    const glowAnim = useRef(new Animated.Value(0)).current;
 
     // Voice state
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
@@ -21,6 +20,7 @@ export const VoiceScreen: React.FC = () => {
     const [conversationId, setConversationId] = useState<string | undefined>(undefined);
     const [statusMessage, setStatusMessage] = useState("I'm listening, Amanda.\nWhat's on your mind?");
     const [transcription, setTranscription] = useState<string>('');
+    const [robotState, setRobotState] = useState<'idle' | 'listening' | 'thinking' | 'talking'>('idle');
 
     useEffect(() => {
         // Request audio permissions
@@ -45,44 +45,7 @@ export const VoiceScreen: React.FC = () => {
             }
         })();
 
-        // Pulse animation for the main circle
-        const pulse = Animated.loop(
-            Animated.sequence([
-                Animated.timing(pulseAnim, {
-                    toValue: 1.1,
-                    duration: 1500,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(pulseAnim, {
-                    toValue: 1,
-                    duration: 1500,
-                    useNativeDriver: true,
-                }),
-            ])
-        );
-
-        // Glow animation
-        const glow = Animated.loop(
-            Animated.sequence([
-                Animated.timing(glowAnim, {
-                    toValue: 1,
-                    duration: 2000,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(glowAnim, {
-                    toValue: 0,
-                    duration: 2000,
-                    useNativeDriver: true,
-                }),
-            ])
-        );
-
-        pulse.start();
-        glow.start();
-
         return () => {
-            pulse.stop();
-            glow.stop();
             // Cleanup audio
             if (recording) {
                 recording.stopAndUnloadAsync();
@@ -102,6 +65,7 @@ export const VoiceScreen: React.FC = () => {
             console.log('Starting recording...');
             setStatusMessage('Listening...');
             setTranscription('');
+            setRobotState('listening');
 
             const { recording: newRecording } = await Audio.Recording.createAsync(
                 Audio.RecordingOptionsPresets.HIGH_QUALITY
@@ -113,6 +77,7 @@ export const VoiceScreen: React.FC = () => {
             console.error('Failed to start recording:', error);
             Alert.alert('Error', 'Failed to start recording. Please try again.');
             setStatusMessage("I'm listening, Amanda.\nWhat's on your mind?");
+            setRobotState('idle');
         }
     };
 
@@ -122,6 +87,7 @@ export const VoiceScreen: React.FC = () => {
             setIsRecording(false);
             setIsProcessing(true);
             setStatusMessage('Processing your message...');
+            setRobotState('thinking');
 
             if (!recording) {
                 return;
@@ -162,6 +128,7 @@ export const VoiceScreen: React.FC = () => {
                 [{ text: 'OK' }]
             );
             setStatusMessage("I'm listening, Amanda.\nWhat's on your mind?");
+            setRobotState('idle');
         } finally {
             setIsProcessing(false);
         }
@@ -170,6 +137,7 @@ export const VoiceScreen: React.FC = () => {
     const playAudioResponse = async (base64Audio: string) => {
         try {
             console.log('Playing audio response...');
+            setRobotState('talking');
 
             // Save base64 audio to file
             const audioUri = await saveBase64Audio(base64Audio, `response_${Date.now()}.mp3`);
@@ -191,12 +159,14 @@ export const VoiceScreen: React.FC = () => {
             newSound.setOnPlaybackStatusUpdate((status: any) => {
                 if (status.isLoaded && status.didJustFinish) {
                     setStatusMessage("I'm listening, Amanda.\nWhat's on your mind?");
+                    setRobotState('idle');
                 }
             });
 
         } catch (error) {
             console.error('Failed to play audio:', error);
             setStatusMessage("I'm listening, Amanda.\nWhat's on your mind?");
+            setRobotState('idle');
         }
     };
 
@@ -232,66 +202,9 @@ export const VoiceScreen: React.FC = () => {
                 <Text style={styles.title}>Voice AI Assistant</Text>
                 <Text style={styles.subtitle}>Speak naturally about your health concerns</Text>
 
-                {/* Animated Glowing Circle */}
-                <View style={styles.circleContainer}>
-                    {/* Outer glow rings */}
-                    <Animated.View
-                        style={[
-                            styles.glowRing,
-                            styles.glowRing1,
-                            {
-                                opacity: glowAnim.interpolate({
-                                    inputRange: [0, 1],
-                                    outputRange: [0.3, 0],
-                                }),
-                                transform: [
-                                    {
-                                        scale: glowAnim.interpolate({
-                                            inputRange: [0, 1],
-                                            outputRange: [1, 1.4],
-                                        }),
-                                    },
-                                ],
-                            },
-                        ]}
-                    />
-                    <Animated.View
-                        style={[
-                            styles.glowRing,
-                            styles.glowRing2,
-                            {
-                                opacity: glowAnim.interpolate({
-                                    inputRange: [0, 1],
-                                    outputRange: [0.2, 0],
-                                }),
-                                transform: [
-                                    {
-                                        scale: glowAnim.interpolate({
-                                            inputRange: [0, 1],
-                                            outputRange: [1, 1.6],
-                                        }),
-                                    },
-                                ],
-                            },
-                        ]}
-                    />
-
-                    {/* Main animated circle */}
-                    <Animated.View
-                        style={[
-                            styles.mainCircle,
-                            {
-                                transform: [{ scale: pulseAnim }],
-                            },
-                        ]}
-                    >
-                        <LinearGradient
-                            colors={['#1E3A8A', '#0EA5E9', '#06B6D4']}
-                            start={{ x: 0, y: 0 }}
-                            end={{ x: 1, y: 1 }}
-                            style={styles.gradientCircle}
-                        />
-                    </Animated.View>
+                {/* Animated Robot */}
+                <View style={styles.robotContainer}>
+                    <AnimatedRobot state={robotState} size={140} />
                 </View>
 
                 {/* Message */}
@@ -381,47 +294,12 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 60,
     },
-    circleContainer: {
+    robotContainer: {
         width: 200,
         height: 200,
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 60,
-    },
-    glowRing: {
-        position: 'absolute',
-        width: 160,
-        height: 160,
-        borderRadius: 80,
-        backgroundColor: '#6366F1',
-    },
-    glowRing1: {
-        width: 160,
-        height: 160,
-        borderRadius: 80,
-    },
-    glowRing2: {
-        width: 180,
-        height: 180,
-        borderRadius: 90,
-    },
-    mainCircle: {
-        width: 160,
-        height: 160,
-        borderRadius: 80,
-        backgroundColor: '#FFFFFF',
-        alignItems: 'center',
-        justifyContent: 'center',
-        shadowColor: '#6366F1',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.5,
-        shadowRadius: 20,
-        elevation: 10,
-    },
-    gradientCircle: {
-        width: 140,
-        height: 140,
-        borderRadius: 70,
     },
     messageScrollContainer: {
         maxHeight: 200,
