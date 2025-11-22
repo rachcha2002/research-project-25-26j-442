@@ -1,0 +1,47 @@
+[
+  {
+    "text": "Fever in children is defined as a temperature of 100.4°F (38°C) or higher. Common causes include viral infections, bacterial infections, and immunizations. Most fevers are harmless and are caused by minor infections. However, seek immediate medical attention if your child is under 3 months old with a fever, has a fever above 104°F (40°C), or shows signs of dehydration, difficulty breathing, or unusual lethargy.",
+    "source": "Pediatric Fever Guidelines - CDC",
+    "metadata": {
+      "category": "symptoms",
+      "age_group": "all",
+      "urgency": "moderate"
+    }
+  },
+  {
+    "text": "The recommended vaccination schedule for infants includes: Hepatitis B at birth, 1-2 months, and 6-18 months; DTaP (Diphtheria, Tetanus, Pertussis) at 2, 4, 6, and 15-18 months; Hib (Haemophilus influenzae type b) at 2, 4, 6, and 12-15 months; Polio at 2, 4, 6-18 months; Pneumococcal at 2, 4, 6, and 12-15 months; Rotavirus at 2, 4, and 6 months; MMR (Measles, Mumps, Rubella) at 12-15 months; Varicella (Chickenpox) at 12-15 months.",
+    "source": "CDC Vaccination Schedule 2024",
+    "metadata": {
+      "category": "vaccinations",
+      "age_group": "infant",
+      "urgency": "routine"
+    }
+  },
+  {
+    "text": "Normal developmental milestones for a 6-month-old include: rolling over in both directions, beginning to sit without support, rocking back and forth on hands and knees, responding to their own name, beginning to babble and make consonant sounds, showing curiosity about objects and trying to get things that are out of reach, and passing things from one hand to the other.",
+    "source": "AAP Developmental Milestones",
+    "metadata": {
+      "category": "development",
+      "age_group": "6-months",
+      "urgency": "informational"
+    }
+  },
+  {
+    "text": "Signs of dehydration in children include: dry mouth and tongue, no tears when crying, sunken eyes or fontanelle (soft spot on baby's head), decreased urination (fewer than 6 wet diapers per day for infants), dark yellow urine, dry skin that doesn't bounce back when pinched, unusual sleepiness or fussiness. Severe dehydration requires immediate medical attention.",
+    "source": "Mayo Clinic Pediatric Care",
+    "metadata": {
+      "category": "symptoms",
+      "age_group": "all",
+      "urgency": "high"
+    }
+  },
+  {
+    "text": "Common cold symptoms in children include runny or stuffy nose, sneezing, cough, mild fever, sore throat, and decreased appetite. Most colds resolve on their own within 7-10 days. Treatment focuses on comfort: ensure adequate fluid intake, use a cool-mist humidifier, saline nose drops for congestion, and acetaminophen or ibuprofen for fever (never aspirin in children). Call your doctor if symptoms worsen or persist beyond 10 days.",
+    "source": "American Academy of Pediatrics",
+    "metadata": {
+      "category": "illness",
+      "age_group": "all",
+      "urgency": "low"
+    }
+  }
+]
