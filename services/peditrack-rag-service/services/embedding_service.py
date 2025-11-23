@@ -3,6 +3,7 @@ import numpy as np
 from typing import List
 from utils.logger import setup_logger
 import os
+import torch
 
 logger = setup_logger(__name__)
 
@@ -14,17 +15,27 @@ class EmbeddingService:
         self.model_name = model_name
         self.model = None
         self.embedding_dimension = None
+        self.device = None
         logger.info(f"Initializing EmbeddingService with model: {model_name}")
         
     def load_model(self):
         """Load the sentence transformer model"""
         if self.model is None:
             try:
-                logger.info(f"Loading model: {self.model_name}")
-                self.model = SentenceTransformer(self.model_name)
+                # Detect GPU/CUDA availability
+                if torch.cuda.is_available():
+                    self.device = 'cuda'
+                    logger.info(f"🚀 GPU detected! Using CUDA device: {torch.cuda.get_device_name(0)}")
+                    logger.info(f"   GPU Memory: {torch.cuda.get_device_properties(0).total_memory / 1024**3:.2f} GB")
+                else:
+                    self.device = 'cpu'
+                    logger.info("Using CPU for embeddings")
+                
+                logger.info(f"Loading model: {self.model_name} on {self.device}")
+                self.model = SentenceTransformer(self.model_name, device=self.device)
                 test_embedding = self.model.encode("test")
                 self.embedding_dimension = len(test_embedding)
-                logger.info(f"Model loaded successfully. Embedding dimension: {self.embedding_dimension}")
+                logger.info(f"✓ Model loaded successfully. Embedding dimension: {self.embedding_dimension}")
             except Exception as e:
                 logger.error(f"Failed to load model: {e}")
                 raise

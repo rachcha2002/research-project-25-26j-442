@@ -35,14 +35,24 @@ vector_store/
 *.faiss
 *.index
 
+# Data (large datasets)
+data/raw_datasets/
+data/processed/
+data/*.png
+!data/.keep
+
 # Logs
 logs/
 *.log
 
 # Environment variables
-
+.env
 .env.local
 .env.*.local
+
+# Kaggle
+.kaggle/
+kaggle.json
 
 # IDE
 .vscode/
