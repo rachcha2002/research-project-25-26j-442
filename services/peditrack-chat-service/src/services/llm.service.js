@@ -108,19 +108,26 @@ class MultiProviderLLMService {
             let systemPrompt = this._getSystemPrompt();
 
             // Retrieve relevant context from RAG if enabled
+            let ragUsed = false;
             if (useRAG) {
-                console.log('🔍 Using RAG for context enhancement...');
-                const ragResult = await this.ragService.retrieveDocuments(
-                    userMessage.content,
-                    ragTopK,
-                    ragThreshold
-                );
+                try {
+                    console.log('🔍 Using RAG for context enhancement...');
+                    const ragResult = await this.ragService.retrieveDocuments(
+                        userMessage.content,
+                        ragTopK,
+                        ragThreshold
+                    );
 
-                if (ragResult.success && ragResult.context) {
-                    systemPrompt = this._enhanceSystemPromptWithRAG(systemPrompt, ragResult.context);
-                    console.log(`✅ Enhanced prompt with ${ragResult.count} documents`);
-                } else {
-                    console.log('⚠️  No RAG context available, using base prompt');
+                    if (ragResult.success && ragResult.context) {
+                        systemPrompt = this._enhanceSystemPromptWithRAG(systemPrompt, ragResult.context);
+                        console.log(`✅ Enhanced prompt with ${ragResult.count} documents`);
+                        ragUsed = true;
+                    } else {
+                        console.log('⚠️  No RAG context available, using base prompt');
+                    }
+                } catch (error) {
+                    console.warn('⚠️  RAG service error, continuing without RAG:', error.message);
+                    // Continue without RAG context
                 }
             }
 
@@ -146,7 +153,7 @@ class MultiProviderLLMService {
                 response: response.content,
                 provider: this.provider,
                 model: this.model.modelName,
-                ragUsed: useRAG
+                ragUsed: ragUsed
             };
 
         } catch (error) {
@@ -175,16 +182,21 @@ class MultiProviderLLMService {
 
             // Retrieve RAG context if enabled
             if (useRAG) {
-                console.log('🔍 Using RAG for streaming response...');
-                const ragResult = await this.ragService.retrieveDocuments(
-                    userMessage.content,
-                    ragTopK,
-                    ragThreshold
-                );
+                try {
+                    console.log('🔍 Using RAG for streaming response...');
+                    const ragResult = await this.ragService.retrieveDocuments(
+                        userMessage.content,
+                        ragTopK,
+                        ragThreshold
+                    );
 
-                if (ragResult.success && ragResult.context) {
-                    systemPrompt = this._enhanceSystemPromptWithRAG(systemPrompt, ragResult.context);
-                    console.log(`✅ Enhanced prompt with ${ragResult.count} documents`);
+                    if (ragResult.success && ragResult.context) {
+                        systemPrompt = this._enhanceSystemPromptWithRAG(systemPrompt, ragResult.context);
+                        console.log(`✅ Enhanced prompt with ${ragResult.count} documents`);
+                    }
+                } catch (error) {
+                    console.warn('⚠️  RAG service error in streaming, continuing without RAG:', error.message);
+                    // Continue without RAG context
                 }
             }
 
@@ -211,18 +223,22 @@ class MultiProviderLLMService {
      * Get base system prompt for PediTrack
      */
     _getSystemPrompt() {
-        return process.env.SYSTEM_PROMPT || `You are PediTrack AI, a helpful and knowledgeable pediatric health assistant. 
-You provide accurate, evidence-based information about child health, development, and parenting.
+        return process.env.SYSTEM_PROMPT || `You are PediTrack AI, a helpful and knowledgeable pediatric health assistant specifically designed for Sri Lankan families. 
+You provide accurate, evidence-based information about child health, development, and parenting in the Sri Lankan context.
 
 Guidelines:
 - Always prioritize child safety and well-being
-- Provide clear, actionable advice
-- Recommend consulting healthcare professionals for serious concerns
-- Be empathetic and supportive to parents
-- Use simple, easy-to-understand language
-- If you're unsure, acknowledge limitations and suggest professional consultation
+- Provide advice considering Sri Lankan culture, climate, and healthcare system
+- Reference local resources (government hospitals, MOH clinics, Grama Niladhari offices when relevant)
+- Use familiar Sri Lankan examples and context (local foods like kola kanda, rice-based diets, traditional practices)
+- Be aware of tropical health concerns common in Sri Lanka
+- Recommend consulting local healthcare professionals (pediatricians, MOH doctors, PHI officers)
+- Be empathetic and supportive to Sri Lankan parents and their cultural practices
+- Use simple, easy-to-understand language suitable for Sri Lankan English speakers
+- Consider local economic factors and affordable healthcare options
+- If discussing traditional practices, balance cultural respect with medical safety
 
-Remember: You are an assistant, not a replacement for professional medical advice.`;
+Remember: You are an assistant familiar with Sri Lankan pediatric healthcare, not a replacement for professional medical advice. Always encourage consultation with local healthcare providers when needed.`;
     }
 
     /**

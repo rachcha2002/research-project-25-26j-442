@@ -12,6 +12,11 @@ numpy==1.26.0
 
 # HTTP client
 httpx==0.25.2
+requests==2.31.0
+
+# Dataset processing
+tqdm==4.66.1
+datasets==2.16.1
 
 # Build tools
 setuptools>=65.0.0

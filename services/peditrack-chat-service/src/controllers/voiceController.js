@@ -55,14 +55,28 @@ class VoiceController {
 
             // Step 2: Get AI response using LLM service
             const llmService = getLLMService();
-            const result = await llmService.generateResponse(messages, {
-                useRAG: true,
-                temperature: 0.7,
-                maxTokens: 1000
-            });
+            
+            // Try to use RAG, but continue without it if unavailable
+            let result;
+            try {
+                result = await llmService.generateResponse(messages, {
+                    useRAG: true,
+                    temperature: 0.7,
+                    maxTokens: 1000
+                });
+            } catch (error) {
+                console.warn('⚠️  Failed with RAG, retrying without RAG context:', error.message);
+                // Fallback: Generate response without RAG
+                result = await llmService.generateResponse(messages, {
+                    useRAG: false,
+                    temperature: 0.7,
+                    maxTokens: 1000
+                });
+            }
             
             const aiResponseText = result.response;
-            console.log('AI response:', aiResponseText);
+            const ragStatus = result.ragUsed ? 'with RAG' : 'without RAG';
+            console.log(`AI response (${ragStatus}):`, aiResponseText);
 
             // Add AI response to history
             const assistantMessage = {
@@ -84,8 +98,10 @@ class VoiceController {
                     messageId: assistantMessage.id,
                     transcription: transcribedText,
                     responseText: aiResponseText,
-                    audioResponse: audioResponse.toString('base64')
-                }
+                    audioResponse: audioResponse.toString('base64'),
+                    ragUsed: result.ragUsed || false
+                },
+                warning: result.ragUsed ? null : 'Operating without RAG context'
             });
         } catch (error) {
             console.error('Voice processing error:', error);
