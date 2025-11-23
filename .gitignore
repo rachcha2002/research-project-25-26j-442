@@ -54,3 +54,4 @@ logs
 # OS
 Thumbs.db
 .DS_Store
+services/peditrack-rag-service/vector_store/faiss_index
