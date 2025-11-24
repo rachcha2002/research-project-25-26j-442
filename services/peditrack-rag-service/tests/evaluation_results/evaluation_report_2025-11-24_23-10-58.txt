@@ -1,0 +1,49 @@
+================================================================================
+RAG SYSTEM EVALUATION REPORT
+================================================================================
+Timestamp: 2025-11-24 23:10:58
+Total Queries Tested: 20
+Top-K Documents: 5
+Total Evaluation Time: 6.59s
+
+RETRIEVAL PERFORMANCE
+--------------------------------------------------------------------------------
+Queries with Results: 0/20 (0.0%)
+Average Retrieval Time: 0.00ms
+Keyword Match Rate: 0.0%
+Average Similarity Score: 0.000
+
+SEMANTIC SIMILARITY ANALYSIS
+--------------------------------------------------------------------------------
+Average Similarity: 0.000
+High Quality (>0.7): 0 (0.0%)
+Medium Quality (0.5-0.7): 0 (0.0%)
+Low Quality (<0.5): 0 (0.0%)
+
+PERFORMANCE BY CATEGORY
+--------------------------------------------------------------------------------
+DEHYDRATION: Avg Similarity=0.000, Success Rate=0.0%
+DENTAL: Avg Similarity=0.000, Success Rate=0.0%
+DEVELOPMENT: Avg Similarity=0.000, Success Rate=0.0%
+DIGESTIVE: Avg Similarity=0.000, Success Rate=0.0%
+EAR_INFECTION: Avg Similarity=0.000, Success Rate=0.0%
+FEVER: Avg Similarity=0.000, Success Rate=0.0%
+FIRST_AID: Avg Similarity=0.000, Success Rate=0.0%
+INFECTIOUS_DISEASE: Avg Similarity=0.000, Success Rate=0.0%
+NUTRITION: Avg Similarity=0.000, Success Rate=0.0%
+RESPIRATORY: Avg Similarity=0.000, Success Rate=0.0%
+SAFETY: Avg Similarity=0.000, Success Rate=0.0%
+SKIN_CONDITIONS: Avg Similarity=0.000, Success Rate=0.0%
+VACCINATION: Avg Similarity=0.000, Success Rate=0.0%
+VITAL_SIGNS: Avg Similarity=0.000, Success Rate=0.0%
+
+PERFORMANCE BY DIFFICULTY
+--------------------------------------------------------------------------------
+EASY: Avg Similarity=0.000, Success Rate=0.0%
+MEDIUM: Avg Similarity=0.000, Success Rate=0.0%
+HARD: Avg Similarity=0.000, Success Rate=0.0%
+
+OVERALL ASSESSMENT
+--------------------------------------------------------------------------------
+POOR - RAG system requires significant improvement
+================================================================================
