@@ -36,6 +36,7 @@ vector_store/
 *.index
 
 # Data (large datasets)
+
 data/raw_datasets/
 data/processed/
 data/*.png

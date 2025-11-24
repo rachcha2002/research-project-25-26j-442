@@ -1,9 +1,9 @@
 """
 Download and Integrate PediatricsMQA Dataset from HuggingFace
-Specialized pediatric medical Q&A dataset
-Uses GPU acceleration for faster processing
+Specialized pediatric medical Q&A dataset with GPU acceleration
 """
 import json
+import sys
 from pathlib import Path
 from tqdm import tqdm
 
@@ -27,31 +27,27 @@ def download_pediatricsmqa():
         print("Note: This may take a few minutes...")
         print()
         
-        # Load the dataset
+        # Load the dataset (it only has 'test' split)
         dataset = load_dataset("adlbh/PediatricsMQA", "tqa")
         
         output_dir = Path("data/raw_datasets/pediatricsmqa")
         output_dir.mkdir(parents=True, exist_ok=True)
         
         print(f"✓ Dataset loaded successfully")
-        print(f"  Train split: {len(dataset['train'])} examples")
-        if 'test' in dataset:
-            print(f"  Test split: {len(dataset['test'])} examples")
-        print()
         
         # Convert to JSON
         print("Converting to JSON format...")
         all_data = []
         
         for split_name in dataset.keys():
-            print(f"Processing {split_name} split...")
+            print(f"Processing {split_name} split: {len(dataset[split_name])} examples")
             for item in tqdm(dataset[split_name], desc=f"  {split_name}"):
                 data_item = {
-                    'question': item.get('question', item.get('Question', '')),
-                    'answer': item.get('answer', item.get('Answer', '')),
-                    'options': item.get('options', item.get('Options', [])),
-                    'correct_answer': item.get('correct_answer', item.get('CorrectAnswer', '')),
-                    'explanation': item.get('explanation', item.get('Explanation', '')),
+                    'question': item.get('question', ''),
+                    'answer': item.get('answer', ''),
+                    'options': item.get('options', []),
+                    'topic': item.get('topic', ''),
+                    'age_group': item.get('age_group', ''),
                     'split': split_name
                 }
                 all_data.append(data_item)
@@ -95,23 +91,29 @@ def preprocess_pediatricsmqa():
     for item in tqdm(data, desc="Processing"):
         question = item.get('question', '')
         answer = item.get('answer', '')
-        explanation = item.get('explanation', '')
+        topic = item.get('topic', '')
+        age_group = item.get('age_group', '')
         options = item.get('options', [])
         
         if not question:
             continue
         
         # Format the document
-        text_parts = [f"Pediatric Question: {question}"]
+        text_parts = [f"Pediatric Medical Question: {question}"]
         
-        if options:
-            text_parts.append(f"\nOptions: {', '.join(options)}")
+        if options and len(options) > 0:
+            text_parts.append(f"\nOptions:")
+            for i, opt in enumerate(options):
+                text_parts.append(f"  {chr(65+i)}. {opt}")
         
         if answer:
             text_parts.append(f"\nCorrect Answer: {answer}")
         
-        if explanation:
-            text_parts.append(f"\nExplanation: {explanation}")
+        if topic:
+            text_parts.append(f"\nTopic: {topic}")
+        
+        if age_group:
+            text_parts.append(f"\nAge Group: {age_group}")
         
         text = "\n".join(text_parts)
         
@@ -121,11 +123,12 @@ def preprocess_pediatricsmqa():
             'metadata': {
                 'question': question,
                 'answer': answer,
-                'has_explanation': bool(explanation),
+                'topic': topic,
+                'age_group': age_group,
                 'has_options': bool(options),
                 'dataset': 'PediatricsMQA',
-                'type': 'medical_qa',
-                'split': item.get('split', 'unknown')
+                'type': 'medical_qa_exam',
+                'split': item.get('split', 'test')
             }
         }
         processed_docs.append(doc)
@@ -151,7 +154,6 @@ def ingest_with_gpu():
     print("🚀 Ingesting with GPU Acceleration")
     print("-" * 70)
     
-    import sys
     sys.path.insert(0, str(Path(__file__).parent.parent))
     
     try:
@@ -239,7 +241,7 @@ def main():
     
     print("✅ PediatricsMQA dataset successfully integrated!")
     print()
-    print("Your RAG system now includes specialized pediatric medical Q&A!")
+    print("Your RAG system now includes specialized pediatric medical exam Q&A!")
     print()
 
 if __name__ == "__main__":
