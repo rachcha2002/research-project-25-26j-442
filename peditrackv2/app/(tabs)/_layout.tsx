@@ -1,4 +1,4 @@
-import { Tabs } from 'expo-router';
+import { Tabs, useSegments } from 'expo-router';
 import React from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { TabBarIcon } from '@/components/BottomNav';
@@ -6,14 +6,19 @@ import { TopBar } from '@/components/TopBar';
 import { Colors } from '@/constants/Colors';
 
 export default function TabLayout() {
+  const segments = useSegments();
+  const hideUI = (segments as string[]).includes('feeding');
+
   return (
     <>
-      <TopBar 
-        username="Amanda"
-        childName="Thisal"
-        onProfilePress={() => console.log('Profile pressed')}
-        onNotificationPress={() => console.log('Notification pressed')}
-      />
+      {!hideUI && (
+        <TopBar 
+          username="Amanda"
+          childName="Thisal"
+          onProfilePress={() => console.log('Profile pressed')}
+          onNotificationPress={() => console.log('Notification pressed')}
+        />
+      )}
       <Tabs
         screenOptions={{
           tabBarActiveTintColor: Colors.primary.DEFAULT,
@@ -60,6 +65,7 @@ export default function TabLayout() {
             tabBarIcon: ({ focused }) => (
               <TabBarIcon name="feeding" focused={focused} />
             ),
+            tabBarStyle: { display: 'none' },
           }}
         />
         <Tabs.Screen
