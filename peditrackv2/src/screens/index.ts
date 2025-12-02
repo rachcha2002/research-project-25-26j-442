@@ -5,3 +5,4 @@ export { FeedingScreen } from './FeedingScreen';
 export { LocationScreen } from './LocationScreen';
 export { ChatScreen } from './ConversationalAI';
 export { VoiceScreen } from './ConversationalAI';
+export {NutritionFeedScreen} from './Nutrition/NutritionSharingFeed/MainScreens/NutritionFeedScreen';
