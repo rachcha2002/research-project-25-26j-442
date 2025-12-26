@@ -1,10 +1,11 @@
 ﻿import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
+import { addMeasurement } from '@/services/healthAnalyticsService';
 
 type EntryMode = 'manual' | 'photo';
 
@@ -14,8 +15,13 @@ export const AddMeasurementScreen: React.FC = () => {
   const [height, setHeight] = useState(95.5);
   const [weight, setWeight] = useState(14.2);
   const [headCircumference, setHeadCircumference] = useState(50.0);
-  const [location, setLocation] = useState('Home');
+  const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
+  const [measurementDate, setMeasurementDate] = useState(new Date());
+  const [loading, setLoading] = useState(false);
+  
+  // TODO: Get this from route params or context
+  const [babyId, setBabyId] = useState('674525cc0a8a8b29b8a2bf9c'); // Temporary placeholder
 
   // Calculate BMI
   const calculateBMI = () => {
@@ -33,6 +39,75 @@ export const AddMeasurementScreen: React.FC = () => {
   const decrementValue = (setter: (val: number) => void, currentValue: number, step: number = 0.1) => {
     if (currentValue > 0) {
       setter(Number((currentValue - step).toFixed(1)));
+    }
+  };
+
+  const saveMeasurement = async (saveAndAddAnother: boolean = false) => {
+    // Validate required fields
+    if (!babyId) {
+      Alert.alert('Error', 'Baby ID is required');
+      return;
+    }
+
+    if (height <= 0 || weight <= 0) {
+      Alert.alert('Error', 'Height and Weight are required and must be greater than 0');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const measurementData = {
+        babyId,
+        measurementDate: measurementDate.toISOString().split('T')[0], // Format: YYYY-MM-DD
+        height: {
+          value: height,
+          unit: 'cm',
+        },
+        weight: {
+          value: weight,
+          unit: 'kg',
+        },
+        headCircumference: headCircumference > 0 ? {
+          value: headCircumference,
+          unit: 'cm',
+        } : undefined,
+        location: location.trim() || undefined,
+        notes: notes.trim() || undefined,
+        entryMode,
+      };
+
+      const result = await addMeasurement(measurementData);
+      
+      Alert.alert(
+        'Success',
+        'Measurement saved successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              if (saveAndAddAnother) {
+                // Reset form for new entry
+                setHeight(0);
+                setWeight(0);
+                setHeadCircumference(0);
+                setNotes('');
+                setMeasurementDate(new Date());
+              } else {
+                // Navigate back to growth details screen
+                router.back();
+              }
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('Error saving measurement:', error);
+      Alert.alert(
+        'Error',
+        error instanceof Error ? error.message : 'Failed to save measurement. Please try again.'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -79,7 +154,13 @@ export const AddMeasurementScreen: React.FC = () => {
           <View style={styles.section}>
             <Text style={styles.label}>Measurement Date</Text>
             <TouchableOpacity style={styles.dateButton}>
-              <Text style={styles.dateText}>Today - Nov 10, 2025</Text>
+              <Text style={styles.dateText}>
+                {measurementDate.toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'short', 
+                  day: 'numeric' 
+                })}
+              </Text>
               <Ionicons name="calendar-outline" size={20} color={Colors.inactive} />
             </TouchableOpacity>
           </View>
@@ -175,11 +256,14 @@ export const AddMeasurementScreen: React.FC = () => {
 
           {/* Location */}
           <View style={styles.section}>
-            <Text style={styles.label}>Location</Text>
-            <TouchableOpacity style={styles.dropdown}>
-              <Text style={styles.dropdownText}>{location}</Text>
-              <Ionicons name="chevron-down" size={20} color={Colors.inactive} />
-            </TouchableOpacity>
+            <Text style={styles.labelOptional}>Location (optional)</Text>
+            <TextInput
+              style={styles.locationInput}
+              value={location}
+              onChangeText={setLocation}
+              placeholder="e.g., Home, Clinic, Hospital"
+              placeholderTextColor={Colors.inactive}
+            />
           </View>
 
           {/* Notes */}
@@ -199,11 +283,27 @@ export const AddMeasurementScreen: React.FC = () => {
 
           {/* Action Buttons */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.secondaryButton}>
-              <Text style={styles.secondaryButtonText}>Save & Add Another</Text>
+            <TouchableOpacity 
+              style={[styles.secondaryButton, loading && styles.disabledButton]}
+              onPress={() => saveMeasurement(true)}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color={Colors.dark} />
+              ) : (
+                <Text style={styles.secondaryButtonText}>Save & Add Another</Text>
+              )}
             </TouchableOpacity>
-            <TouchableOpacity style={styles.primaryButton}>
-              <Text style={styles.primaryButtonText}>Save Measurement</Text>
+            <TouchableOpacity 
+              style={[styles.primaryButton, loading && styles.disabledButton]}
+              onPress={() => saveMeasurement(false)}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color={Colors.white} />
+              ) : (
+                <Text style={styles.primaryButtonText}>Save Measurement</Text>
+              )}
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -381,6 +481,15 @@ const styles = StyleSheet.create({
     color: Colors.dark,
     fontWeight: '500',
   },
+  locationInput: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 15,
+    color: Colors.dark,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
   notesInput: {
     backgroundColor: Colors.white,
     borderRadius: 12,
@@ -421,5 +530,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: Colors.white,
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
 });
