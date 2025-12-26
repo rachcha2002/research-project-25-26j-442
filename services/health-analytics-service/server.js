@@ -44,12 +44,12 @@ app.use((err, req, res, next) => {
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+      family: 4, // Force IPv4
     });
     console.log('✅ MongoDB connected successfully');
   } catch (error) {
     console.error('❌ MongoDB connection error:', error.message);
+    console.error('💡 Tip: Make sure MongoDB Atlas cluster is running and IP is whitelisted');
     process.exit(1);
   }
 };
