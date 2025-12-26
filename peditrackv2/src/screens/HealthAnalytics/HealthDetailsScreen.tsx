@@ -1,92 +1,137 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 
+type Symptom = 'fever' | 'cold' | 'cough' | 'vomit' | 'diarrhea' | 'pain' | 'fatigue' | 'noAppetite';
+
 export const HealthDetailsScreen: React.FC = () => {
+  const [selectedSymptoms, setSelectedSymptoms] = useState<Symptom[]>(['fatigue']);
+
+  const toggleSymptom = (symptom: Symptom) => {
+    if (selectedSymptoms.includes(symptom)) {
+      setSelectedSymptoms(selectedSymptoms.filter(s => s !== symptom));
+    } else {
+      setSelectedSymptoms([...selectedSymptoms, symptom]);
+    }
+  };
+
+  const symptoms = [
+    { id: 'fever' as Symptom, emoji: '🤒', label: 'Fever' },
+    { id: 'cold' as Symptom, emoji: '🤧', label: 'Cold' },
+    { id: 'cough' as Symptom, emoji: '😷', label: 'Cough' },
+    { id: 'vomit' as Symptom, emoji: '🤢', label: 'Vomit' },
+    { id: 'diarrhea' as Symptom, emoji: '💩', label: 'Diarrhea' },
+    { id: 'pain' as Symptom, emoji: '😫', label: 'Pain' },
+    { id: 'fatigue' as Symptom, emoji: '🥱', label: 'Fatigue' },
+    { id: 'noAppetite' as Symptom, emoji: '🍽️', label: 'No Appetite' },
+  ];
+
   return (
     <>
       <SecondaryTopBar />
       <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="medical" size={32} color={Colors.primary.light} />
-          </View>
-          <Text style={styles.headerTitle}>Health Records</Text>
-          <Text style={styles.headerSubtitle}>
-            Track your child's health records and medical history
-          </Text>
-        </View>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Title */}
+          <Text style={styles.pageTitle}>Health Records</Text>
 
-        {/* Vaccination Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="shield-checkmark" size={24} color={Colors.primary.light} />
-            <Text style={styles.cardTitle}>Vaccinations</Text>
-          </View>
-          <Text style={styles.cardDescription}>
-            Keep track of all vaccination schedules and records
-          </Text>
-          <View style={styles.statusBadge}>
-            <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-            <Text style={styles.statusText}>Up to date</Text>
-          </View>
-        </View>
+          {/* Active Conditions */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Active Conditions (1)</Text>
+            
+            <TouchableOpacity style={styles.conditionCard}>
+              <View style={styles.conditionIconContainer}>
+                <Ionicons name="add" size={24} color="#EF4444" />
+              </View>
+              <View style={styles.conditionContent}>
+                <Text style={styles.conditionName}>Seasonal Allergies</Text>
+                <Text style={styles.conditionStatus}>Status: Monitoring</Text>
+                <Text style={styles.conditionDate}>Since: Jan 2025</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={Colors.inactive} />
+            </TouchableOpacity>
 
-        {/* Medical History Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="document-text" size={24} color={Colors.primary.light} />
-            <Text style={styles.cardTitle}>Medical History</Text>
+            <TouchableOpacity style={styles.addConditionButton}>
+              <Text style={styles.addConditionText}>+ Add Condition</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.cardDescription}>
-            View past diagnoses, treatments, and medical notes
-          </Text>
-          <TouchableOpacity style={styles.viewButton}>
-            <Text style={styles.viewButtonText}>View Records</Text>
-            <Ionicons name="chevron-forward" size={18} color={Colors.primary.light} />
-          </TouchableOpacity>
-        </View>
 
-        {/* Appointments Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="calendar" size={24} color={Colors.primary.light} />
-            <Text style={styles.cardTitle}>Appointments</Text>
-          </View>
-          <Text style={styles.cardDescription}>
-            Schedule and manage upcoming medical appointments
-          </Text>
-          <View style={styles.appointmentInfo}>
-            <Text style={styles.appointmentLabel}>Next Appointment:</Text>
-            <Text style={styles.appointmentDate}>Dec 15, 2025</Text>
-          </View>
-        </View>
+          {/* Log Today's Symptoms */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Log Today's Symptoms</Text>
+            <Text style={styles.sectionSubtitle}>Tap to log quickly</Text>
 
-        {/* Allergies Card */}
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="alert-circle" size={24} color="#EF4444" />
-            <Text style={styles.cardTitle}>Allergies</Text>
+            <View style={styles.symptomsGrid}>
+              {symptoms.map((symptom) => (
+                <TouchableOpacity
+                  key={symptom.id}
+                  style={[
+                    styles.symptomButton,
+                    selectedSymptoms.includes(symptom.id) && styles.symptomButtonSelected,
+                  ]}
+                  onPress={() => toggleSymptom(symptom.id)}
+                >
+                  <Text style={styles.symptomEmoji}>{symptom.emoji}</Text>
+                  <Text style={styles.symptomLabel}>{symptom.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
-          <Text style={styles.cardDescription}>
-            Record and monitor any known allergies
-          </Text>
-          <TouchableOpacity style={styles.addButton}>
-            <Ionicons name="add-circle" size={20} color={Colors.primary.light} />
-            <Text style={styles.addButtonText}>Add Allergy</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+
+          {/* Recent (Last 7 Days) */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Recent (Last 7 Days):</Text>
+            
+            <View style={styles.recentList}>
+              <View style={styles.recentItem}>
+                <Text style={styles.recentBullet}>•</Text>
+                <View style={styles.recentContent}>
+                  <Text style={styles.recentText}>Mild fever 38.2°C</Text>
+                  <Text style={styles.recentTime}>3 days ago</Text>
+                </View>
+              </View>
+
+              <View style={styles.recentItem}>
+                <Text style={styles.recentBullet}>•</Text>
+                <View style={styles.recentContent}>
+                  <Text style={styles.recentText}>Cough</Text>
+                  <Text style={styles.recentTime}>5 days ago</Text>
+                </View>
+              </View>
+
+              <TouchableOpacity style={styles.viewAllButton}>
+                <Text style={styles.viewAllText}>View All History →</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Severe Allergies Alert */}
+          <View style={styles.alertCard}>
+            <View style={styles.alertHeader}>
+              <Ionicons name="alert-circle" size={24} color="#EF4444" />
+              <Text style={styles.alertTitle}>Severe Allergies: 1</Text>
+            </View>
+
+            <View style={styles.allergyItem}>
+              <Text style={styles.allergyBullet}>•</Text>
+              <View style={styles.allergyContent}>
+                <Text style={styles.allergyName}>Peanuts (Severe)</Text>
+                <Text style={styles.allergyRisk}>Risk: Anaphylaxis</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity style={styles.emergencyButton}>
+              <Text style={styles.emergencyButtonText}>View Emergency Plan →</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
     </>
   );
 };
@@ -101,118 +146,203 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingTop: 20,
     paddingBottom: 32,
   },
-  header: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#E0E7FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  headerTitle: {
-    color: Colors.dark,
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    color: Colors.inactive,
-    fontSize: 15,
-    textAlign: 'center',
-    paddingHorizontal: 20,
-  },
-  card: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  cardTitle: {
-    color: Colors.dark,
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 12,
-  },
-  cardDescription: {
-    color: Colors.inactive,
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#D1FAE5',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
-  statusText: {
-    color: '#059669',
-    fontSize: 13,
-    fontWeight: '600',
-    marginLeft: 6,
-  },
-  viewButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.background,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  viewButtonText: {
+  pageTitle: {
+    fontSize: 28,
+    fontWeight: '700',
     color: Colors.primary.light,
-    fontSize: 15,
-    fontWeight: '600',
+    marginBottom: 24,
   },
-  appointmentInfo: {
-    backgroundColor: Colors.background,
-    padding: 12,
-    borderRadius: 12,
+  section: {
+    marginBottom: 28,
   },
-  appointmentLabel: {
-    color: Colors.inactive,
-    fontSize: 13,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.dark,
     marginBottom: 4,
   },
-  appointmentDate: {
-    color: Colors.dark,
-    fontSize: 16,
-    fontWeight: '600',
+  sectionSubtitle: {
+    fontSize: 14,
+    color: Colors.inactive,
+    marginBottom: 16,
   },
-  addButton: {
+  conditionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.background,
-    paddingVertical: 12,
+    backgroundColor: Colors.white,
     borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  addButtonText: {
-    color: Colors.primary.light,
+  conditionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  conditionContent: {
+    flex: 1,
+  },
+  conditionName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.dark,
+    marginBottom: 4,
+  },
+  conditionStatus: {
+    fontSize: 13,
+    color: Colors.inactive,
+    marginBottom: 2,
+  },
+  conditionDate: {
+    fontSize: 13,
+    color: Colors.inactive,
+  },
+  addConditionButton: {
+    borderWidth: 1,
+    borderColor: Colors.primary.light,
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+  },
+  addConditionText: {
     fontSize: 15,
     fontWeight: '600',
+    color: Colors.primary.light,
+  },
+  symptomsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  symptomButton: {
+    width: '22%',
+    aspectRatio: 1,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  symptomButtonSelected: {
+    borderColor: '#3B82F6',
+    backgroundColor: '#EFF6FF',
+  },
+  symptomEmoji: {
+    fontSize: 32,
+    marginBottom: 4,
+  },
+  symptomLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: Colors.dark,
+    textAlign: 'center',
+  },
+  recentList: {
+    marginTop: 8,
+  },
+  recentItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  recentBullet: {
+    fontSize: 16,
+    color: Colors.dark,
+    marginRight: 8,
+    marginTop: 2,
+  },
+  recentContent: {
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  recentText: {
+    fontSize: 15,
+    color: Colors.dark,
+  },
+  recentTime: {
+    fontSize: 13,
+    color: Colors.inactive,
+  },
+  viewAllButton: {
+    marginTop: 8,
+  },
+  viewAllText: {
+    fontSize: 15,
+    color: Colors.primary.light,
+    fontWeight: '500',
+  },
+  alertCard: {
+    backgroundColor: '#FEF2F2',
+    borderWidth: 2,
+    borderColor: '#FCA5A5',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  alertHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  alertTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#DC2626',
     marginLeft: 8,
+  },
+  allergyItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: 12,
+  },
+  allergyBullet: {
+    fontSize: 16,
+    color: Colors.dark,
+    marginRight: 8,
+    marginTop: 2,
+  },
+  allergyContent: {
+    flex: 1,
+  },
+  allergyName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.dark,
+    marginBottom: 2,
+  },
+  allergyRisk: {
+    fontSize: 13,
+    color: '#DC2626',
+  },
+  emergencyButton: {
+    backgroundColor: Colors.white,
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+  },
+  emergencyButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#DC2626',
   },
 });

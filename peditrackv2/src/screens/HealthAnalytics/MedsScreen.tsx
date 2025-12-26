@@ -1,161 +1,213 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
+import Svg, { Circle } from 'react-native-svg';
 
 export const MedsScreen: React.FC = () => {
+  const [showMenu1, setShowMenu1] = useState(false);
+  const [showMenu2, setShowMenu2] = useState(false);
+
+  // Circular progress component
+  const CircularProgress = ({ percentage, size = 80 }: { percentage: number; size?: number }) => {
+    const radius = (size - 10) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+    return (
+      <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
+        <Svg width={size} height={size}>
+          {/* Background circle */}
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="#E5E7EB"
+            strokeWidth="8"
+            fill="none"
+          />
+          {/* Progress circle */}
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
+            r={radius}
+            stroke="#10B981"
+            strokeWidth="8"
+            fill="none"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          />
+        </Svg>
+        <View style={styles.progressTextContainer}>
+          <Text style={styles.progressPercentage}>{percentage}%</Text>
+        </View>
+      </View>
+    );
+  };
+
   return (
     <>
       <SecondaryTopBar />
       <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="medkit" size={32} color={Colors.primary.light} />
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Header */}
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Medications & Vaccines</Text>
+            <TouchableOpacity style={styles.addButton}>
+              <Ionicons name="add" size={24} color={Colors.primary.light} />
+            </TouchableOpacity>
           </View>
-          <Text style={styles.headerTitle}>Medications</Text>
-          <Text style={styles.headerSubtitle}>
-            Manage and track your child's medication schedule
-          </Text>
-        </View>
 
-        {/* Active Medications */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Active Medications</Text>
-          <TouchableOpacity>
-            <Ionicons name="add-circle" size={24} color={Colors.primary.light} />
+          {/* Active Medications */}
+          <Text style={styles.sectionTitle}>Active Medications (2)</Text>
+
+          {/* Medication Card 1 - Vitamin D3 */}
+          <View style={styles.medCard}>
+            <View style={styles.medCardHeader}>
+              <View style={[styles.pillIcon, { backgroundColor: '#DBEAFE' }]}>
+                <Ionicons name="medical" size={20} color="#3B82F6" />
+              </View>
+              <View style={styles.medCardTitleContainer}>
+                <Text style={styles.medCardTitle}>Vitamin D3 - 1000 IU</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowMenu1(!showMenu1)}>
+                <Ionicons name="ellipsis-vertical" size={20} color={Colors.inactive} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.scheduleText}>Daily at 8:00 PM</Text>
+
+            <View style={styles.nextDoseContainer}>
+              <Ionicons name="time-outline" size={16} color="#F59E0B" />
+              <Text style={styles.nextDoseText}>Next: Tonight 8:00 PM</Text>
+            </View>
+
+            {/* Adherence Progress Bar */}
+            <View style={styles.adherenceContainer}>
+              <View style={styles.adherenceBar}>
+                <View style={[styles.adherenceProgress, { width: '95%' }]} />
+              </View>
+              <View style={styles.adherenceInfo}>
+                <Ionicons name="checkmark-circle" size={14} color="#10B981" />
+                <Text style={styles.adherenceText}>Adherence: 95%</Text>
+              </View>
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.medCardActions}>
+              <TouchableOpacity style={styles.markTakenButton}>
+                <Text style={styles.markTakenText}>Mark Taken</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.editButton}>
+                <Text style={styles.editButtonText}>Edit →</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Medication Card 2 - Allergy Medication */}
+          <View style={styles.medCard}>
+            <View style={styles.medCardHeader}>
+              <View style={[styles.pillIcon, { backgroundColor: '#FED7AA' }]}>
+                <Ionicons name="medical" size={20} color="#F97316" />
+              </View>
+              <View style={styles.medCardTitleContainer}>
+                <Text style={styles.medCardTitle}>Allergy Medication</Text>
+              </View>
+              <TouchableOpacity onPress={() => setShowMenu2(!showMenu2)}>
+                <Ionicons name="ellipsis-vertical" size={20} color={Colors.inactive} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.scheduleText}>As needed</Text>
+            <Text style={styles.lastTakenText}>Last taken: 2 days ago</Text>
+
+            {/* Action Buttons */}
+            <View style={styles.medCardActions}>
+              <TouchableOpacity style={styles.markTakenButton}>
+                <Text style={styles.markTakenText}>Log Dose</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.editButton}>
+                <Text style={styles.editButtonText}>Edit →</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Add Medication Button */}
+          <TouchableOpacity style={styles.addMedicationButton}>
+            <Text style={styles.addMedicationText}>+ Add Medication</Text>
           </TouchableOpacity>
-        </View>
 
-        <View style={styles.medCard}>
-          <View style={styles.medHeader}>
-            <View style={styles.medIconContainer}>
-              <Ionicons name="medical" size={24} color={Colors.primary.light} />
-            </View>
-            <View style={styles.medInfo}>
-              <Text style={styles.medName}>Vitamin D Drops</Text>
-              <Text style={styles.medDosage}>2 drops daily</Text>
-            </View>
-            <View style={styles.activeBadge}>
-              <Text style={styles.activeBadgeText}>Active</Text>
-            </View>
-          </View>
-          
-          <View style={styles.medDetails}>
-            <View style={styles.medDetailRow}>
-              <Ionicons name="time-outline" size={16} color={Colors.inactive} />
-              <Text style={styles.medDetailText}>Next dose: 9:00 AM</Text>
-            </View>
-            <View style={styles.medDetailRow}>
-              <Ionicons name="calendar-outline" size={16} color={Colors.inactive} />
-              <Text style={styles.medDetailText}>Started: Nov 1, 2025</Text>
-            </View>
-          </View>
+          {/* Immunization Status */}
+          <Text style={styles.sectionTitle}>Immunization Status</Text>
 
-          <TouchableOpacity style={styles.markTakenButton}>
-            <Ionicons name="checkmark-circle" size={20} color={Colors.white} />
-            <Text style={styles.markTakenText}>Mark as Taken</Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.immunizationCard}>
+            <View style={styles.immunizationContent}>
+              {/* Circular Progress */}
+              <View style={styles.circularProgressContainer}>
+                <CircularProgress percentage={80} size={80} />
+                <Text style={styles.immunizationFraction}>12/15</Text>
+              </View>
 
-        <View style={styles.medCard}>
-          <View style={styles.medHeader}>
-            <View style={styles.medIconContainer}>
-              <Ionicons name="medical" size={24} color={Colors.primary.light} />
-            </View>
-            <View style={styles.medInfo}>
-              <Text style={styles.medName}>Paracetamol Syrup</Text>
-              <Text style={styles.medDosage}>5ml every 6 hours</Text>
-            </View>
-            <View style={styles.activeBadge}>
-              <Text style={styles.activeBadgeText}>Active</Text>
-            </View>
-          </View>
-          
-          <View style={styles.medDetails}>
-            <View style={styles.medDetailRow}>
-              <Ionicons name="time-outline" size={16} color={Colors.inactive} />
-              <Text style={styles.medDetailText}>Next dose: 2:00 PM</Text>
-            </View>
-            <View style={styles.medDetailRow}>
-              <Ionicons name="calendar-outline" size={16} color={Colors.inactive} />
-              <Text style={styles.medDetailText}>Started: Nov 20, 2025</Text>
+              {/* Next Due Info */}
+              <View style={styles.nextDueContainer}>
+                <Text style={styles.nextDueLabel}>Next Due:</Text>
+                <View style={styles.vaccineNameRow}>
+                  <Ionicons name="checkmark-circle" size={16} color="#10B981" />
+                  <Text style={styles.vaccineName}>MMR Booster</Text>
+                </View>
+                <Text style={styles.vaccineDueDate}>Dec 15 (14 days)</Text>
+                <View style={styles.dueSoonBadge}>
+                  <Text style={styles.dueSoonText}>Due Soon</Text>
+                </View>
+              </View>
             </View>
           </View>
 
-          <TouchableOpacity style={styles.markTakenButton}>
-            <Ionicons name="checkmark-circle" size={20} color={Colors.white} />
-            <Text style={styles.markTakenText}>Mark as Taken</Text>
-          </TouchableOpacity>
-        </View>
+          {/* Recent Vaccines */}
+          <Text style={styles.sectionTitle}>Recent Vaccines:</Text>
 
-        {/* Medication History */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>Recent History</Text>
-        </View>
+          <View style={styles.vaccinesCard}>
+            {/* Vaccine Item 1 */}
+            <View style={styles.vaccineItem}>
+              <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+              <Text style={styles.vaccineItemName}>DTaP</Text>
+              <Text style={styles.vaccineItemDate}>Oct 10, 2024</Text>
+            </View>
 
-        <View style={styles.historyCard}>
-          <View style={styles.historyItem}>
-            <View style={styles.historyIcon}>
-              <Ionicons name="checkmark" size={16} color="#10B981" />
+            {/* Vaccine Item 2 */}
+            <View style={styles.vaccineItem}>
+              <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+              <Text style={styles.vaccineItemName}>Polio</Text>
+              <Text style={styles.vaccineItemDate}>Sep 15, 2024</Text>
             </View>
-            <View style={styles.historyInfo}>
-              <Text style={styles.historyMedName}>Vitamin D Drops</Text>
-              <Text style={styles.historyTime}>Today, 9:00 AM</Text>
+
+            {/* Vaccine Item 3 */}
+            <View style={styles.vaccineItem}>
+              <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+              <Text style={styles.vaccineItemName}>Hepatitis</Text>
+              <Text style={styles.vaccineItemDate}>Aug 20, 2024</Text>
             </View>
-            <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+
+            {/* View Full Schedule Button */}
+            <TouchableOpacity style={styles.viewScheduleButton}>
+              <Text style={styles.viewScheduleText}>View Full Schedule →</Text>
+            </TouchableOpacity>
+
+            {/* Add Vaccine Record Button */}
+            <TouchableOpacity style={styles.addVaccineButton}>
+              <Text style={styles.addVaccineText}>Add Vaccine Record</Text>
+            </TouchableOpacity>
           </View>
-
-          <View style={styles.historyDivider} />
-
-          <View style={styles.historyItem}>
-            <View style={styles.historyIcon}>
-              <Ionicons name="checkmark" size={16} color="#10B981" />
-            </View>
-            <View style={styles.historyInfo}>
-              <Text style={styles.historyMedName}>Paracetamol Syrup</Text>
-              <Text style={styles.historyTime}>Today, 8:00 AM</Text>
-            </View>
-            <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-          </View>
-
-          <View style={styles.historyDivider} />
-
-          <View style={styles.historyItem}>
-            <View style={styles.historyIcon}>
-              <Ionicons name="checkmark" size={16} color="#10B981" />
-            </View>
-            <View style={styles.historyInfo}>
-              <Text style={styles.historyMedName}>Vitamin D Drops</Text>
-              <Text style={styles.historyTime}>Yesterday, 9:00 AM</Text>
-            </View>
-            <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-          </View>
-        </View>
-
-        {/* Reminders Card */}
-        <View style={styles.reminderCard}>
-          <View style={styles.reminderHeader}>
-            <Ionicons name="notifications" size={24} color={Colors.primary.light} />
-            <Text style={styles.reminderTitle}>Medication Reminders</Text>
-          </View>
-          <Text style={styles.reminderDescription}>
-            Get notified when it's time to give medication
-          </Text>
-          <TouchableOpacity style={styles.reminderButton}>
-            <Text style={styles.reminderButtonText}>Manage Reminders</Text>
-            <Ionicons name="chevron-forward" size={18} color={Colors.primary.light} />
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+        </ScrollView>
+      </SafeAreaView>
     </>
   );
 };
@@ -170,205 +222,274 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingTop: 16,
     paddingBottom: 32,
   },
   header: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#E0E7FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  headerTitle: {
-    color: Colors.dark,
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    color: Colors.inactive,
-    fontSize: 15,
-    textAlign: 'center',
-    paddingHorizontal: 20,
-  },
-  sectionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 24,
   },
-  sectionTitle: {
-    color: Colors.dark,
+  headerTitle: {
     fontSize: 18,
     fontWeight: '600',
+    color: Colors.dark,
+  },
+  addButton: {
+    width: 32,
+    height: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.dark,
+    marginBottom: 12,
+    marginTop: 8,
   },
   medCard: {
     backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  medHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  medIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#E0E7FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  medInfo: {
-    flex: 1,
-  },
-  medName: {
-    color: Colors.dark,
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  medDosage: {
-    color: Colors.inactive,
-    fontSize: 14,
-  },
-  activeBadge: {
-    backgroundColor: '#D1FAE5',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
     borderRadius: 12,
-  },
-  activeBadgeText: {
-    color: '#059669',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  medDetails: {
-    backgroundColor: Colors.background,
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  medDetailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  medDetailText: {
-    color: Colors.inactive,
-    fontSize: 14,
-    marginLeft: 8,
-  },
-  markTakenButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primary.light,
-    paddingVertical: 12,
-    borderRadius: 12,
-  },
-  markTakenText: {
-    color: Colors.white,
-    fontSize: 15,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  historyCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
+    padding: 16,
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  historyItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  historyIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#D1FAE5',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  historyInfo: {
-    flex: 1,
-  },
-  historyMedName: {
-    color: Colors.dark,
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  historyTime: {
-    color: Colors.inactive,
-    fontSize: 13,
-  },
-  historyDivider: {
-    height: 1,
-    backgroundColor: Colors.background,
-  },
-  reminderCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  reminderHeader: {
+  medCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 12,
   },
-  reminderTitle: {
-    color: Colors.dark,
-    fontSize: 18,
+  pillIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  medCardTitleContainer: {
+    flex: 1,
+  },
+  medCardTitle: {
+    fontSize: 16,
     fontWeight: '600',
-    marginLeft: 12,
+    color: Colors.dark,
   },
-  reminderDescription: {
-    color: Colors.inactive,
+  scheduleText: {
     fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 16,
+    color: Colors.inactive,
+    marginBottom: 8,
   },
-  reminderButton: {
+  nextDoseContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: Colors.background,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
+    marginBottom: 12,
+    gap: 6,
   },
-  reminderButtonText: {
-    color: Colors.primary.light,
-    fontSize: 15,
+  nextDoseText: {
+    fontSize: 14,
+    color: '#F59E0B',
+    fontWeight: '500',
+  },
+  lastTakenText: {
+    fontSize: 13,
+    color: Colors.inactive,
+    marginBottom: 12,
+  },
+  adherenceContainer: {
+    marginBottom: 12,
+  },
+  adherenceBar: {
+    height: 6,
+    backgroundColor: '#E5E7EB',
+    borderRadius: 3,
+    marginBottom: 6,
+  },
+  adherenceProgress: {
+    height: '100%',
+    backgroundColor: '#10B981',
+    borderRadius: 3,
+  },
+  adherenceInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  adherenceText: {
+    fontSize: 12,
+    color: '#10B981',
+    fontWeight: '500',
+  },
+  medCardActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 4,
+  },
+  markTakenButton: {
+    flex: 1,
+    backgroundColor: '#3B82F6',
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  markTakenText: {
+    fontSize: 14,
     fontWeight: '600',
+    color: Colors.white,
+  },
+  editButton: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  editButtonText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.dark,
+  },
+  addMedicationButton: {
+    borderWidth: 1,
+    borderColor: '#3B82F6',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  addMedicationText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#3B82F6',
+  },
+  immunizationCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  immunizationContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+  },
+  circularProgressContainer: {
+    alignItems: 'center',
+  },
+  progressTextContainer: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressPercentage: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#10B981',
+  },
+  immunizationFraction: {
+    fontSize: 13,
+    color: Colors.inactive,
+    marginTop: 4,
+  },
+  nextDueContainer: {
+    flex: 1,
+  },
+  nextDueLabel: {
+    fontSize: 13,
+    color: Colors.inactive,
+    marginBottom: 4,
+  },
+  vaccineNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  vaccineName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.dark,
+  },
+  vaccineDueDate: {
+    fontSize: 14,
+    color: '#F97316',
+    marginBottom: 8,
+  },
+  dueSoonBadge: {
+    backgroundColor: '#FED7AA',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 6,
+    alignSelf: 'flex-start',
+  },
+  dueSoonText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#C2410C',
+  },
+  vaccinesCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  vaccineItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 8,
+    gap: 10,
+  },
+  vaccineItemName: {
+    flex: 1,
+    fontSize: 15,
+    color: Colors.dark,
+  },
+  vaccineItemDate: {
+    fontSize: 13,
+    color: Colors.inactive,
+  },
+  viewScheduleButton: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  viewScheduleText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#3B82F6',
+  },
+  addVaccineButton: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    padding: 12,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  addVaccineText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.dark,
   },
 });
