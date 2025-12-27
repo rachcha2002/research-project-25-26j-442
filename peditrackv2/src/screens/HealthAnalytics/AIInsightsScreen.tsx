@@ -4,158 +4,214 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
+import { LinearGradient } from 'expo-linear-gradient';
 
 export const AIInsightsScreen: React.FC = () => {
+  // Simple Bar Chart Component
+  const SimpleBarChart = () => {
+    const data = [4, 6, 5, 7, 6, 8, 7];
+    const maxValue = Math.max(...data);
+
+    return (
+      <View style={styles.chartContainer}>
+        {data.map((value, index) => (
+          <View key={index} style={styles.barWrapper}>
+            <View 
+              style={[
+                styles.bar, 
+                { 
+                  height: `${(value / maxValue) * 100}%`,
+                  backgroundColor: '#3B82F6'
+                }
+              ]} 
+            />
+          </View>
+        ))}
+      </View>
+    );
+  };
+
   return (
     <>
       <SecondaryTopBar />
       <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="sparkles" size={32} color={Colors.primary.light} />
-          </View>
-          <Text style={styles.headerTitle}>AI Insights</Text>
-          <Text style={styles.headerSubtitle}>
-            Personalized insights and recommendations for your child's health
-          </Text>
-        </View>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Health Score Card */}
+          <LinearGradient
+            colors={['#60A5FA', '#3B82F6']}
+            style={styles.scoreCard}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+          >
+            <Text style={styles.scoreValue}>85</Text>
+            <Text style={styles.scoreTotal}>/100</Text>
+            <Text style={styles.scoreLabel}>Health Score</Text>
+            
+            <View style={styles.scoreDetails}>
+              <View style={styles.scoreDetailRow}>
+                <View style={styles.riskDot} />
+                <Text style={styles.scoreDetailText}>Risk Level: Low</Text>
+              </View>
+              <Text style={styles.scoreDetailText}>Confidence: 88%</Text>
+            </View>
 
-        {/* Health Summary Card */}
-        <View style={styles.insightCard}>
-          <View style={styles.insightHeader}>
-            <View style={styles.insightIconContainer}>
-              <Ionicons name="analytics" size={24} color="#10B981" />
-            </View>
-            <Text style={styles.insightTitle}>Health Summary</Text>
-          </View>
-          <Text style={styles.insightDescription}>
-            Your child's overall health is excellent. Growth metrics are within normal ranges, 
-            and all vaccinations are up to date.
-          </Text>
-          <View style={styles.insightBadge}>
-            <Ionicons name="checkmark-circle" size={16} color="#10B981" />
-            <Text style={styles.insightBadgeText}>Excellent</Text>
-          </View>
-        </View>
+            <TouchableOpacity style={styles.scoreLink}>
+              <Text style={styles.scoreLinkText}>→ See last month</Text>
+            </TouchableOpacity>
+          </LinearGradient>
 
-        {/* Growth Prediction Card */}
-        <View style={styles.insightCard}>
-          <View style={styles.insightHeader}>
-            <View style={[styles.insightIconContainer, { backgroundColor: '#DBEAFE' }]}>
-              <Ionicons name="trending-up" size={24} color="#3B82F6" />
+          {/* What Affects Your Score */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeaderRow}>
+              <Text style={styles.sectionTitle}>What Affects{'\n'}Your Score?</Text>
+              <TouchableOpacity>
+                <Text style={styles.reportLink}>View{'\n'}Calculation Report →</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.insightTitle}>Growth Prediction</Text>
-          </View>
-          <Text style={styles.insightDescription}>
-            Based on current growth patterns, your child is expected to reach 
-            approximately 98 cm in height within the next 3 months.
-          </Text>
-          <View style={styles.predictionMetrics}>
-            <View style={styles.predictionItem}>
-              <Text style={styles.predictionLabel}>Expected Height</Text>
-              <Text style={styles.predictionValue}>98 cm</Text>
-            </View>
-            <View style={styles.predictionItem}>
-              <Text style={styles.predictionLabel}>Expected Weight</Text>
-              <Text style={styles.predictionValue}>15.5 kg</Text>
-            </View>
-          </View>
-        </View>
 
-        {/* Recommendations Card */}
-        <View style={styles.insightCard}>
-          <View style={styles.insightHeader}>
-            <View style={[styles.insightIconContainer, { backgroundColor: '#FEF3C7' }]}>
-              <Ionicons name="bulb" size={24} color="#F59E0B" />
-            </View>
-            <Text style={styles.insightTitle}>Recommendations</Text>
-          </View>
-          
-          <View style={styles.recommendationItem}>
-            <View style={styles.recommendationIcon}>
-              <Ionicons name="nutrition" size={20} color={Colors.primary.light} />
-            </View>
-            <View style={styles.recommendationInfo}>
-              <Text style={styles.recommendationTitle}>Nutrition</Text>
-              <Text style={styles.recommendationText}>
-                Consider adding more iron-rich foods to support healthy development
-              </Text>
+            <View style={styles.factorsList}>
+              <FactorItem label="overall health" value={70} />
+              <FactorItem label="nutrition intake" value={23} />
+              <FactorItem label="sleep hygiene" value={10} />
+              <FactorItem label="health condition" value={15} />
+              <FactorItem label="vaccination compliance" value={13} />
+              <FactorItem label="An accuracy" value={2} />
             </View>
           </View>
 
-          <View style={styles.recommendationDivider} />
+          {/* Key Insights */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Key Insights</Text>
+            
+            <View style={styles.insightCard}>
+              <Text style={styles.insightSubtitle}>Growth Prediction</Text>
+              
+              {/* Simple Bar Chart */}
+              <SimpleBarChart />
 
-          <View style={styles.recommendationItem}>
-            <View style={styles.recommendationIcon}>
-              <Ionicons name="fitness" size={20} color={Colors.primary.light} />
-            </View>
-            <View style={styles.recommendationInfo}>
-              <Text style={styles.recommendationTitle}>Physical Activity</Text>
-              <Text style={styles.recommendationText}>
-                Encourage tummy time and crawling activities for motor development
-              </Text>
+              <View style={styles.insightDetails}>
+                <View style={styles.insightRow}>
+                  <Text style={styles.insightText}>Healthy height is good and</Text>
+                  <View style={styles.excellentBadge}>
+                    <Text style={styles.excellentBadgeText}>EXCELLENT</Text>
+                  </View>
+                </View>
+                
+                <View style={styles.insightRow}>
+                  <Text style={styles.insightText}>Expected to Measure ~25.0 R cm</Text>
+                  <View style={styles.learnMoreBadge}>
+                    <Text style={styles.learnMoreBadgeText}>LEARN MORE</Text>
+                  </View>
+                </View>
+              </View>
             </View>
           </View>
 
-          <View style={styles.recommendationDivider} />
+          {/* AI Dedicated Patterns */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>AI Dedicated Patterns</Text>
 
-          <View style={styles.recommendationItem}>
-            <View style={styles.recommendationIcon}>
-              <Ionicons name="moon" size={20} color={Colors.primary.light} />
+            {/* SWOT Analysis Card */}
+            <View style={styles.patternCard}>
+              <View style={styles.patternHeader}>
+                <Text style={styles.patternIcon}>📊</Text>
+                <Text style={styles.patternTitle}>SWOT analysis for pattern table</Text>
+              </View>
+              <TouchableOpacity>
+                <Text style={styles.calculateLink}>Calculate avg →</Text>
+              </TouchableOpacity>
             </View>
-            <View style={styles.recommendationInfo}>
-              <Text style={styles.recommendationTitle}>Sleep Schedule</Text>
-              <Text style={styles.recommendationText}>
-                Maintain consistent bedtime routine for better sleep quality
-              </Text>
+
+            {/* Pattern Insight 1 */}
+            <View style={styles.patternCard}>
+              <View style={styles.patternHeader}>
+                <Text style={styles.patternIcon}>😴</Text>
+                <Text style={styles.patternTitle}>Sleep and nutrition affect growth velocity</Text>
+              </View>
+              <TouchableOpacity>
+                <Text style={styles.calculateLink}>Calculate avg →</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Pattern Insight 2 */}
+            <View style={styles.patternCard}>
+              <View style={styles.patternHeader}>
+                <Text style={styles.patternIcon}>💉</Text>
+                <Text style={styles.patternTitle}>Vaccination can help prevent disease</Text>
+              </View>
+              <TouchableOpacity>
+                <Text style={styles.calculateLink}>Calculate avg →</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Suggestion Pattern */}
+            <View style={styles.patternCard}>
+              <View style={styles.patternHeader}>
+                <Text style={styles.patternIcon}>📢</Text>
+                <Text style={styles.patternTitle}>Suggestion based on previous pattern</Text>
+              </View>
+              <TouchableOpacity>
+                <Text style={styles.calculateLink}>Report Link →</Text>
+              </TouchableOpacity>
             </View>
           </View>
-        </View>
 
-        {/* Milestone Predictions */}
-        <View style={styles.insightCard}>
-          <View style={styles.insightHeader}>
-            <View style={[styles.insightIconContainer, { backgroundColor: '#FCE7F3' }]}>
-              <Ionicons name="trophy" size={24} color="#EC4899" />
-            </View>
-            <Text style={styles.insightTitle}>Upcoming Milestones</Text>
-          </View>
-          <Text style={styles.insightDescription}>
-            Based on current development, here are expected milestones:
-          </Text>
-          
-          <View style={styles.milestoneList}>
-            <View style={styles.milestoneItem}>
-              <View style={styles.milestoneDot} />
-              <Text style={styles.milestoneText}>Walking independently (2-4 weeks)</Text>
-            </View>
-            <View style={styles.milestoneItem}>
-              <View style={styles.milestoneDot} />
-              <Text style={styles.milestoneText}>Speaking 2-word phrases (1-2 months)</Text>
-            </View>
-            <View style={styles.milestoneItem}>
-              <View style={styles.milestoneDot} />
-              <Text style={styles.milestoneText}>Self-feeding with utensils (2-3 months)</Text>
+          {/* Saved Recall Metrics */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Saved Recall metrics</Text>
+            
+            <View style={styles.metricsRow}>
+              <View style={styles.metricCard}>
+                <Ionicons name="information-circle-outline" size={24} color="#3B82F6" />
+                <Text style={styles.metricValue}>88%</Text>
+                <Text style={styles.metricLabel}>precision</Text>
+              </View>
+
+              <View style={styles.metricCard}>
+                <Ionicons name="calendar-outline" size={24} color="#3B82F6" />
+                <Text style={styles.metricValue}>95%</Text>
+                <Text style={styles.metricLabel}>Recall</Text>
+              </View>
+
+              <View style={styles.metricCard}>
+                <Ionicons name="document-text-outline" size={24} color="#3B82F6" />
+                <Text style={styles.metricValue}>87%</Text>
+                <Text style={styles.metricLabel}>F1-Score</Text>
+              </View>
             </View>
           </View>
-        </View>
 
-        {/* Ask AI Button */}
-        <TouchableOpacity style={styles.askAIButton}>
-          <Ionicons name="chatbubble-ellipses" size={24} color={Colors.white} />
-          <Text style={styles.askAIButtonText}>Ask AI a Question</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+          {/* Action Buttons */}
+          <TouchableOpacity style={styles.primaryButton}>
+            <Text style={styles.primaryButtonText}>View Growth Predictions</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonText}>View This Analysis report</Text>
+            <Ionicons name="chevron-forward" size={16} color={Colors.dark} />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.secondaryButton}>
+            <Text style={styles.secondaryButtonText}>Share with Doctor</Text>
+            <Ionicons name="chevron-forward" size={16} color={Colors.dark} />
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
     </>
   );
 };
+
+// Factor Item Component
+const FactorItem: React.FC<{ label: string; value: number }> = ({ label, value }) => (
+  <View style={styles.factorItem}>
+    <Text style={styles.factorLabel}>{label}</Text>
+    <Text style={styles.factorValue}>{value}</Text>
+  </View>
+);
 
 const styles = StyleSheet.create({
   container: {
@@ -167,172 +223,236 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 20,
-    paddingTop: 24,
+    paddingTop: 20,
     paddingBottom: 32,
   },
-  header: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  iconCircle: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#E0E7FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 16,
-  },
-  headerTitle: {
-    color: Colors.dark,
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  headerSubtitle: {
-    color: Colors.inactive,
-    fontSize: 15,
-    textAlign: 'center',
-    paddingHorizontal: 20,
-  },
-  insightCard: {
-    backgroundColor: Colors.white,
+  scoreCard: {
     borderRadius: 16,
-    padding: 20,
-    marginBottom: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  insightHeader: {
-    flexDirection: 'row',
+    padding: 24,
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 24,
   },
-  insightIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#D1FAE5',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  insightTitle: {
-    color: Colors.dark,
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  insightDescription: {
-    color: Colors.inactive,
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 12,
-  },
-  insightBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#D1FAE5',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-    alignSelf: 'flex-start',
-  },
-  insightBadgeText: {
-    color: '#059669',
-    fontSize: 13,
-    fontWeight: '600',
-    marginLeft: 6,
-  },
-  predictionMetrics: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  predictionItem: {
-    flex: 1,
-    backgroundColor: Colors.background,
-    padding: 12,
-    borderRadius: 12,
-  },
-  predictionLabel: {
-    color: Colors.inactive,
-    fontSize: 12,
-    marginBottom: 4,
-  },
-  predictionValue: {
-    color: Colors.dark,
-    fontSize: 18,
+  scoreValue: {
+    fontSize: 48,
     fontWeight: 'bold',
+    color: Colors.white,
   },
-  recommendationItem: {
-    flexDirection: 'row',
-    paddingVertical: 12,
+  scoreTotal: {
+    fontSize: 20,
+    color: Colors.white,
+    opacity: 0.9,
+    marginTop: -8,
   },
-  recommendationIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#E0E7FF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+  scoreLabel: {
+    fontSize: 16,
+    color: Colors.white,
+    marginTop: 8,
+    marginBottom: 16,
   },
-  recommendationInfo: {
-    flex: 1,
-  },
-  recommendationTitle: {
-    color: Colors.dark,
-    fontSize: 15,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  recommendationText: {
-    color: Colors.inactive,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  recommendationDivider: {
-    height: 1,
-    backgroundColor: Colors.background,
-  },
-  milestoneList: {
-    gap: 12,
-  },
-  milestoneItem: {
+  scoreDetails: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 16,
+    marginBottom: 12,
   },
-  milestoneDot: {
+  scoreDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  riskDot: {
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: Colors.primary.light,
-    marginRight: 12,
+    backgroundColor: '#22C55E',
   },
-  milestoneText: {
+  scoreDetailText: {
+    fontSize: 13,
+    color: Colors.white,
+    opacity: 0.9,
+  },
+  scoreLink: {
+    marginTop: 8,
+  },
+  scoreLinkText: {
+    fontSize: 13,
+    color: Colors.white,
+    textDecorationLine: 'underline',
+  },
+  section: {
+    marginBottom: 24,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 16,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
     color: Colors.dark,
-    fontSize: 14,
-    flex: 1,
   },
-  askAIButton: {
+  reportLink: {
+    fontSize: 12,
+    color: '#3B82F6',
+    textAlign: 'right',
+  },
+  factorsList: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 16,
+  },
+  factorItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+  },
+  factorLabel: {
+    fontSize: 14,
+    color: Colors.dark,
+  },
+  factorValue: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.dark,
+  },
+  insightCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 12,
+  },
+  insightSubtitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.dark,
+    marginBottom: 16,
+  },
+  chartContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    height: 80,
+    gap: 8,
+    marginBottom: 16,
+  },
+  barWrapper: {
+    flex: 1,
+    height: '100%',
+    justifyContent: 'flex-end',
+  },
+  bar: {
+    width: '100%',
+    borderRadius: 4,
+  },
+  insightDetails: {
+    gap: 8,
+  },
+  insightRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.primary.light,
-    paddingVertical: 16,
-    borderRadius: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 5,
+    justifyContent: 'space-between',
   },
-  askAIButtonText: {
-    color: Colors.white,
-    fontSize: 16,
+  insightText: {
+    fontSize: 13,
+    color: Colors.dark,
+    flex: 1,
+  },
+  excellentBadge: {
+    backgroundColor: '#FED7AA',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  excellentBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#9A3412',
+  },
+  learnMoreBadge: {
+    backgroundColor: '#BBF7D0',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+  },
+  learnMoreBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#15803D',
+  },
+  patternCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  patternHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    gap: 12,
+  },
+  patternIcon: {
+    fontSize: 24,
+  },
+  patternTitle: {
+    fontSize: 13,
+    color: Colors.dark,
+    flex: 1,
+  },
+  calculateLink: {
+    fontSize: 11,
+    color: '#3B82F6',
+  },
+  metricsRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  metricCard: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+  },
+  metricValue: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: Colors.dark,
+    marginTop: 8,
+  },
+  metricLabel: {
+    fontSize: 12,
+    color: Colors.inactive,
+    marginTop: 4,
+  },
+  primaryButton: {
+    backgroundColor: '#3B82F6',
+    borderRadius: 12,
+    padding: 16,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  primaryButtonText: {
+    fontSize: 15,
     fontWeight: '600',
-    marginLeft: 12,
+    color: Colors.white,
+  },
+  secondaryButton: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  secondaryButtonText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: Colors.dark,
   },
 });
