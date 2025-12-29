@@ -9,25 +9,110 @@ interface Comment {
   id: string;
   avatar: string;
   name: string;
+  commenterId: string;
   role?: string;
   time: string;
   content: string;
   isVerified?: boolean;
+  replies?: Comment[];   // <-- nested replies
 }
 
 interface CommentSectionProps {
   comments: Comment[];
+  postId: string;
+  currentUserId: string;
+  postOwnerId: string;
+  onAddComment: (postId: string, text: string, parentCommentId?: string) => void;
+  onUpdateComment: (postId: string, commentId: string, text: string) => void;
+  onDeleteComment: (postId: string, commentId: string) => void;
 }
 
-export const CommentSection: React.FC<CommentSectionProps> = ({ comments }) => {
+export const CommentSection: React.FC<CommentSectionProps> = ({
+  comments,
+  postId,
+  currentUserId,
+  postOwnerId,
+  onAddComment,
+  onUpdateComment,
+  onDeleteComment,
+}) => {
+  const [text, setText] = React.useState('');
+  const [replyTo, setReplyTo] = React.useState<string | undefined>();
+  const [editingCommentId, setEditingCommentId] = React.useState<string | undefined>();
+
+  const handleSend = () => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+
+    if (editingCommentId) {
+      onUpdateComment(postId, editingCommentId, trimmed);
+    } else {
+      onAddComment(postId, trimmed, replyTo);
+    }
+
+    setText('');
+    setReplyTo(undefined);
+    setEditingCommentId(undefined);
+  };
+
+  const activeLabel = (() => {
+    if (editingCommentId) return 'Editing comment';
+    if (replyTo) return 'Replying to a comment';
+    return 'Add a comment...';
+  })();
+
+  const renderComment = (comment: Comment, level: number = 0): React.ReactNode => {
+    const canModify =
+      comment.commenterId === currentUserId || postOwnerId === currentUserId;
+    const isReply = level > 0;
+
+    return (
+      <View key={comment.id} style={[styles.commentRow, isReply && styles.replyRow]}>
+        {isReply && (
+          <View style={styles.threadColumn}>
+            <View style={styles.threadDot} />
+            <View style={styles.threadLine} />
+          </View>
+        )}
+        <View style={styles.commentContent}>
+          <CommentItem
+            avatar={comment.avatar}
+            name={comment.name}
+            role={comment.role}
+            time={comment.time}
+            content={comment.content}
+            isVerified={comment.isVerified}
+            canEdit={canModify}
+            canDelete={canModify}
+            isReply={isReply}
+            onReply={() => {
+              setReplyTo(comment.id);
+              setEditingCommentId(undefined);
+              setText('');
+            }}
+            onEdit={() => {
+              if (!canModify) return;
+              setEditingCommentId(comment.id);
+              setReplyTo(undefined);
+              setText(comment.content);
+            }}
+            onDelete={() => {
+              if (!canModify) return;
+              onDeleteComment(postId, comment.id);
+            }}
+          />
+          {comment.replies?.map(child => renderComment(child, level + 1))}
+        </View>
+      </View>
+    );
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.header}>Comments ({comments.length})</Text>
+      <Text style={styles.header}>Comments</Text>
       
       <View style={styles.list}>
-        {comments.map(comment => (
-          <CommentItem key={comment.id} {...comment} />
-        ))}
+        {comments.map(c => renderComment(c))}
       </View>
 
       <View style={styles.inputContainer}>
@@ -37,15 +122,14 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ comments }) => {
         />
         <View style={styles.inputWrapper}>
           <TextInput
-            placeholder="Add a comment..."
+            placeholder={activeLabel}
             style={styles.input}
             placeholderTextColor={Colors.inactive}
+            value={text}
+            onChangeText={setText}
           />
-          <TouchableOpacity>
-            <Ionicons name="happy-outline" size={20} color={Colors.primary.light} />
-          </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.sendButton}>
+        <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
           <Ionicons name="send" size={16} color={Colors.white} />
         </TouchableOpacity>
       </View>
@@ -69,6 +153,33 @@ const styles = StyleSheet.create({
   list: {
     gap: 8,
     marginBottom: Layout.spacing.md,
+  },
+  commentRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  replyRow: {
+    marginLeft: 8,                 // overall indent for replies
+  },
+  threadColumn: {
+    width: 16,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  threadDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#A855F7',
+    marginBottom: 2,
+  },
+  threadLine: {
+    flex: 1,
+    width: 2,
+    backgroundColor: '#E5E7EB',
+  },
+  commentContent: {
+    flex: 1,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -101,7 +212,7 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#C084FC', // Light purple color from design
+    backgroundColor: '#C084FC',
     alignItems: 'center',
     justifyContent: 'center',
   },

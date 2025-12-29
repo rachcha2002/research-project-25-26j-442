@@ -1,97 +1,138 @@
-import React, { useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, ScrollView, StyleSheet, ActivityIndicator, Text, RefreshControl } from 'react-native';
 import { Colors } from '../../../../constants/Colors';
 import { ProfileHeader } from '../SubComponents/ProfileHeader';
 import { ProfileStats } from '../SubComponents/ProfileStats';
 import { ProfileTabs } from '../SubComponents/ProfileTabs';
-import { ProfileGrid } from '../SubComponents/ProfileGrid';
-
 import { FollowListScreen } from './FollowListScreen';
-
 import { PostDetailsScreen } from './PostDetailsScreen';
+import { FeedPostCard } from '../SubComponents/FeedPostCard';
+import {
+  FILE_BASE_URL,
+  getUserProfileOverview,
+  UserProfileOverview,
+  getSavedPostsByUser,
+  PostWithMeta,
+} from '../../../../services/SocialService';
 
 interface ProfileScreenProps {
   onBackPress: () => void;
-  user?: any; // Optional user prop to display other profiles
+  userId: string;        // profile user id (whose profile we show)
+  currentUserId?: string; // logged-in user id (viewer); defaults to userId if not provided
 }
 
-export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBackPress, user: initialUser }) => {
-  const [activeTab, setActiveTab] = useState<'posts' | 'saved'>('saved');
+export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBackPress, userId, currentUserId }) => {
+  const viewerId = currentUserId ?? userId;
+
+  const [activeTab, setActiveTab] = useState<'posts' | 'saved'>('posts');
   const [showFollowList, setShowFollowList] = useState(false);
   const [followListTab, setFollowListTab] = useState<'followers' | 'following'>('followers');
   const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [profile, setProfile] = useState<UserProfileOverview | null>(null);
+  const [savedPosts, setSavedPosts] = useState<PostWithMeta[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const currentUser = {
-    name: 'Emma Rodriguez',
-    role: 'Parent',
-    avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-    stats: {
-      posts: 248,
-      followers: '2.4K',
-      following: 892,
-    },
+  const load = async (isRefresh = false) => {
+    try {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      setError(null);
+      const [profileData, savedData] = await Promise.all([
+        getUserProfileOverview(userId),
+        getSavedPostsByUser(userId),
+      ]);
+      setProfile(profileData);
+      setSavedPosts(savedData);
+    } catch (e) {
+      console.error('Failed to load profile overview or saved posts', e);
+      setError('Failed to load profile');
+    } finally {
+      if (isRefresh) {
+        setRefreshing(false);
+      } else {
+        setLoading(false);
+      }
+    }
   };
 
-  const user = initialUser || currentUser;
+  useEffect(() => {
+    load(false);
+  }, [userId]);
 
-  const images = [
-    'https://images.unsplash.com/photo-1519864600265-abb23847ef2c',
-    'https://images.unsplash.com/photo-1513104890138-7c749659a591',
-    'https://images.unsplash.com/photo-1512621776951-a57141f2eefd',
-    'https://images.unsplash.com/photo-1490645935967-10de6ba17061',
-    'https://images.unsplash.com/photo-1498837167922-ddd27525d352',
-    'https://images.unsplash.com/photo-1482049016688-2d3e1b311543',
-    'https://images.unsplash.com/photo-1484723091739-30a097e8f929',
-    'https://images.unsplash.com/photo-1476224203421-9ac39bcb3327',
-    'https://images.unsplash.com/photo-1473093295043-cdd812d0e601',
-  ];
+  const user = profile
+    ? {
+        name: profile.userId,
+        role: 'User',
+        avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
+        stats: {
+          posts: profile.postCount,
+          followers: String(profile.followersCount),
+          following: profile.followingCount,
+        },
+      }
+    : null;
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <ActivityIndicator size="large" color={Colors.primary.DEFAULT} />
+      </View>
+    );
+  }
+
+  if (error || !profile || !user) {
+    return (
+      <View style={[styles.container, styles.center]}>
+        <Text style={{ color: Colors.dark }}>{error || 'Profile not found'}</Text>
+      </View>
+    );
+  }
 
   if (showFollowList) {
     return (
-      <FollowListScreen 
+      <FollowListScreen
         initialTab={followListTab}
         onBackPress={() => setShowFollowList(false)}
         userName={user.name}
+        profileUserId={profile.userId}
+        currentUserId={viewerId}
       />
     );
   }
 
   if (selectedPost) {
     return (
-      <PostDetailsScreen 
+      <PostDetailsScreen
         post={selectedPost}
         onBackPress={() => setSelectedPost(null)}
       />
     );
   }
 
-  const handlePostPress = (index: number) => {
-    // In a real app, we would fetch the post details by ID or pass the full post object
-    // For now, we'll create a mock post based on the selected image
-    setSelectedPost({
-      id: `post-${index}`,
-      name: user.name,
-      role: user.role,
-      time: '5 hours ago',
-      content: 'My 9-month-old LOVED this avocado banana combo today! First time trying avocado and finished the whole bowl 🥑🍌 Any other avocado recipe suggestions?',
-      tags: ['#FirstFoods', '#9months', '#HealthyFats'],
-      image: images[index],
-      avatar: user.avatar,
-      stats: { likes: 89, comments: 24, shares: 0 },
-      isApproved: true,
-      approvedBy: 'Dr. Sarah Chen'
-    });
-  };
-
   return (
     <View style={styles.container}>
-      <ProfileHeader 
-        onBackPress={onBackPress} 
-        onSettingsPress={() => {}} 
+      <ProfileHeader
+        onBackPress={onBackPress}
+        onSettingsPress={() => {}}
       />
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <ProfileStats 
-          user={user} 
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={() => load(true)}
+            colors={[Colors.primary.DEFAULT]}
+            tintColor={Colors.primary.DEFAULT}
+          />
+        }
+      >
+        <ProfileStats
+          user={user}
           onFollowersPress={() => {
             setFollowListTab('followers');
             setShowFollowList(true);
@@ -101,8 +142,106 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBackPress, user:
             setShowFollowList(true);
           }}
         />
+
         <ProfileTabs activeTab={activeTab} onTabChange={setActiveTab} />
-        <ProfileGrid images={images} onPostPress={handlePostPress} />
+
+        {/* POSTS TAB */}
+        {activeTab === 'posts' && (
+          <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 24 }}>
+            {profile.posts.length === 0 ? (
+              <Text style={{ textAlign: 'center', color: Colors.inactive }}>
+                No posts yet.
+              </Text>
+            ) : (
+              profile.posts.map(post => (
+                <FeedPostCard
+                  key={post.PostID}
+                  postId={post.PostID}
+                  postOwnerId={post.UserID}
+                  currentUserId={viewerId}
+                  name={post.UserID}
+                  role="User"
+                  time={new Date(post.PostedTime).toLocaleString()}
+                  content={post.Description || ''}
+                  tags={post.Tags || []}
+                  image={post.PostUrl ? FILE_BASE_URL + post.PostUrl : undefined}
+                  avatar={user.avatar}
+                  stats={{ likes: 0, dislikes: 0, comments: 0, shares: 0 }}
+                  comments={[]}
+                  isApproved={post.Approved}
+                  approvedBy={undefined}
+                  showAddFriend={false}
+                  onAddFriend={undefined}
+                  isOwner={post.UserID === viewerId}
+                  onEdit={undefined}
+                  onDelete={undefined}
+                  isLiked={false}
+                  isDisliked={false}
+                  isSaved={false}
+                  onToggleLike={() => {}}
+                  onToggleDislike={() => {}}
+                  onToggleSave={() => {}}
+                  onAddComment={() => {}}
+                  onUpdateComment={() => {}}
+                  onDeleteComment={() => {}}
+                />
+              ))
+            )}
+          </View>
+        )}
+
+        {/* SAVED TAB */}
+        {activeTab === 'saved' && (
+          <View style={{ paddingHorizontal: 16, paddingTop: 8, paddingBottom: 24 }}>
+            {savedPosts.length === 0 ? (
+              <Text style={{ textAlign: 'center', color: Colors.inactive }}>
+                No saved posts yet.
+              </Text>
+            ) : (
+              savedPosts.map(item => {
+                const { post, engagement, comments } = item;
+                return (
+                  <FeedPostCard
+                    key={post.PostID}
+                    postId={post.PostID}
+                    postOwnerId={post.UserID}
+                    currentUserId={viewerId}
+                    name={post.UserID}
+                    role="User"
+                    time={new Date(post.PostedTime).toLocaleString()}
+                    content={post.Description || ''}
+                    tags={post.Tags || []}
+                    image={post.PostUrl ? FILE_BASE_URL + post.PostUrl : undefined}
+                    avatar={user.avatar}
+                    stats={{
+                      likes: engagement.LikedBy.length,
+                      dislikes: engagement.DislikedBy.length,
+                      comments: comments.length,
+                      shares: 0,
+                    }}
+                    comments={comments}
+                    isApproved={post.Approved}
+                    approvedBy={undefined}
+                    showAddFriend={false}
+                    onAddFriend={undefined}
+                    isOwner={post.UserID === viewerId}
+                    onEdit={undefined}
+                    onDelete={undefined}
+                    isLiked={engagement.LikedBy.includes(viewerId)}
+                    isDisliked={engagement.DislikedBy.includes(viewerId)}
+                    isSaved={true}
+                    onToggleLike={() => {}}
+                    onToggleDislike={() => {}}
+                    onToggleSave={() => {}}
+                    onAddComment={() => {}}
+                    onUpdateComment={() => {}}
+                    onDeleteComment={() => {}}
+                  />
+                );
+              })
+            )}
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -112,5 +251,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.white,
+  },
+  center: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

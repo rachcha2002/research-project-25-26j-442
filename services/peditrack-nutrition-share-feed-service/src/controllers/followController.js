@@ -1,4 +1,5 @@
 const Follow = require('../models/Follow');
+const Post = require('../models/Post'); // <- make sure this path/name matches your project
 
 // Follow a user
 exports.followUser = async (req, res) => {
@@ -85,5 +86,33 @@ exports.getFollowing = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ message: 'Server error.', error: error.message });
+    }
+};
+
+// Get user overview: posts + counts
+exports.getUserOverview = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        if (!userId) {
+            return res.status(400).json({ message: 'userId is required.' });
+        }
+
+        const [followersCount, followingCount, posts, postCount] = await Promise.all([
+            Follow.countDocuments({ followingId: userId }),       // followers
+            Follow.countDocuments({ followerId: userId }),        // following
+            Post.find({ UserID: userId })                         // this user's posts
+                .sort({ PostedTime: -1 }),
+            Post.countDocuments({ UserID: userId })
+        ]);
+
+        return res.status(200).json({
+            userId,
+            followersCount,
+            followingCount,
+            postCount,
+            posts
+        });
+    } catch (error) {
+        return res.status(500).json({ message: 'Server error.', error: error.message });
     }
 };

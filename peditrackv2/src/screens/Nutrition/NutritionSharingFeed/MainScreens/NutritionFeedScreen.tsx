@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, Text, TouchableOpacity, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
 import { TopNavBar } from '../SubComponents/TopNavBar';
 import { Searchbar } from '../SubComponents/Searchbar';
@@ -8,88 +8,343 @@ import { CreatePostCard } from '../SubComponents/CreatePostCard';
 import { ProfileScreen } from './ProfileScreen';
 import { Colors } from '../../../../constants/Colors';
 import { Layout } from '../../../../constants/Layout';
+import {getAllPosts,FILE_BASE_URL,PostWithMeta,updatePostEngagement,removePostEngagement,createPost,addComment,updateComment,deleteComment,getFollowing,followUser,savePost,removeSavedPost,deletePost,Comment as ApiComment} from '../../../../services/SocialService';
 
-const POSTS = [
-  {
-    id: '1',
-    name: "Dr. Sarah Chen",
-    role: "Nutritionist",
-    time: "2 hours ago",
-    content: "Great iron-rich meal idea for 6-8 month olds! Spinach and lentil purée with a touch of lemon for vitamin C absorption. Remember: iron + vitamin C = better absorption! 🥬",
-    tags: ['#IronRich', '#6months+', '#LentilRecipe'],
-    image: "https://images.unsplash.com/photo-1519864600265-abb23847ef2c",
-    avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-    stats: { likes: 124, comments: 2, shares: 18 }
-  },
-  {
-    id: '2',
-    name: "Emma Rodriguez",
-    role: "Parent",
-    time: "5 hours ago",
-    content: "My 9-month-old LOVED this avocado banana combo today! First time trying avocado and finished the whole bowl 🥑🍌 Any other avocado recipe suggestions?",
-    tags: ['#FirstFoods', '#9months', '#HealthyFats'],
-    avatar: "https://randomuser.me/api/portraits/women/26.jpg",
-    stats: { likes: 0, comments: 0, shares: 0 },
-    isApproved: true,
-    approvedBy: "Dr. Sarah Chen"
-  },
-  {
-    id: '3',
-    name: "Michael Chang",
-    role: "Parent",
-    time: "1 day ago",
-    content: "Made these sweet potato pancakes for breakfast. They were a hit! 🥞 Just mashed sweet potato, egg, and a little cinnamon.",
-    tags: ['#Breakfast', '#SweetPotato', '#ToddlerMeals'],
-    avatar: "https://randomuser.me/api/portraits/men/32.jpg",
-    stats: { likes: 45, comments: 12, shares: 5 },
-    isApproved: true,
-    approvedBy: "Nutritionist Maya"
-  },
-  {
-    id: '4',
-    name: "Lisa Thompson",
-    role: "Parent",
-    time: "2 days ago",
-    content: "Is it okay to give strawberries to a 7-month-old? I've heard mixed things about allergies. 🍓",
-    tags: ['#Allergies', '#Questions', '#7months'],
-    avatar: "https://randomuser.me/api/portraits/women/65.jpg",
-    stats: { likes: 8, comments: 15, shares: 1 }
-  },
-  {
-    id: '5',
-    name: "Nutritionist Maya",
-    role: "Nutritionist",
-    time: "3 days ago",
-    content: "Hydration tip: If your little one refuses water, try adding a slice of cucumber or strawberry for a hint of flavor! 💧🥒",
-    tags: ['#Hydration', '#Tips', '#HealthyHabits'],
-    avatar: "https://randomuser.me/api/portraits/women/33.jpg",
-    stats: { likes: 89, comments: 6, shares: 24 }
+// helper: add a comment (or reply) into the tree
+const addCommentToTree = (
+  items: ApiComment[],
+  newComment: ApiComment,
+  parentId?: string
+): ApiComment[] => {
+  // top‑level comment or backend didn’t mark as Reply
+  if (!parentId || !newComment.Reply) {
+    return [...items, newComment];
   }
-];
+
+  return items.map(c => {
+    if (c.CommentID === parentId) {
+      return {
+        ...c,
+        replies: [...(c.replies || []), newComment],
+      };
+    }
+
+    return {
+      ...c,
+      replies: c.replies ? addCommentToTree(c.replies, newComment, parentId) : c.replies,
+    };
+  });
+};
+
+// helper: update a comment (or reply) in the tree
+const updateCommentTree = (items: ApiComment[], updated: ApiComment): ApiComment[] =>
+  items.map(c =>
+    c.CommentID === updated.CommentID
+      ? updated
+      : {
+          ...c,
+          replies: c.replies ? updateCommentTree(c.replies, updated) : c.replies,
+        }
+  );
+
+// helper: remove a comment (or reply) from the tree
+const removeCommentFromTree = (items: ApiComment[], id: string): ApiComment[] =>
+  items
+    .filter(c => c.CommentID !== id)
+    .map(c => ({
+      ...c,
+      replies: c.replies ? removeCommentFromTree(c.replies, id) : c.replies,
+    }));
 
 export function NutritionFeedScreen() {
   const [isCreatePostVisible, setCreatePostVisible] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [currentView, setCurrentView] = React.useState<'feed' | 'profile'>('feed');
   const [activeTab, setActiveTab] = React.useState<'friends' | 'forYou'>('friends');
+  const [posts, setPosts] = React.useState<PostWithMeta[]>([]);
+  const [followingIds, setFollowingIds] = React.useState<string[]>([]);
+  const [refreshing, setRefreshing] = React.useState(false);
+  const currentUserId = 'USR0007';
   const router = useRouter();
 
-  const filteredPosts = POSTS.filter(post => {
+  const fetchData = React.useCallback(async () => {
+    try {
+      const [postsRes, followingRes] = await Promise.all([
+        getAllPosts(currentUserId),
+        getFollowing(currentUserId),
+      ]);
+
+      setPosts(postsRes);
+      const ids = followingRes.following.map(f => f.followingId);
+      setFollowingIds(ids);
+    } catch (error) {
+      console.error('Failed to load feed data', error);
+    }
+  }, [currentUserId]);
+
+  React.useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const onRefresh = React.useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await fetchData();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [fetchData]);
+
+  const visiblePosts = React.useMemo(() => {
+    // 1) Filter by tab (friends vs forYou)
+    const base =
+      activeTab === 'friends'
+        ? posts.filter(p => followingIds.includes(p.post.UserID))
+        : posts; // "For You" = all posts
+
+    // 2) Apply search filter
     const query = searchQuery.toLowerCase();
-    const matchesQuery = (
-      post.content.toLowerCase().includes(query) ||
-      post.name.toLowerCase().includes(query) ||
-      post.tags.some(tag => tag.toLowerCase().includes(query))
+    if (!query) return base;
+
+    return base.filter(({ post }) => {
+      const description = (post.Description || '').toLowerCase();
+      const userId = (post.UserID || '').toLowerCase();
+      const tags = (post.Tags || []).map(t => t.toLowerCase());
+
+      return (
+        description.includes(query) ||
+        userId.includes(query) ||
+        tags.some(tag => tag.includes(query))
+      );
+    });
+  }, [posts, followingIds, activeTab, searchQuery]);
+
+  const handleToggleLike = async (postId: string) => {
+    const target = posts.find(p => p.post.PostID === postId);
+    if (!target) return;
+
+    const alreadyLiked = target.engagement.LikedBy.includes(currentUserId);
+
+    setPosts(prev =>
+      prev.map(p => {
+        if (p.post.PostID !== postId) return p;
+        const engagement = { ...p.engagement };
+        engagement.LikedBy = [...engagement.LikedBy];
+        engagement.DislikedBy = [...engagement.DislikedBy];
+
+        if (alreadyLiked) {
+          engagement.LikedBy = engagement.LikedBy.filter(id => id !== currentUserId);
+        } else {
+          if (!engagement.LikedBy.includes(currentUserId)) {
+            engagement.LikedBy.push(currentUserId);
+          }
+          engagement.DislikedBy = engagement.DislikedBy.filter(id => id !== currentUserId);
+        }
+
+        return { ...p, engagement };
+      })
     );
-    
-    // In a real app, we would filter by friends vs for you here
-    // For now, we'll just show all posts but maybe randomize or filter slightly if needed
-    // or just rely on the "Add Friend" button difference
-    return matchesQuery;
-  });
+
+    try {
+      if (alreadyLiked) {
+        await removePostEngagement(currentUserId, postId, 'like');
+      } else {
+        await updatePostEngagement(currentUserId, postId, 'like');
+      }
+    } catch (e) {
+      console.error('Failed to toggle like', e);
+    }
+  };
+
+  const handleToggleDislike = async (postId: string) => {
+    const target = posts.find(p => p.post.PostID === postId);
+    if (!target) return;
+
+    const alreadyDisliked = target.engagement.DislikedBy.includes(currentUserId);
+
+    setPosts(prev =>
+      prev.map(p => {
+        if (p.post.PostID !== postId) return p;
+        const engagement = { ...p.engagement };
+        engagement.LikedBy = [...engagement.LikedBy];
+        engagement.DislikedBy = [...engagement.DislikedBy];
+
+        if (alreadyDisliked) {
+          engagement.DislikedBy = engagement.DislikedBy.filter(id => id !== currentUserId);
+        } else {
+          if (!engagement.DislikedBy.includes(currentUserId)) {
+            engagement.DislikedBy.push(currentUserId);
+          }
+          engagement.LikedBy = engagement.LikedBy.filter(id => id !== currentUserId);
+        }
+
+        return { ...p, engagement };
+      })
+    );
+
+    try {
+      if (alreadyDisliked) {
+        await removePostEngagement(currentUserId, postId, 'dislike');
+      } else {
+        await updatePostEngagement(currentUserId, postId, 'dislike');
+      }
+    } catch (e) {
+      console.error('Failed to toggle dislike', e);
+    }
+  };
+
+  const handleCreatePost = async (data: {
+    content: string;
+    tags: string[];
+    allowRecommendations: boolean;
+    file?: { uri: string; type: string; name: string };
+  }) => {
+    try {
+      const newPost = await createPost(
+        currentUserId,
+        data.content,
+        data.tags,
+        data.file,
+        data.allowRecommendations
+      );
+
+      setPosts(prev => [
+        {
+          post: newPost,
+          engagement: { LikedBy: [], DislikedBy: [] },
+          comments: [],
+          isSaved: false, // <-- FIX: satisfy PostWithMeta
+        },
+        ...prev,
+      ]);
+    } catch (e) {
+      console.error('Failed to create post', e);
+    }
+  };
+
+  // ADD COMMENT – keep hierarchy in sync immediately
+  const handleAddComment = async (
+    postId: string,
+    text: string,
+    parentCommentId?: string
+  ) => {
+    try {
+      const newComment = await addComment(
+        currentUserId,
+        postId,
+        text,
+        !!parentCommentId,
+        parentCommentId
+      );
+
+      setPosts(prev =>
+        prev.map(p =>
+          p.post.PostID === postId
+            ? {
+                ...p,
+                comments: addCommentToTree(p.comments, newComment, parentCommentId),
+              }
+            : p
+        )
+      );
+    } catch (e) {
+      console.error('Failed to add comment', e);
+    }
+  };
+
+  // UPDATE COMMENT (works for main comments and replies)
+  const handleUpdateComment = async (
+    postId: string,
+    commentId: string,
+    text: string
+  ) => {
+    try {
+      const updated = await updateComment(currentUserId, commentId, text);
+      setPosts(prev =>
+        prev.map(p =>
+          p.post.PostID === postId
+            ? { ...p, comments: updateCommentTree(p.comments, updated) }
+            : p
+        )
+      );
+    } catch (e) {
+      console.error('Failed to update comment', e);
+    }
+  };
+
+  // DELETE COMMENT (works for main comments and replies)
+  const handleDeleteComment = async (postId: string, commentId: string) => {
+    try {
+      await deleteComment(currentUserId, commentId);
+      setPosts(prev =>
+        prev.map(p =>
+          p.post.PostID === postId
+            ? { ...p, comments: removeCommentFromTree(p.comments, commentId) }
+            : p
+        )
+      );
+    } catch (e) {
+      console.error('Failed to delete comment', e);
+    }
+  };
+
+  // DELETE POST (post owner only)
+  const handleDeletePost = async (postId: string) => {
+    // optimistic remove from UI
+    setPosts(prev => prev.filter(p => p.post.PostID !== postId));
+
+    try {
+      await deletePost(postId, currentUserId);
+    } catch (e) {
+      console.error('Failed to delete post', e);
+      // restore by refetching if backend delete failed
+      fetchData();
+    }
+  };
+
+  const handleAddFriend = async (targetUserId: string) => {
+    try {
+      await followUser(currentUserId, targetUserId);
+      setFollowingIds(prev =>
+        prev.includes(targetUserId) ? prev : [...prev, targetUserId]
+      );
+    } catch (e) {
+      console.error('Failed to follow user', e);
+    }
+  };
+
+  const handleToggleSave = async (postId: string) => {
+    const target = posts.find(p => p.post.PostID === postId);
+    if (!target) return;
+
+    const alreadySaved = target.isSaved;
+
+    // optimistic update
+    setPosts(prev =>
+      prev.map(p =>
+        p.post.PostID === postId ? { ...p, isSaved: !alreadySaved } : p
+      )
+    );
+
+    try {
+      if (alreadySaved) {
+        await removeSavedPost(currentUserId, postId);
+      } else {
+        await savePost(currentUserId, postId);
+      }
+    } catch (e) {
+      console.error('Failed to toggle save', e);
+      // optional: revert state or refetch
+    }
+  };
 
   if (currentView === 'profile') {
-    return <ProfileScreen onBackPress={() => setCurrentView('feed')} />;
+    return (
+      <ProfileScreen
+        userId={currentUserId}
+        onBackPress={() => setCurrentView('feed')}
+      />
+    );
   }
 
   return (
@@ -101,7 +356,12 @@ export function NutritionFeedScreen() {
         profileImage="https://randomuser.me/api/portraits/women/44.jpg"
         title="Nutrition share feed"
       />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         <Searchbar value={searchQuery} onChangeText={setSearchQuery} />
         
         <View style={styles.toggleContainer}>
@@ -119,18 +379,53 @@ export function NutritionFeedScreen() {
           </TouchableOpacity>
         </View>
 
-        {filteredPosts.map(post => (
+        {visiblePosts.map(({ post, engagement, comments, isSaved }) => (
           <FeedPostCard
-            key={post.id}
-            {...post}
-            showAddFriend={activeTab === 'forYou'}
-            onAddFriend={() => console.log('Add friend:', post.name)}
+            key={post.PostID}
+            postId={post.PostID}
+            postOwnerId={post.UserID}
+            currentUserId={currentUserId}
+            name={post.UserID}
+            role="User"
+            time={new Date(post.PostedTime).toLocaleString()}
+            content={post.Description || ''}
+            tags={post.Tags || []}
+            image={post.PostUrl ? FILE_BASE_URL + post.PostUrl : undefined}
+            avatar="https://randomuser.me/api/portraits/lego/1.jpg"
+            stats={{
+              likes: engagement.LikedBy?.length || 0,
+              dislikes: engagement.DislikedBy?.length || 0,
+              comments: comments.length,
+              shares: 0,
+            }}
+            comments={comments}
+            isApproved={post.Approved}
+            approvedBy={undefined}
+            showAddFriend={
+              activeTab === 'forYou' &&
+              post.UserID !== currentUserId &&
+              !followingIds.includes(post.UserID)
+            }
+            onAddFriend={() => handleAddFriend(post.UserID)}
+            isOwner={post.UserID === currentUserId}
+            onEdit={undefined}
+            onDelete={() => handleDeletePost(post.PostID)}   // <-- WIRE DELETE
+            isLiked={engagement.LikedBy?.includes(currentUserId)}
+            isDisliked={engagement.DislikedBy?.includes(currentUserId)}
+            isSaved={isSaved}
+            onToggleLike={() => handleToggleLike(post.PostID)}
+            onToggleDislike={() => handleToggleDislike(post.PostID)}
+            onToggleSave={() => handleToggleSave(post.PostID)}
+            onAddComment={handleAddComment}
+            onUpdateComment={handleUpdateComment}
+            onDeleteComment={handleDeleteComment}
           />
         ))}
       </ScrollView>
       <CreatePostCard 
         visible={isCreatePostVisible} 
         onClose={() => setCreatePostVisible(false)} 
+        onSubmit={handleCreatePost}
       />
     </View>
   );

@@ -5,46 +5,32 @@ import { CommentSection } from './CommentSection';
 import { Colors } from '../../../../constants/Colors';
 import { Layout } from '../../../../constants/Layout';
 
-const MOCK_COMMENTS = [
-  {
-    id: '1',
-    avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
-    name: 'Dr. Sarah Chen',
-    role: 'Nutritionist',
-    time: '4 hours ago',
-    content: 'Excellent choice! Avocados are packed with healthy fats essential for brain development. Try adding a bit of mashed sweet potato for extra nutrients! ✅',
-    isVerified: true,
-  },
-  {
-    id: '2',
-    avatar: 'https://randomuser.me/api/portraits/women/68.jpg',
-    name: 'Priya Kapoor',
-    role: 'Parent',
-    time: '3 hours ago',
-    content: 'My daughter loves avocado mixed with Greek yogurt! It\'s creamy and she gets probiotics too 😋',
-    isVerified: false,
-  },
-  {
-    id: '3',
-    avatar: 'https://randomuser.me/api/portraits/women/33.jpg',
-    name: 'Nutritionist Maya',
-    role: 'Nutritionist',
-    time: '2 hours ago',
-    content: 'Pro tip: Add a squeeze of lemon to prevent browning if you\'re meal prepping! Also helps with iron absorption from other foods.',
-    isVerified: true,
-  },
-  {
-    id: '4',
-    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-    name: 'Michael Chen',
-    role: 'Parent',
-    time: '1 hour ago',
-    content: 'We do avocado with pear! The sweetness of pear balances it nicely 🍐',
-    isVerified: false,
-  },
-];
-// ...existing code...
+type ApiComment = {
+  CommentID: string;
+  Comment: string;
+  CommenterID: string;
+  CommentTime: string;
+  Reply: boolean;
+  to?: string | null;
+  replies?: ApiComment[];
+};
+
+type UiComment = {
+  id: string;
+  commenterId: string;
+  avatar: string;
+  name: string;
+  role?: string;
+  time: string;
+  content: string;
+  isVerified?: boolean;
+  replies?: UiComment[];
+};
+
 interface FeedPostCardProps {
+  postId: string;
+  postOwnerId: string;
+  currentUserId: string;
   name: string;
   role: string;
   time: string;
@@ -52,7 +38,8 @@ interface FeedPostCardProps {
   tags: string[];
   image?: string;
   avatar?: string;
-  stats: { likes: number; comments: number; shares: number; };
+  stats: { likes: number; dislikes: number; comments: number; shares: number; };
+  comments: ApiComment[];
   isApproved?: boolean;
   approvedBy?: string;
   showAddFriend?: boolean;
@@ -60,11 +47,33 @@ interface FeedPostCardProps {
   isOwner?: boolean;
   onEdit?: () => void;
   onDelete?: () => void;
+  isLiked?: boolean;
+  isDisliked?: boolean;
+  onToggleLike?: () => void;
+  onToggleDislike?: () => void;
+  onAddComment: (postId: string, text: string, parentCommentId?: string) => void;
+  onUpdateComment: (postId: string, commentId: string, text: string) => void;
+  onDeleteComment: (postId: string, commentId: string) => void;
+  isSaved?: boolean;
+  onToggleSave?: () => void;
 }
 
+// helper: count all comments + replies
+const countComments = (items: ApiComment[]): number =>
+  items.reduce(
+    (sum, c) => sum + 1 + (c.replies ? countComments(c.replies) : 0),
+    0
+  );
+
 export const FeedPostCard: React.FC<FeedPostCardProps> = ({
-  name, role, time, content, tags, image, avatar, stats, isApproved, approvedBy,
+  postId,
+  postOwnerId,
+  currentUserId,
+  name, role, time, content, tags, image, avatar, stats, comments, isApproved, approvedBy,
   showAddFriend, onAddFriend, isOwner, onEdit, onDelete,
+  isLiked, isDisliked, onToggleLike, onToggleDislike,
+  onAddComment, onUpdateComment, onDeleteComment,
+  isSaved, onToggleSave,
 }) => {
   const [showComments, setShowComments] = React.useState(false);
   const [isFriendAdded, setIsFriendAdded] = React.useState(false);
@@ -74,6 +83,28 @@ export const FeedPostCard: React.FC<FeedPostCardProps> = ({
     setIsFriendAdded(true);
     onAddFriend?.();
   };
+
+  const mapComment = React.useCallback((c: ApiComment): UiComment => ({
+    id: c.CommentID,
+    commenterId: c.CommenterID,
+    avatar: 'https://randomuser.me/api/portraits/lego/1.jpg',
+    name: c.CommenterID,
+    role: undefined,
+    time: new Date(c.CommentTime).toLocaleString(),
+    content: c.Comment,
+    isVerified: false,
+    replies: c.replies?.map(mapComment),
+  }), []);
+
+  const uiComments = React.useMemo(
+    () => comments.map(mapComment),
+    [comments, mapComment]
+  );
+
+  const totalComments = React.useMemo(
+    () => countComments(comments),
+    [comments]
+  );
 
   return (
     <View style={styles.card}>
@@ -167,14 +198,50 @@ export const FeedPostCard: React.FC<FeedPostCardProps> = ({
       )}
 
       <View style={styles.statsRow}>
-        <TouchableOpacity style={[styles.statButton, styles.likeButton]}>
-          <Ionicons name="thumbs-up-outline" size={18} color="#4CAF50" />
-          <Text style={[styles.statText, { color: '#4CAF50' }]}>{stats.likes}</Text>
+        <TouchableOpacity
+          style={[
+            styles.statButton,
+            styles.likeButton,
+            isLiked && { backgroundColor: '#4CAF50' },
+          ]}
+          onPress={onToggleLike}
+        >
+          <Ionicons
+            name={isLiked ? 'thumbs-up' : 'thumbs-up-outline'}
+            size={18}
+            color={isLiked ? '#FFFFFF' : '#4CAF50'}
+          />
+          <Text
+            style={[
+              styles.statText,
+              { color: isLiked ? '#FFFFFF' : '#4CAF50' },
+            ]}
+          >
+            {stats.likes}
+          </Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={[styles.statButton, styles.dislikeButton]}>
-          <Ionicons name="thumbs-down-outline" size={18} color="#EF4444" />
-          <Text style={[styles.statText, { color: '#EF4444' }]}>2</Text>
+        <TouchableOpacity
+          style={[
+            styles.statButton,
+            styles.dislikeButton,
+            isDisliked && { backgroundColor: '#EF4444' },
+          ]}
+          onPress={onToggleDislike}
+        >
+          <Ionicons
+            name={isDisliked ? 'thumbs-down' : 'thumbs-down-outline'}
+            size={18}
+            color={isDisliked ? '#FFFFFF' : '#EF4444'}
+          />
+          <Text
+            style={[
+              styles.statText,
+              { color: isDisliked ? '#FFFFFF' : '#EF4444' },
+            ]}
+          >
+            {stats.dislikes}
+          </Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
@@ -182,15 +249,34 @@ export const FeedPostCard: React.FC<FeedPostCardProps> = ({
           onPress={() => setShowComments(!showComments)}
         >
           <Ionicons name="chatbubble-outline" size={18} color="#3B82F6" />
-          <Text style={[styles.statText, { color: '#3B82F6' }]}>{stats.comments}</Text>
+          <Text style={[styles.statText, { color: '#3B82F6' }]}>
+            {totalComments}
+          </Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={[styles.statButton, styles.starButton]}>
-          <Ionicons name="star-outline" size={18} color="#F59E0B" />
+        <TouchableOpacity
+          style={[styles.statButton, styles.starButton, isSaved && { backgroundColor: '#F59E0B20' }]}
+          onPress={onToggleSave}
+        >
+          <Ionicons
+            name={isSaved ? 'star' : 'star-outline'}
+            size={18}
+            color="#F59E0B"
+          />
         </TouchableOpacity>
       </View>
 
-      {showComments && <CommentSection comments={MOCK_COMMENTS} />}
+      {showComments && (
+        <CommentSection
+          comments={uiComments}
+          postId={postId}
+          currentUserId={currentUserId}
+          postOwnerId={postOwnerId}
+          onAddComment={onAddComment}
+          onUpdateComment={onUpdateComment}
+          onDeleteComment={onDeleteComment}
+        />
+      )}
     </View>
   );
 };

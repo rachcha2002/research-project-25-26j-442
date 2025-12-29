@@ -1,7 +1,29 @@
 const Post = require('../models/Post');
 const PostEngagement = require('../models/PostEngagement');
 const PostComment = require('../models/PostComments');
+const SavedPosts = require('../models/SavedPosts');
 const { uploadToR2, deleteFromR2 } = require('./uploadController');
+
+// helper to build comment tree (same logic as getPostWithEngagement)
+const buildCommentTree = (comments) => {
+    const commentMap = {};
+    comments.forEach(c => {
+        const obj = c.toObject ? c.toObject() : { ...c };
+        obj.replies = [];
+        commentMap[obj.CommentID] = obj;
+    });
+
+    const roots = [];
+    Object.values(commentMap).forEach(comment => {
+        if (comment.Reply && comment.to && commentMap[comment.to]) {
+            commentMap[comment.to].replies.push(comment);
+        } else if (!comment.Reply) {
+            roots.push(comment);
+        }
+    });
+
+    return roots;
+};
 
 exports.createPost = async (req, res) => {
     try {
@@ -81,8 +103,52 @@ exports.createPost = async (req, res) => {
 
 exports.getAllPosts = async (req, res) => {
     try {
-        const posts = await Post.find().sort({ PostedTime: -1 }); // Sort by newest first
-        res.status(200).json(posts);
+        const { UserID } = req.query;   // <-- NEW (optional)
+
+        // 1. Get all posts
+        const posts = await Post.find().sort({ PostedTime: -1 }).lean();
+        const postIds = posts.map(p => p.PostID);
+
+        if (postIds.length === 0) {
+            return res.status(200).json([]);
+        }
+
+        // 2. Get all engagements for these posts
+        const engagements = await PostEngagement.find({ PostID: { $in: postIds } }).lean();
+        const engagementMap = {};
+        engagements.forEach(e => {
+            engagementMap[e.PostID] = e;
+        });
+
+        // 3. Get all comments for these posts
+        const comments = await PostComment.find({ PostID: { $in: postIds } })
+            .sort({ CommentTime: 1 });
+
+        const commentsByPost = {};
+        postIds.forEach(id => { commentsByPost[id] = []; });
+        comments.forEach(c => {
+            if (!commentsByPost[c.PostID]) commentsByPost[c.PostID] = [];
+            commentsByPost[c.PostID].push(c);
+        });
+
+        // 3b. Get saved posts for this user (once)
+        let savedSet = new Set();
+        if (UserID) {
+            const saved = await SavedPosts.findOne({ UserId: UserID }).lean();
+            if (saved && saved.Posts) {
+                savedSet = new Set(saved.Posts.map(id => String(id)));
+            }
+        }
+
+        // 4. Build response array with post + engagement + comment tree + isSaved
+        const result = posts.map(post => ({
+            post,
+            engagement: engagementMap[post.PostID] || { PostID: post.PostID, LikedBy: [], DislikedBy: [] },
+            comments: buildCommentTree(commentsByPost[post.PostID] || []),
+            isSaved: savedSet.has(String(post._id)),   // <-- NEW
+        }));
+
+        res.status(200).json(result);
     } catch (error) {
         console.error("Error fetching posts:", error);
         res.status(500).json({ message: "Error fetching posts", error: error.message });
@@ -375,5 +441,136 @@ exports.deleteComment = async (req, res) => {
         return res.status(200).json({ success: true, message: 'Comment and its replies deleted successfully.' });
     } catch (error) {
         return res.status(500).json({ success: false, message: 'Server error.', error: error.message });
+    }
+};
+
+// Save a post for a user
+exports.savePost = async (req, res) => {
+    try {
+        const { UserID, PostID } = req.body;
+
+        if (!UserID || !PostID) {
+            return res.status(400).json({ success: false, message: 'UserID and PostID are required.' });
+        }
+
+        const post = await Post.findOne({ PostID });
+        if (!post) {
+            return res.status(404).json({ success: false, message: 'Post not found.' });
+        }
+
+        let saved = await SavedPosts.findOne({ UserId: UserID });
+        if (!saved) {
+            saved = new SavedPosts({ UserId: UserID, Posts: [] });
+        }
+
+        const alreadySaved = saved.Posts.some(id => id.equals(post._id));
+        if (alreadySaved) {
+            return res.status(200).json({ success: true, message: 'Post already saved.', savedPosts: saved });
+        }
+
+        saved.Posts.push(post._id);
+        await saved.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Post saved successfully.',
+            savedPosts: saved,
+        });
+    } catch (error) {
+        console.error('Error saving post:', error);
+        return res.status(500).json({ success: false, message: 'Server error.', error: error.message });
+    }
+};
+
+// Remove a saved post for a user
+exports.removeSavedPost = async (req, res) => {
+    try {
+        const { UserID, PostID } = req.body;
+
+        if (!UserID || !PostID) {
+            return res.status(400).json({ success: false, message: 'UserID and PostID are required.' });
+        }
+
+        const post = await Post.findOne({ PostID });
+        if (!post) {
+            return res.status(404).json({ success: false, message: 'Post not found.' });
+        }
+
+        const saved = await SavedPosts.findOne({ UserId: UserID });
+        if (!saved) {
+            return res.status(404).json({ success: false, message: 'No saved posts found for user.' });
+        }
+
+        const before = saved.Posts.length;
+        saved.Posts = saved.Posts.filter(id => !id.equals(post._id));
+
+        if (saved.Posts.length === before) {
+            return res.status(200).json({ success: true, message: 'Post was not saved.', savedPosts: saved });
+        }
+
+        await saved.save();
+
+        return res.status(200).json({
+            success: true,
+            message: 'Post removed from saved list.',
+            savedPosts: saved,
+        });
+    } catch (error) {
+        console.error('Error removing saved post:', error);
+        return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    }
+};
+
+// Get all saved posts (with details) for a user
+exports.getSavedPostsByUser = async (req, res) => {
+    try {
+        const { UserID } = req.params;
+
+        if (!UserID) {
+            return res.status(400).json({ success: false, message: 'UserID is required.' });
+        }
+
+        // 1. Find saved posts document and populate posts
+        const saved = await SavedPosts.findOne({ UserId: UserID })
+            .populate('Posts')
+            .lean();
+
+        if (!saved || !saved.Posts || saved.Posts.length === 0) {
+            return res.status(200).json([]); // no saved posts
+        }
+
+        const posts = saved.Posts; // populated Post documents
+        const postIds = posts.map(p => p.PostID);
+
+        // 2. Get engagements for these posts
+        const engagements = await PostEngagement.find({ PostID: { $in: postIds } }).lean();
+        const engagementMap = {};
+        engagements.forEach(e => {
+            engagementMap[e.PostID] = e;
+        });
+
+        // 3. Get comments for these posts
+        const comments = await PostComment.find({ PostID: { $in: postIds } })
+            .sort({ CommentTime: 1 });
+
+        const commentsByPost = {};
+        postIds.forEach(id => { commentsByPost[id] = []; });
+        comments.forEach(c => {
+            if (!commentsByPost[c.PostID]) commentsByPost[c.PostID] = [];
+            commentsByPost[c.PostID].push(c);
+        });
+
+        // 4. Build response (same shape as getAllPosts)
+        const result = posts.map(post => ({
+            post,
+            engagement: engagementMap[post.PostID] || { PostID: post.PostID, LikedBy: [], DislikedBy: [] },
+            comments: buildCommentTree(commentsByPost[post.PostID] || []),
+            isSaved: true,
+        }));
+
+        return res.status(200).json(result);
+    } catch (error) {
+        console.error('Error fetching saved posts:', error);
+        return res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
 };

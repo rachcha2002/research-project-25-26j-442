@@ -1,137 +1,281 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, FlatList, Text, TouchableOpacity } from 'react-native';
 import { Colors } from '../../../../constants/Colors';
 import { TopNavBar } from '../SubComponents/TopNavBar';
 import { Searchbar } from '../SubComponents/Searchbar';
 import { UserListItem } from '../SubComponents/UserListItem';
-
 import { ProfileScreen } from './ProfileScreen';
+import {
+  getFollowers,
+  getFollowing,
+  followUser as followUserApi,
+  unfollowUser as unfollowUserApi,
+} from '../../../../services/SocialService';
 
 interface FollowListScreenProps {
   initialTab: 'followers' | 'following';
   onBackPress: () => void;
-  userName: string;
+  userName: string;       // display name of the profile owner
+  profileUserId: string;  // whose followers/following we are viewing
+  currentUserId: string;  // logged-in user id (for follow/unfollow)
 }
 
-const MOCK_USERS = [
-  {
-    id: '1',
-    name: 'Dr. Sarah',
-    handle: '@sarahchen',
-    avatar: 'https://randomuser.me/api/portraits/women/68.jpg',
-    role: 'Nutritionist' as const,
-    bio: 'Pediatric Nutritionist | 10+ years exp',
-    isFollowing: true,
-    isVerified: true,
-    stats: { posts: 156, followers: '5.2K', following: 420 },
-  },
-  {
-    id: '2',
-    name: 'Priya Kapoor',
-    handle: '@priyak',
-    avatar: 'https://randomuser.me/api/portraits/women/32.jpg',
-    role: 'Parent' as const,
-    bio: 'Mom of twins | Food lover',
-    isFollowing: false,
-    stats: { posts: 45, followers: '120', following: 85 },
-  },
-  {
-    id: '3',
-    name: 'Nutritionist Maya',
-    handle: '@nutritionmaya',
-    avatar: 'https://randomuser.me/api/portraits/women/45.jpg',
-    role: 'Nutritionist' as const,
-    bio: 'Certified Child Nutritionist',
-    isFollowing: true,
-    isVerified: true,
-    stats: { posts: 342, followers: '8.9K', following: 210 },
-  },
-  {
-    id: '4',
-    name: 'Michael Chen',
-    handle: '@mikec',
-    avatar: 'https://randomuser.me/api/portraits/men/22.jpg',
-    role: 'Parent' as const,
-    bio: 'Dad of 3 | Healthy cooking enthusiast',
-    isFollowing: false,
-    stats: { posts: 12, followers: '45', following: 120 },
-  },
-  {
-    id: '5',
-    name: 'Jessica Miller',
-    handle: '@jessmiller',
-    avatar: 'https://randomuser.me/api/portraits/women/90.jpg',
-    role: 'Parent' as const,
-    bio: 'First time mom | Learning',
-    isFollowing: true,
-    stats: { posts: 89, followers: '340', following: 450 },
-  },
-  {
-    id: '6',
-    name: 'Dr. Lisa Park',
-    handle: '@drlisapark',
-    avatar: 'https://randomuser.me/api/portraits/women/28.jpg',
-    role: 'Nutritionist' as const,
-    bio: 'Baby Nutrition Specialist',
-    isFollowing: false,
-    isVerified: true,
-    stats: { posts: 210, followers: '3.1K', following: 180 },
-  },
-];
+const PAGE_LIMIT = 20;
 
-export const FollowListScreen: React.FC<FollowListScreenProps> = ({ 
-  initialTab, 
+export const FollowListScreen: React.FC<FollowListScreenProps> = ({
+  initialTab,
   onBackPress,
-  userName
+  userName,
+  profileUserId,
+  currentUserId,
 }) => {
   const [activeTab, setActiveTab] = useState<'followers' | 'following'>(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
-  const [users, setUsers] = useState(MOCK_USERS);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
 
-  if (selectedUser) {
+  const [followers, setFollowers] = useState<any[]>([]);
+  const [following, setFollowing] = useState<any[]>([]);
+
+  const [followersPage, setFollowersPage] = useState(1);
+  const [followingPage, setFollowingPage] = useState(1);
+  const [followersTotal, setFollowersTotal] = useState(0);
+  const [followingTotal, setFollowingTotal] = useState(0);
+
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+
+  // set of userIds the *current user* is following
+  const [currentUserFollowingIds, setCurrentUserFollowingIds] = useState<Set<string>>(new Set());
+
+  const loadCurrentUserFollowing = async () => {
+    try {
+      // big limit so we usually get all; adjust if needed
+      const res = await getFollowing(currentUserId, 1, 1000);
+      const ids = new Set<string>(res.following.map((rel: any) => rel.followingId));
+      setCurrentUserFollowingIds(ids);
+
+      // sync already-loaded lists with new follow-state
+      setFollowers(prev =>
+        prev.map(u => ({
+          ...u,
+          isFollowing: ids.has(u.id),
+        })),
+      );
+      setFollowing(prev =>
+        prev.map(u => ({
+          ...u,
+          isFollowing: ids.has(u.id),
+        })),
+      );
+    } catch (e) {
+      console.error('Failed to load current user following list', e);
+    }
+  };
+
+  const mapFollowerToUserItem = (rel: { followerId: string }) => {
+    const isSelf = rel.followerId === currentUserId;
+    return {
+      id: rel.followerId,
+      name: rel.followerId,
+      handle: `@${rel.followerId}`,
+      avatar: undefined, // avoid empty uri warning
+      role: 'Parent',
+      bio: '',
+      canFollow: !isSelf, // <-- viewer row: no follow button
+      // show "Following" if current user already follows this follower
+      isFollowing: !isSelf && currentUserFollowingIds.has(rel.followerId),
+    };
+  };
+
+  const mapFollowingToUserItem = (rel: { followingId: string }) => {
+    const isSelf = rel.followingId === currentUserId;
+    return {
+      id: rel.followingId,
+      name: rel.followingId,
+      handle: `@${rel.followingId}`,
+      avatar: undefined,
+      role: 'Parent',
+      bio: '',
+      canFollow: !isSelf, // <-- viewer row: no follow button
+      // from current user's perspective
+      isFollowing: !isSelf && currentUserFollowingIds.has(rel.followingId),
+    };
+  };
+
+  const loadFollowers = async (page: number = 1, append: boolean = false) => {
+    setLoading(true);
+    try {
+      const res = await getFollowers(profileUserId, page, PAGE_LIMIT);
+      const mapped = res.followers.map(mapFollowerToUserItem);
+      setFollowers(prev => (append ? [...prev, ...mapped] : mapped));
+      setFollowersPage(res.page);
+      setFollowersTotal(res.total);
+    } catch (e) {
+      console.error('Failed to load followers', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadFollowing = async (page: number = 1, append: boolean = false) => {
+    setLoading(true);
+    try {
+      const res = await getFollowing(profileUserId, page, PAGE_LIMIT);
+      const mapped = res.following.map(mapFollowingToUserItem);
+      setFollowing(prev => (append ? [...prev, ...mapped] : mapped));
+      setFollowingPage(res.page);
+      setFollowingTotal(res.total);
+    } catch (e) {
+      console.error('Failed to load following', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // load who the *current user* follows (once, when currentUserId changes)
+  useEffect(() => {
+    loadCurrentUserFollowing();
+  }, [currentUserId]);
+
+  // Initial load and when switching tabs (fetch once per tab, then cached)
+  useEffect(() => {
+    if (activeTab === 'followers' && followers.length === 0) {
+      loadFollowers(1, false);
+    } else if (activeTab === 'following' && following.length === 0) {
+      loadFollowing(1, false);
+    }
+  }, [activeTab, profileUserId]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      if (activeTab === 'followers') {
+        await loadFollowers(1, false);
+      } else {
+        await loadFollowing(1, false);
+      }
+      // also refresh current user's following relationships
+      await loadCurrentUserFollowing();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleLoadMore = () => {
+    if (loading) return;
+
+    if (activeTab === 'followers') {
+      if (followers.length < followersTotal) {
+        loadFollowers(followersPage + 1, true);
+      }
+    } else {
+      if (following.length < followingTotal) {
+        loadFollowing(followingPage + 1, true);
+      }
+    }
+  };
+
+  const handleFollowPress = async (id: string) => {
+    const list = activeTab === 'followers' ? followers : following;
+    const index = list.findIndex((u: any) => u.id === id);
+    if (index === -1) return;
+
+    const user = list[index];
+    const isCurrentlyFollowing = !!user.isFollowing;
+
+    const updateListItem = (updatedUser: any) => {
+      if (activeTab === 'followers') {
+        setFollowers(prev => prev.map(u => (u.id === id ? updatedUser : u)));
+      } else {
+        setFollowing(prev => prev.map(u => (u.id === id ? updatedUser : u)));
+      }
+    };
+
+    // optimistic toggle in UI
+    const optimisticUser = { ...user, isFollowing: !isCurrentlyFollowing };
+    updateListItem(optimisticUser);
+
+    // optimistic update of set of ids current user follows
+    setCurrentUserFollowingIds(prev => {
+      const next = new Set(prev);
+      if (isCurrentlyFollowing) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+
+    try {
+      if (isCurrentlyFollowing) {
+        await unfollowUserApi(currentUserId, id);
+
+        // if we're on our own profile's "Following" tab, remove from list
+        if (activeTab === 'following' && profileUserId === currentUserId) {
+          setFollowing(prev => prev.filter(u => u.id !== id));
+          setFollowingTotal(prev => (prev > 0 ? prev - 1 : 0));
+        }
+      } else {
+        await followUserApi(currentUserId, id);
+      }
+    } catch (e) {
+      console.error('Follow/unfollow failed', e);
+
+      // revert UI on error
+      updateListItem(user);
+      setCurrentUserFollowingIds(prev => {
+        const next = new Set(prev);
+        if (isCurrentlyFollowing) {
+          // we tried to unfollow but failed, so ensure id is still there
+          next.add(id);
+        } else {
+          // we tried to follow but failed, so ensure id is removed
+          next.delete(id);
+        }
+        return next;
+      });
+    }
+  };
+
+  const sourceUsers = activeTab === 'followers' ? followers : following;
+
+  const filteredUsers = sourceUsers.filter((user: any) => {
+    const lower = searchQuery.toLowerCase();
+    const name = (user.name || '').toLowerCase();
+    const handle = (user.handle || '').toLowerCase();
+    const matchesSearch = name.includes(lower) || handle.includes(lower);
+    return matchesSearch;
+  });
+
+  // Open another user's profile from the list
+  if (selectedUserId) {
     return (
-      <ProfileScreen 
-        user={selectedUser}
-        onBackPress={() => setSelectedUser(null)}
+      <ProfileScreen
+        userId={selectedUserId}
+        currentUserId={currentUserId}
+        onBackPress={() => setSelectedUserId(null)}
       />
     );
   }
 
-  const handleFollowPress = (id: string) => {
-    setUsers(users.map(user => 
-      user.id === id ? { ...user, isFollowing: !user.isFollowing } : user
-    ));
-  };
-
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.handle.toLowerCase().includes(searchQuery.toLowerCase());
-      
-    if (activeTab === 'following') {
-      return matchesSearch && user.isFollowing;
-    }
-    return matchesSearch;
-  });
-
   return (
     <View style={styles.container}>
-      <TopNavBar 
+      <TopNavBar
         title={userName}
         onBackPress={onBackPress}
-        onAddPress={() => {}} 
-        profileImage="" // Not needed as we hide right section
+        onAddPress={() => {}}
         showLogo={false}
         showRightSection={false}
       />
-      
+
       <View style={styles.content}>
         <View style={styles.searchContainer}>
           <Searchbar value={searchQuery} onChangeText={setSearchQuery} />
         </View>
 
         <View style={styles.tabs}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.tab, activeTab === 'followers' && styles.activeTab]}
             onPress={() => setActiveTab('followers')}
           >
@@ -139,7 +283,7 @@ export const FollowListScreen: React.FC<FollowListScreenProps> = ({
               Followers
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={[styles.tab, activeTab === 'following' && styles.activeTab]}
             onPress={() => setActiveTab('following')}
           >
@@ -151,15 +295,26 @@ export const FollowListScreen: React.FC<FollowListScreenProps> = ({
 
         <FlatList
           data={filteredUsers}
-          keyExtractor={item => item.id}
+          keyExtractor={(item: any) => item.id}
           renderItem={({ item }) => (
-            <UserListItem 
-              user={item} 
-              onFollowPress={handleFollowPress} 
-              onPress={setSelectedUser}
+            <UserListItem
+              user={item}
+              onFollowPress={handleFollowPress}
+              onPress={(u: any) => setSelectedUserId(u.id)}
             />
           )}
           showsVerticalScrollIndicator={false}
+          refreshing={refreshing}
+          onRefresh={handleRefresh}
+          onEndReachedThreshold={0.5}
+          onEndReached={handleLoadMore}
+          ListEmptyComponent={
+            !loading && !refreshing ? (
+              <Text style={{ textAlign: 'center', color: Colors.inactive, marginTop: 16 }}>
+                No users found.
+              </Text>
+            ) : null
+          }
         />
       </View>
     </View>
@@ -191,7 +346,7 @@ const styles = StyleSheet.create({
     borderBottomColor: 'transparent',
   },
   activeTab: {
-    borderBottomColor: '#A855F7', // Purple
+    borderBottomColor: '#A855F7',
   },
   tabText: {
     fontSize: 16,

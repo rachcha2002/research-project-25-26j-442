@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../../constants/Colors';
 import { Layout } from '../../../../constants/Layout';
@@ -11,6 +11,12 @@ interface CommentItemProps {
   time: string;
   content: string;
   isVerified?: boolean;
+  canEdit?: boolean;
+  canDelete?: boolean;
+  onReply?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  isReply?: boolean;              // <-- NEW
 }
 
 export const CommentItem: React.FC<CommentItemProps> = ({
@@ -20,13 +26,20 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   time,
   content,
   isVerified,
+  canEdit,
+  canDelete,
+  onReply,
+  onEdit,
+  onDelete,
+  isReply,                        // <-- NEW
 }) => {
   const isNutritionist = role === 'Nutritionist';
 
   return (
     <View style={[
       styles.container,
-      isNutritionist && styles.nutritionistContainer
+      isNutritionist && styles.nutritionistContainer,
+      isReply && styles.replyContainer       // <-- NEW
     ]}>
       <View style={styles.header}>
         <View style={styles.userInfo}>
@@ -59,6 +72,21 @@ export const CommentItem: React.FC<CommentItemProps> = ({
         </View>
         <Text style={styles.time}>{time}</Text>
       </View>
+      <View style={styles.actionsRow}>
+        <TouchableOpacity onPress={onReply}>
+          <Text style={styles.actionText}>Reply</Text>
+        </TouchableOpacity>
+        {canEdit && (
+          <TouchableOpacity onPress={onEdit}>
+            <Text style={styles.actionText}>Edit</Text>
+          </TouchableOpacity>
+        )}
+        {canDelete && (
+          <TouchableOpacity onPress={onDelete}>
+            <Text style={[styles.actionText, { color: '#EF4444' }]}>Delete</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </View>
   );
 };
@@ -75,6 +103,10 @@ const styles = StyleSheet.create({
   nutritionistContainer: {
     backgroundColor: '#F0FDF4', // Light green background for nutritionists
     borderColor: '#DCFCE7',
+  },
+  replyContainer: {
+    backgroundColor: '#F9FAFB',       // softer bg for replies
+    borderColor: '#E5E7EB',
   },
   header: {
     flexDirection: 'row',
@@ -140,6 +172,15 @@ const styles = StyleSheet.create({
   },
   time: {
     fontSize: 10,
+    color: Colors.inactive,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 4,
+  },
+  actionText: {
+    fontSize: 11,
     color: Colors.inactive,
   },
 });

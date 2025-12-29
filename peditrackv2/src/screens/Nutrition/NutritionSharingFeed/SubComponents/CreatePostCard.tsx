@@ -10,9 +10,12 @@ import {
   ScrollView,
   Switch,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../../constants/Colors';
 import { Layout } from '../../../../constants/Layout';
+
+type UploadFile = { uri: string; type: string; name: string };
 
 interface CreatePostCardProps {
   visible: boolean;
@@ -22,19 +25,26 @@ interface CreatePostCardProps {
     tags: string[];
     image?: string;
   };
-  onSubmit?: (post: any) => void;
+  onSubmit?: (post: {
+    content: string;
+    tags: string[];
+    allowRecommendations: boolean;
+    file?: UploadFile;
+  }) => void;
 }
 
 export const CreatePostCard: React.FC<CreatePostCardProps> = ({ visible, onClose, initialPost, onSubmit }) => {
   const [content, setContent] = useState(initialPost?.content || '');
   const [allowRecommendations, setAllowRecommendations] = useState(true);
   const [selectedTags, setSelectedTags] = useState<string[]>(initialPost?.tags || []);
+  const [file, setFile] = useState<UploadFile | undefined>(undefined);
 
   // Reset state when visible changes or initialPost changes
   React.useEffect(() => {
     if (visible) {
       setContent(initialPost?.content || '');
       setSelectedTags(initialPost?.tags || []);
+      setFile(undefined);
     }
   }, [visible, initialPost]);
 
@@ -57,11 +67,34 @@ export const CreatePostCard: React.FC<CreatePostCardProps> = ({ visible, onClose
     }
   };
 
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== 'granted') {
+      console.warn('Permission to access gallery was denied');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      const asset = result.assets[0];
+      const uri = asset.uri;
+      const name = uri.split('/').pop() || 'upload.jpg';
+      const type = asset.mimeType || 'image/jpeg';
+      setFile({ uri, type, name });
+    }
+  };
+
   const handleSubmit = () => {
     onSubmit?.({
       content,
       tags: selectedTags,
-      // ... other fields
+      allowRecommendations,
+      file,
     });
     onClose();
   };
@@ -105,12 +138,21 @@ export const CreatePostCard: React.FC<CreatePostCardProps> = ({ visible, onClose
 
           {/* Photo Upload */}
           <Text style={styles.sectionLabel}>Add Food Photo (Optional)</Text>
-          <TouchableOpacity style={styles.uploadArea}>
-            <View style={styles.uploadIconCircle}>
-              <Ionicons name="image-outline" size={32} color={Colors.primary.DEFAULT} />
-            </View>
-            <Text style={styles.uploadText}>Tap to upload photo</Text>
-            <Text style={styles.uploadSubtext}>JPG, PNG up to 10MB</Text>
+          <TouchableOpacity style={styles.uploadArea} onPress={pickImage}>
+            {file ? (
+              <>
+                <Image source={{ uri: file.uri }} style={{ width: 120, height: 120, borderRadius: 8, marginBottom: 8 }} />
+                <Text style={styles.uploadText}>Tap to change photo</Text>
+              </>
+            ) : (
+              <>
+                <View style={styles.uploadIconCircle}>
+                  <Ionicons name="image-outline" size={32} color={Colors.primary.DEFAULT} />
+                </View>
+                <Text style={styles.uploadText}>Tap to upload photo</Text>
+                <Text style={styles.uploadSubtext}>JPG, PNG up to 10MB</Text>
+              </>
+            )}
           </TouchableOpacity>
 
           {/* Tags */}

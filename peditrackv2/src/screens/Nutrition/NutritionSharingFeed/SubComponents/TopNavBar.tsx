@@ -8,7 +8,7 @@ interface TopNavBarProps {
   onBackPress: () => void;
   onAddPress: () => void;
   onProfilePress?: () => void;
-  profileImage: string;
+  profileImage?: string;
   title?: string;
   showLogo?: boolean;
   showRightSection?: boolean;
