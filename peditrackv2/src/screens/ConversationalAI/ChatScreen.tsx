@@ -122,7 +122,7 @@ export default function ChatScreen() {
                 // Show error message to user
                 Alert.alert(
                     'Connection Error',
-                    'Unable to connect to the chat service. Please make sure the service is running on http://192.168.1.2:3001',
+                    'Unable to connect to the chat service. Please make sure the service is running on http://192.168.1.3:3001',
                     [{ text: 'OK' }]
                 );
 
