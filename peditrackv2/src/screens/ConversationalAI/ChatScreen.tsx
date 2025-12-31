@@ -68,7 +68,7 @@ export default function ChatScreen() {
         if (inputText.trim() || selectedImage) {
             // Prepare message text based on content
             let userMessageText = inputText.trim();
-            
+
             // If there's an image but no text, use placeholder
             if (selectedImage && !userMessageText) {
                 userMessageText = '[Image attached]';
@@ -95,11 +95,8 @@ export default function ChatScreen() {
             setIsTyping(true);
 
             try {
-                let response;
-                
-                // For now, always use text endpoint (image endpoint needs backend restart)
-                // If there's an image, we mention it in the text
-                response = await sendChatMessage(
+                // Send message to chat service
+                const response = await sendChatMessage(
                     currentText || (currentImage ? 'I have shared an image with you.' : ''),
                     conversationId,
                     'openai'
@@ -107,15 +104,15 @@ export default function ChatScreen() {
 
                 // Update conversation ID if new
                 if (!conversationId) {
-                    setConversationId(response.data.conversationId);
+                    setConversationId(response.conversationId);
                 }
 
                 // Add AI response to UI
                 const aiMessage: Message = {
-                    id: response.data.message.id,
-                    text: response.data.message.content,
+                    id: Date.now().toString(),
+                    text: response.message,
                     sender: 'assistant',
-                    timestamp: formatTimestamp(new Date(response.data.message.timestamp)),
+                    timestamp: formatTimestamp(new Date(response.metadata.timestamp)),
                 };
 
                 setMessages(prev => [...prev, aiMessage]);
@@ -363,10 +360,10 @@ export default function ChatScreen() {
                             style={styles.iconButton}
                             onPress={pickImage}
                         >
-                            <Ionicons 
-                                name="image-outline" 
-                                size={26} 
-                                color={selectedImage ? Colors.primary.DEFAULT : Colors.inactive} 
+                            <Ionicons
+                                name="image-outline"
+                                size={26}
+                                color={selectedImage ? Colors.primary.DEFAULT : Colors.inactive}
                             />
                         </TouchableOpacity>
 

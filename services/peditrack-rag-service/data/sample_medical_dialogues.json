@@ -1,0 +1,112 @@
+[
+  {
+    "text": "Patient Question: My 3-year-old has a fever of 101°F and is complaining of ear pain. What should I do?\n\nDoctor Answer: Ear pain with fever in young children often indicates an ear infection (otitis media). Here's what you should do: 1) Give age-appropriate pain relief (acetaminophen or ibuprofen). 2) Keep your child hydrated. 3) Schedule an appointment with your pediatrician within 24 hours. 4) Watch for worsening symptoms like high fever (>103°F), severe pain, or drainage from the ear. If these occur, seek immediate medical attention.",
+    "source": "Sample Pediatric Q&A",
+    "metadata": {
+      "category": "symptoms",
+      "specialty": "Pediatrics",
+      "age_group": "toddler",
+      "urgency": "moderate",
+      "condition": "ear_infection"
+    }
+  },
+  {
+    "text": "Patient Question: When should my baby get their first vaccinations?\n\nDoctor Answer: The first vaccinations are typically given at birth (Hepatitis B) and at 2 months of age. The 2-month visit includes vaccines for DTaP (diphtheria, tetanus, pertussis), Hib (Haemophilus influenzae type b), IPV (polio), PCV13 (pneumococcal), and RV (rotavirus). Following the CDC's recommended immunization schedule is important for protecting your baby from serious diseases. Your pediatrician will provide a complete schedule and answer any questions you have.",
+    "source": "Sample Pediatric Q&A",
+    "metadata": {
+      "category": "prevention",
+      "specialty": "Pediatrics",
+      "age_group": "infant",
+      "topic": "vaccination",
+      "source_authority": "CDC"
+    }
+  },
+  {
+    "text": "Patient Question: My 6-month-old has a rash on their face and body. Is this normal?\n\nDoctor Answer: Rashes in infants can have many causes. Common benign rashes include baby acne, eczema, and heat rash. However, some rashes require medical attention. Contact your pediatrician if: the rash is accompanied by fever, the baby seems unwell, the rash is spreading rapidly, there are blisters or bleeding, or if you're concerned. For mild rashes, keep the skin clean and dry, avoid harsh soaps, and use gentle moisturizers. Your pediatrician can examine the rash and provide specific treatment if needed.",
+    "source": "Sample Pediatric Q&A",
+    "metadata": {
+      "category": "symptoms",
+      "specialty": "Pediatrics",
+      "age_group": "infant",
+      "condition": "rash",
+      "urgency": "low_to_moderate"
+    }
+  },
+  {
+    "text": "Patient Question: What are the developmental milestones for a 12-month-old?\n\nDoctor Answer: At 12 months, most children can: 1) Motor skills - sit without support, pull to stand, may take first steps, pick up small objects with thumb and finger (pincer grasp). 2) Language - say 'mama' and 'dada' specifically, may have 1-2 other words, understand simple commands. 3) Social - show preference for familiar people, may have separation anxiety, enjoy games like peek-a-boo. 4) Cognitive - explore objects by shaking, banging, throwing, find hidden objects. Remember, children develop at different rates. If you have concerns about your child's development, discuss them with your pediatrician.",
+    "source": "Sample Pediatric Q&A",
+    "metadata": {
+      "category": "development",
+      "specialty": "Pediatrics",
+      "age_group": "infant",
+      "topic": "milestones",
+      "age_months": 12
+    }
+  },
+  {
+    "text": "Patient Question: How can I tell if my child is dehydrated?\n\nDoctor Answer: Signs of dehydration in children include: 1) Mild to moderate - dry mouth and tongue, fewer wet diapers (less than 6 per day for infants), no tears when crying, sunken soft spot (fontanelle) in infants, decreased activity or energy. 2) Severe - very dry mouth, no wet diapers for 8+ hours, sunken eyes, very sleepy or difficult to wake, rapid breathing, cool or discolored hands and feet. Mild dehydration can often be treated at home with oral rehydration solutions. Severe dehydration requires immediate medical attention. Call your pediatrician if you notice these signs, especially in infants under 6 months.",
+    "source": "Sample Pediatric Q&A",
+    "metadata": {
+      "category": "symptoms",
+      "specialty": "Pediatrics",
+      "age_group": "all",
+      "condition": "dehydration",
+      "urgency": "moderate_to_high"
+    }
+  },
+  {
+    "text": "Patient Question: Is it safe to give my 2-year-old honey?\n\nDoctor Answer: Yes, honey is safe for children over 12 months old. However, never give honey to infants under 1 year of age due to the risk of infant botulism, a serious illness caused by bacteria that can be present in honey. After the first birthday, a child's digestive system is mature enough to handle the bacteria. Honey can be a natural sweetener and may help soothe coughs in children over 1 year old. Always consult your pediatrician about appropriate remedies for your child's specific symptoms.",
+    "source": "Sample Pediatric Q&A",
+    "metadata": {
+      "category": "nutrition",
+      "specialty": "Pediatrics",
+      "age_group": "toddler",
+      "topic": "food_safety",
+      "safety_concern": "botulism"
+    }
+  },
+  {
+    "text": "Patient Question: My child has a persistent cough. When should I be concerned?\n\nDoctor Answer: Most coughs in children are caused by viral infections and resolve on their own. However, contact your pediatrician if: the cough lasts more than 2 weeks, your child has difficulty breathing or rapid breathing, there's wheezing or a barking sound, your child is coughing up blood or thick colored mucus, there's fever over 100.4°F in infants under 3 months or over 104°F in older children, your child appears very ill or has chest pain. For nighttime coughs, try elevating the head of the bed, using a cool-mist humidifier, and ensuring adequate hydration. Avoid cough medicines in children under 4 years unless prescribed by your doctor.",
+    "source": "Sample Pediatric Q&A",
+    "metadata": {
+      "category": "symptoms",
+      "specialty": "Pediatrics",
+      "age_group": "all",
+      "condition": "cough",
+      "urgency": "variable"
+    }
+  },
+  {
+    "text": "Patient Question: What's the best way to introduce solid foods to my baby?\n\nDoctor Answer: Start introducing solid foods around 6 months of age, when your baby shows signs of readiness: can sit with support, has good head control, shows interest in food, and can move food to the back of the mouth. Begin with single-ingredient foods like iron-fortified infant cereal, pureed vegetables, or fruits. Introduce one new food at a time, waiting 3-5 days before adding another to watch for allergic reactions. Start with 1-2 teaspoons and gradually increase. Continue breastfeeding or formula feeding. Common first foods include sweet potato, avocado, banana, and oatmeal. Avoid honey, cow's milk (as a drink), and choking hazards. Your pediatrician can provide personalized guidance.",
+    "source": "Sample Pediatric Q&A",
+    "metadata": {
+      "category": "nutrition",
+      "specialty": "Pediatrics",
+      "age_group": "infant",
+      "topic": "solid_foods",
+      "age_months": 6
+    }
+  },
+  {
+    "text": "Patient Question: How much sleep does my preschooler need?\n\nDoctor Answer: Preschool-aged children (3-5 years) typically need 10-13 hours of sleep per 24 hours, including naps. Most 3-year-olds still benefit from a daytime nap, while many 4-5 year-olds transition away from napping. Establish a consistent bedtime routine: bath, quiet activities, reading, and lights out at the same time each night. Avoid screens 1-2 hours before bedtime. Ensure the bedroom is dark, quiet, and cool. Adequate sleep is crucial for growth, learning, behavior, and immune function. If your child has difficulty falling asleep, frequent night wakings, or excessive daytime sleepiness, consult your pediatrician.",
+    "source": "Sample Pediatric Q&A",
+    "metadata": {
+      "category": "development",
+      "specialty": "Pediatrics",
+      "age_group": "preschool",
+      "topic": "sleep",
+      "age_range": "3-5_years"
+    }
+  },
+  {
+    "text": "Patient Question: What should I do if my child has a nosebleed?\n\nDoctor Answer: Nosebleeds are common in children and usually not serious. Here's what to do: 1) Stay calm and reassure your child. 2) Have them sit upright and lean slightly forward (not backward). 3) Pinch the soft part of the nose firmly for 10 minutes without releasing. 4) Apply a cold compress to the bridge of the nose. 5) After bleeding stops, avoid nose-blowing, picking, or strenuous activity for several hours. Seek medical attention if: bleeding doesn't stop after 20 minutes of pressure, the nosebleed follows a head injury, nosebleeds are frequent, or your child has other unusual bleeding or bruising. To prevent nosebleeds, use a humidifier, apply petroleum jelly inside the nostrils, and keep nails trimmed.",
+    "source": "Sample Pediatric Q&A",
+    "metadata": {
+      "category": "first_aid",
+      "specialty": "Pediatrics",
+      "age_group": "all",
+      "condition": "nosebleed",
+      "urgency": "low"
+    }
+  }
+]

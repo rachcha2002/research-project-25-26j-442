@@ -1,0 +1,49 @@
+================================================================================
+RAG SYSTEM EVALUATION REPORT
+================================================================================
+Timestamp: 2025-11-24 23:33:08
+Total Queries Tested: 20
+Top-K Documents: 10
+Total Evaluation Time: 113.86s
+
+RETRIEVAL PERFORMANCE
+--------------------------------------------------------------------------------
+Queries with Results: 20/20 (100.0%)
+Average Retrieval Time: 2916.92ms
+Keyword Match Rate: 100.0%
+Average Similarity Score: -0.845
+
+SEMANTIC SIMILARITY ANALYSIS
+--------------------------------------------------------------------------------
+Average Similarity: 0.554
+High Quality (>0.7): 2 (10.0%)
+Medium Quality (0.5-0.7): 12 (60.0%)
+Low Quality (<0.5): 6 (30.0%)
+
+PERFORMANCE BY CATEGORY
+--------------------------------------------------------------------------------
+DEHYDRATION: Avg Similarity=0.604, Success Rate=100.0%
+DENTAL: Avg Similarity=0.509, Success Rate=100.0%
+DEVELOPMENT: Avg Similarity=0.462, Success Rate=100.0%
+DIGESTIVE: Avg Similarity=0.570, Success Rate=100.0%
+EAR_INFECTION: Avg Similarity=0.564, Success Rate=100.0%
+FEVER: Avg Similarity=0.550, Success Rate=100.0%
+FIRST_AID: Avg Similarity=0.673, Success Rate=100.0%
+INFECTIOUS_DISEASE: Avg Similarity=0.801, Success Rate=100.0%
+NUTRITION: Avg Similarity=0.581, Success Rate=100.0%
+RESPIRATORY: Avg Similarity=0.688, Success Rate=100.0%
+SAFETY: Avg Similarity=0.311, Success Rate=100.0%
+SKIN_CONDITIONS: Avg Similarity=0.484, Success Rate=100.0%
+VACCINATION: Avg Similarity=0.540, Success Rate=100.0%
+VITAL_SIGNS: Avg Similarity=0.530, Success Rate=100.0%
+
+PERFORMANCE BY DIFFICULTY
+--------------------------------------------------------------------------------
+EASY: Avg Similarity=0.492, Success Rate=100.0%
+MEDIUM: Avg Similarity=0.577, Success Rate=100.0%
+HARD: Avg Similarity=0.599, Success Rate=100.0%
+
+OVERALL ASSESSMENT
+--------------------------------------------------------------------------------
+FAIR - RAG system needs improvement
+================================================================================

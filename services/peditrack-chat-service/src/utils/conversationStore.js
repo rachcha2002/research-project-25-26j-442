@@ -16,6 +16,26 @@ class ConversationStore {
     }
 
     /**
+     * Get conversation (alias for getHistory)
+     */
+    getConversation(conversationId) {
+        return this.getHistory(conversationId);
+    }
+
+    /**
+     * Save entire conversation
+     */
+    saveConversation(conversationId, messages) {
+        this.conversations.set(conversationId, messages);
+
+        // Cleanup old conversations if limit exceeded
+        if (this.conversations.size > this.maxConversations) {
+            const firstKey = this.conversations.keys().next().value;
+            this.conversations.delete(firstKey);
+        }
+    }
+
+    /**
      * Add message to conversation
      */
     addMessage(conversationId, message) {
@@ -40,6 +60,13 @@ class ConversationStore {
      */
     clearHistory(conversationId) {
         this.conversations.delete(conversationId);
+    }
+
+    /**
+     * Clear conversation (alias for clearHistory)
+     */
+    clearConversation(conversationId) {
+        this.clearHistory(conversationId);
     }
 
     /**

@@ -1,7 +1,7 @@
 {
     "name": "peditrack-chat-service",
     "version": "1.0.0",
-    "description": "AI Chat Microservice for PediTrack v2",
+    "description": "AI Chat Microservice for PediTrack v2 with Multi-Provider LLM Support",
     "main": "src/server.js",
     "scripts": {
         "start": "node src/server.js",
@@ -12,7 +12,10 @@
         "chat",
         "ai",
         "openai",
+        "gemini",
+        "claude",
         "llm",
+        "langchain",
         "peditrack"
     ],
     "author": "",
@@ -21,13 +24,17 @@
         "express": "^4.18.2",
         "cors": "^2.8.5",
         "dotenv": "^16.3.1",
-        "openai": "^4.20.1",
         "axios": "^1.6.2",
         "body-parser": "^1.20.2",
         "helmet": "^7.1.0",
         "morgan": "^1.10.0",
         "uuid": "^9.0.1",
-        "multer": "^1.4.5-lts.1"
+        "multer": "^1.4.5-lts.1",
+        "langchain": "^0.1.0",
+        "@langchain/openai": "^0.0.19",
+        "@langchain/google-genai": "^0.0.9",
+        "@langchain/anthropic": "^0.1.1",
+        "@langchain/core": "^0.1.0"
     },
     "devDependencies": {
         "nodemon": "^3.0.2"

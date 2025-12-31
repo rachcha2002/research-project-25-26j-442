@@ -17,20 +17,21 @@ export interface ChatMessage {
 
 export interface SendMessageResponse {
     success: boolean;
-    data: {
-        conversationId: string;
-        message: ChatMessage;
-        provider: string;
+    conversationId: string;
+    message: string;
+    metadata: {
+        model: string;
+        ragUsed: boolean;
+        usage?: any;
+        timestamp: string;
     };
 }
 
 export interface ConversationHistory {
     success: boolean;
-    data: {
-        conversationId: string;
-        messages: ChatMessage[];
-        count: number;
-    };
+    conversationId: string;
+    messages: ChatMessage[];
+    count: number;
 }
 
 /**
