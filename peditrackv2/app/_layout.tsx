@@ -8,6 +8,9 @@ export default function RootLayout() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="chat" options={{ headerShown: false }} />
       <Stack.Screen name="voice" options={{ headerShown: false }} />
+      <Stack.Screen name="assessment" options={{ headerShown: false }} />
+      <Stack.Screen name="teleconsultation" options={{ headerShown: false }} />
+      <Stack.Screen name="nearby-hospitals" options={{ headerShown: false }} />
     </Stack>
   );
 }
