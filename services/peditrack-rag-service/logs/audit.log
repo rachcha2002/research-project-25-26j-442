@@ -1,0 +1,1 @@
+2025-11-22 13:25:42,170 - {'timestamp': '2025-11-22T07:55:42.170697', 'event_type': 'retrieval_request', 'details': {'query_length': 36, 'top_k': 3}}
