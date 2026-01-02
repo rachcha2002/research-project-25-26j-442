@@ -1,0 +1,162 @@
+[
+  {
+    "id": "q1",
+    "question": "What are the common symptoms of fever in infants?",
+    "expected_answer": "Common symptoms include elevated body temperature (above 100.4°F or 38°C), irritability, poor feeding, lethargy, flushed skin, and sometimes vomiting or diarrhea.",
+    "category": "fever",
+    "difficulty": "easy",
+    "keywords": ["fever", "infant", "symptoms", "temperature"]
+  },
+  {
+    "id": "q2",
+    "question": "When should I take my child to the emergency room for a fever?",
+    "expected_answer": "Seek emergency care if: infant under 3 months with fever over 100.4°F, fever above 104°F, fever lasting more than 3 days, difficulty breathing, severe headache, stiff neck, persistent vomiting, seizures, or signs of dehydration.",
+    "category": "fever",
+    "difficulty": "medium",
+    "keywords": ["emergency", "fever", "when to see doctor"]
+  },
+  {
+    "id": "q3",
+    "question": "What is the recommended vaccination schedule for a 2-month-old baby?",
+    "expected_answer": "At 2 months, babies should receive: DTaP (diphtheria, tetanus, pertussis), IPV (polio), Hib (Haemophilus influenzae type b), PCV13 (pneumococcal), and RV (rotavirus) vaccines.",
+    "category": "vaccination",
+    "difficulty": "medium",
+    "keywords": ["vaccination", "2 months", "immunization", "schedule"]
+  },
+  {
+    "id": "q4",
+    "question": "How can I treat diaper rash at home?",
+    "expected_answer": "Keep the area clean and dry, change diapers frequently, use barrier creams with zinc oxide, allow diaper-free time, avoid tight diapers, and use fragrance-free wipes or warm water for cleaning.",
+    "category": "skin_conditions",
+    "difficulty": "easy",
+    "keywords": ["diaper rash", "treatment", "home care"]
+  },
+  {
+    "id": "q5",
+    "question": "What are signs of dehydration in children?",
+    "expected_answer": "Signs include: dry mouth and tongue, no tears when crying, sunken eyes, sunken fontanelle in infants, decreased urination (fewer than 6 wet diapers per day in infants), dark yellow urine, lethargy, and irritability.",
+    "category": "dehydration",
+    "difficulty": "medium",
+    "keywords": ["dehydration", "symptoms", "children"]
+  },
+  {
+    "id": "q6",
+    "question": "At what age do babies typically start teething?",
+    "expected_answer": "Most babies begin teething between 4 and 7 months of age, though it can vary. The lower front teeth usually appear first, followed by the upper front teeth.",
+    "category": "development",
+    "difficulty": "easy",
+    "keywords": ["teething", "age", "development", "teeth"]
+  },
+  {
+    "id": "q7",
+    "question": "What are the symptoms of respiratory syncytial virus (RSV) in infants?",
+    "expected_answer": "RSV symptoms include: runny nose, decreased appetite, coughing, sneezing, fever, wheezing, rapid or difficulty breathing, and in severe cases, bluish skin color due to lack of oxygen.",
+    "category": "respiratory",
+    "difficulty": "medium",
+    "keywords": ["RSV", "respiratory", "symptoms", "infant"]
+  },
+  {
+    "id": "q8",
+    "question": "How much sleep does a 6-month-old baby need?",
+    "expected_answer": "A 6-month-old typically needs 12-16 hours of sleep per day, including nighttime sleep and 2-3 naps during the day.",
+    "category": "development",
+    "difficulty": "easy",
+    "keywords": ["sleep", "6 months", "baby", "development"]
+  },
+  {
+    "id": "q9",
+    "question": "What are the signs of an ear infection in toddlers?",
+    "expected_answer": "Signs include: ear pain, tugging or pulling at ears, difficulty sleeping, crying more than usual, fever, fluid draining from ear, difficulty hearing, loss of balance, and irritability.",
+    "category": "ear_infection",
+    "difficulty": "medium",
+    "keywords": ["ear infection", "toddler", "symptoms"]
+  },
+  {
+    "id": "q10",
+    "question": "When can babies start eating solid foods?",
+    "expected_answer": "Most babies are ready for solid foods around 6 months of age. Signs of readiness include: good head control, sitting up with support, showing interest in food, and the ability to move food to the back of the mouth.",
+    "category": "nutrition",
+    "difficulty": "easy",
+    "keywords": ["solid foods", "baby", "feeding", "6 months"]
+  },
+  {
+    "id": "q11",
+    "question": "What is the difference between croup and bronchiolitis?",
+    "expected_answer": "Croup affects the upper airway causing a barking cough and stridor, typically in children 6 months to 3 years. Bronchiolitis affects the lower airways causing wheezing and rapid breathing, most common in infants under 2 years, often caused by RSV.",
+    "category": "respiratory",
+    "difficulty": "hard",
+    "keywords": ["croup", "bronchiolitis", "difference", "respiratory"]
+  },
+  {
+    "id": "q12",
+    "question": "How do I know if my baby has colic?",
+    "expected_answer": "Colic is characterized by the 'rule of threes': crying for more than 3 hours a day, more than 3 days a week, for more than 3 weeks in an otherwise healthy baby. The crying is intense, often in the evening, with clenched fists and arched back.",
+    "category": "digestive",
+    "difficulty": "medium",
+    "keywords": ["colic", "crying", "baby", "symptoms"]
+  },
+  {
+    "id": "q13",
+    "question": "What are the recommended iron-rich foods for toddlers?",
+    "expected_answer": "Iron-rich foods include: lean red meat, poultry, fish, iron-fortified cereals, beans and lentils, tofu, dark leafy greens, and dried fruits. Pair with vitamin C-rich foods to enhance absorption.",
+    "category": "nutrition",
+    "difficulty": "medium",
+    "keywords": ["iron", "nutrition", "toddler", "foods"]
+  },
+  {
+    "id": "q14",
+    "question": "What is hand, foot, and mouth disease?",
+    "expected_answer": "Hand, foot, and mouth disease is a contagious viral infection common in young children, causing fever, sore throat, and a rash with blisters on hands, feet, and mouth. It's usually mild and resolves in 7-10 days.",
+    "category": "infectious_disease",
+    "difficulty": "medium",
+    "keywords": ["hand foot mouth", "viral", "rash", "children"]
+  },
+  {
+    "id": "q15",
+    "question": "At what age should children have their first dental visit?",
+    "expected_answer": "The American Academy of Pediatric Dentistry recommends the first dental visit by age 1 or within 6 months after the first tooth erupts.",
+    "category": "dental",
+    "difficulty": "easy",
+    "keywords": ["dental", "first visit", "age", "teeth"]
+  },
+  {
+    "id": "q16",
+    "question": "What are the signs of autism spectrum disorder in toddlers?",
+    "expected_answer": "Early signs may include: limited eye contact, delayed speech, repetitive behaviors, difficulty with social interactions, not responding to their name, unusual reactions to sensory input, and lack of pretend play.",
+    "category": "development",
+    "difficulty": "hard",
+    "keywords": ["autism", "ASD", "development", "signs"]
+  },
+  {
+    "id": "q17",
+    "question": "How can I prevent sudden infant death syndrome (SIDS)?",
+    "expected_answer": "Prevention strategies include: placing baby on back to sleep, using a firm sleep surface, keeping soft objects out of crib, room-sharing without bed-sharing, avoiding overheating, offering a pacifier, and avoiding smoke exposure.",
+    "category": "safety",
+    "difficulty": "medium",
+    "keywords": ["SIDS", "prevention", "safe sleep", "infant"]
+  },
+  {
+    "id": "q18",
+    "question": "What is the normal heart rate for a newborn?",
+    "expected_answer": "A normal heart rate for a newborn is typically between 120-160 beats per minute when awake and can drop to 70-120 beats per minute during sleep.",
+    "category": "vital_signs",
+    "difficulty": "medium",
+    "keywords": ["heart rate", "newborn", "normal", "vital signs"]
+  },
+  {
+    "id": "q19",
+    "question": "How do I treat a minor burn in a child?",
+    "expected_answer": "For minor burns: cool the burn with cool (not ice-cold) running water for 10-20 minutes, cover with a sterile non-stick bandage, give pain relief if needed, and avoid applying ice, butter, or ointments. Seek medical care for burns larger than 3 inches or on face, hands, feet, or genitals.",
+    "category": "first_aid",
+    "difficulty": "medium",
+    "keywords": ["burn", "treatment", "first aid", "child"]
+  },
+  {
+    "id": "q20",
+    "question": "What are the developmental milestones for a 12-month-old?",
+    "expected_answer": "By 12 months, most babies can: sit without support, pull to stand, cruise along furniture, say 'mama' and 'dada', wave bye-bye, play peek-a-boo, use pincer grasp, and show preference for certain people and toys.",
+    "category": "development",
+    "difficulty": "medium",
+    "keywords": ["milestones", "12 months", "development", "baby"]
+  }
+]

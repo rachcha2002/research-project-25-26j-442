@@ -1,0 +1,505 @@
+{
+  "evaluation_timestamp": "2025-11-24 23:31:07",
+  "top_k": 10,
+  "total_ground_truth_queries": 20,
+  "retrieval_metrics": {
+    "total_queries": 20,
+    "top_k": 10,
+    "retrieval_scores": [
+      {
+        "query_id": "q1",
+        "question": "What are the common symptoms of fever in infants?",
+        "num_results": 10,
+        "avg_score": 0.6187134465987668,
+        "retrieval_time": 0.2083752155303955,
+        "keyword_match": true,
+        "category_match": true
+      },
+      {
+        "query_id": "q2",
+        "question": "When should I take my child to the emergency room for a fever?",
+        "num_results": 10,
+        "avg_score": 0.667826372633482,
+        "retrieval_time": 0.033978939056396484,
+        "keyword_match": true,
+        "category_match": true
+      },
+      {
+        "query_id": "q3",
+        "question": "What is the recommended vaccination schedule for a 2-month-old baby?",
+        "num_results": 10,
+        "avg_score": 0.5166701133595646,
+        "retrieval_time": 0.034003257751464844,
+        "keyword_match": true,
+        "category_match": true
+      },
+      {
+        "query_id": "q4",
+        "question": "How can I treat diaper rash at home?",
+        "num_results": 10,
+        "avg_score": 0.6040194961012505,
+        "retrieval_time": 0.037000179290771484,
+        "keyword_match": true,
+        "category_match": false
+      },
+      {
+        "query_id": "q5",
+        "question": "What are signs of dehydration in children?",
+        "num_results": 10,
+        "avg_score": 0.5904334058085972,
+        "retrieval_time": 0.025995969772338867,
+        "keyword_match": true,
+        "category_match": true
+      },
+      {
+        "query_id": "q6",
+        "question": "At what age do babies typically start teething?",
+        "num_results": 10,
+        "avg_score": 0.5193766932504778,
+        "retrieval_time": 0.020999908447265625,
+        "keyword_match": true,
+        "category_match": true
+      },
+      {
+        "query_id": "q7",
+        "question": "What are the symptoms of respiratory syncytial virus (RSV) in infants?",
+        "num_results": 10,
+        "avg_score": 0.5941927153167664,
+        "retrieval_time": 0.030998945236206055,
+        "keyword_match": true,
+        "category_match": true
+      },
+      {
+        "query_id": "q8",
+        "question": "How much sleep does a 6-month-old baby need?",
+        "num_results": 10,
+        "avg_score": 0.5080158556399257,
+        "retrieval_time": 0.04799985885620117,
+        "keyword_match": true,
+        "category_match": false
+      },
+      {
+        "query_id": "q9",
+        "question": "What are the signs of an ear infection in toddlers?",
+        "num_results": 10,
+        "avg_score": 0.5899956376792744,
+        "retrieval_time": 0.03500008583068848,
+        "keyword_match": true,
+        "category_match": false
+      },
+      {
+        "query_id": "q10",
+        "question": "When can babies start eating solid foods?",
+        "num_results": 10,
+        "avg_score": 0.5739296265935769,
+        "retrieval_time": 0.03599953651428223,
+        "keyword_match": true,
+        "category_match": true
+      },
+      {
+        "query_id": "q11",
+        "question": "What is the difference between croup and bronchiolitis?",
+        "num_results": 10,
+        "avg_score": 0.5355974809014148,
+        "retrieval_time": 0.06800270080566406,
+        "keyword_match": true,
+        "category_match": false
+      },
+      {
+        "query_id": "q12",
+        "question": "How do I know if my baby has colic?",
+        "num_results": 10,
+        "avg_score": 0.6079003304632216,
+        "retrieval_time": 0.0412752628326416,
+        "keyword_match": true,
+        "category_match": false
+      },
+      {
+        "query_id": "q13",
+        "question": "What are the recommended iron-rich foods for toddlers?",
+        "num_results": 10,
+        "avg_score": 0.5428955914755123,
+        "retrieval_time": 0.04374551773071289,
+        "keyword_match": true,
+        "category_match": true
+      },
+      {
+        "query_id": "q14",
+        "question": "What is hand, foot, and mouth disease?",
+        "num_results": 10,
+        "avg_score": 0.565663808518674,
+        "retrieval_time": 0.03888225555419922,
+        "keyword_match": true,
+        "category_match": false
+      },
+      {
+        "query_id": "q15",
+        "question": "At what age should children have their first dental visit?",
+        "num_results": 10,
+        "avg_score": 0.5361873614975134,
+        "retrieval_time": 0.03099846839904785,
+        "keyword_match": true,
+        "category_match": true
+      },
+      {
+        "query_id": "q16",
+        "question": "What are the signs of autism spectrum disorder in toddlers?",
+        "num_results": 10,
+        "avg_score": 0.5649469335707931,
+        "retrieval_time": 0.03399825096130371,
+        "keyword_match": true,
+        "category_match": true
+      },
+      {
+        "query_id": "q17",
+        "question": "How can I prevent sudden infant death syndrome (SIDS)?",
+        "num_results": 10,
+        "avg_score": 0.5698203646798823,
+        "retrieval_time": 0.033998966217041016,
+        "keyword_match": true,
+        "category_match": false
+      },
+      {
+        "query_id": "q18",
+        "question": "What is the normal heart rate for a newborn?",
+        "num_results": 10,
+        "avg_score": 0.520454992191919,
+        "retrieval_time": 0.023997783660888672,
+        "keyword_match": true,
+        "category_match": false
+      },
+      {
+        "query_id": "q19",
+        "question": "How do I treat a minor burn in a child?",
+        "num_results": 10,
+        "avg_score": 0.5455337831298411,
+        "retrieval_time": 0.021999359130859375,
+        "keyword_match": true,
+        "category_match": false
+      },
+      {
+        "query_id": "q20",
+        "question": "What are the developmental milestones for a 12-month-old?",
+        "num_results": 10,
+        "avg_score": 0.5354881630314565,
+        "retrieval_time": 0.022001266479492188,
+        "keyword_match": true,
+        "category_match": true
+      }
+    ],
+    "avg_retrieval_time": 0.043462586402893064,
+    "keyword_match_rate": 1.0,
+    "category_match_rate": 0.55,
+    "avg_similarity_score": 0.5653831086220953,
+    "queries_with_results": 20,
+    "queries_without_results": 0
+  },
+  "semantic_similarity_metrics": {
+    "total_queries": 20,
+    "top_k": 10,
+    "similarity_scores": [
+      {
+        "query_id": "q1",
+        "question": "What are the common symptoms of fever in infants?",
+        "similarity": 0.4447163939476013,
+        "quality": "low",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q2",
+        "question": "When should I take my child to the emergency room for a fever?",
+        "similarity": 0.6744992136955261,
+        "quality": "medium",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q3",
+        "question": "What is the recommended vaccination schedule for a 2-month-old baby?",
+        "similarity": 0.5719665288925171,
+        "quality": "medium",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q4",
+        "question": "How can I treat diaper rash at home?",
+        "similarity": 0.42833104729652405,
+        "quality": "low",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q5",
+        "question": "What are signs of dehydration in children?",
+        "similarity": 0.6063528060913086,
+        "quality": "medium",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q6",
+        "question": "At what age do babies typically start teething?",
+        "similarity": 0.6124352216720581,
+        "quality": "medium",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q7",
+        "question": "What are the symptoms of respiratory syncytial virus (RSV) in infants?",
+        "similarity": 0.6049434542655945,
+        "quality": "medium",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q8",
+        "question": "How much sleep does a 6-month-old baby need?",
+        "similarity": 0.5234131217002869,
+        "quality": "medium",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q9",
+        "question": "What are the signs of an ear infection in toddlers?",
+        "similarity": 0.5635043978691101,
+        "quality": "medium",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q10",
+        "question": "When can babies start eating solid foods?",
+        "similarity": 0.5746129751205444,
+        "quality": "medium",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q11",
+        "question": "What is the difference between croup and bronchiolitis?",
+        "similarity": 0.7723629474639893,
+        "quality": "high",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q12",
+        "question": "How do I know if my baby has colic?",
+        "similarity": 0.5693259835243225,
+        "quality": "medium",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q13",
+        "question": "What are the recommended iron-rich foods for toddlers?",
+        "similarity": 0.4138261377811432,
+        "quality": "low",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q14",
+        "question": "What is hand, foot, and mouth disease?",
+        "similarity": 0.7997596859931946,
+        "quality": "high",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q15",
+        "question": "At what age should children have their first dental visit?",
+        "similarity": 0.6348258256912231,
+        "quality": "medium",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q16",
+        "question": "What are the signs of autism spectrum disorder in toddlers?",
+        "similarity": 0.4537186920642853,
+        "quality": "low",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q17",
+        "question": "How can I prevent sudden infant death syndrome (SIDS)?",
+        "similarity": 0.313485711812973,
+        "quality": "low",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q18",
+        "question": "What is the normal heart rate for a newborn?",
+        "similarity": 0.6802018284797668,
+        "quality": "medium",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q19",
+        "question": "How do I treat a minor burn in a child?",
+        "similarity": 0.6740669012069702,
+        "quality": "medium",
+        "num_docs_retrieved": 10
+      },
+      {
+        "query_id": "q20",
+        "question": "What are the developmental milestones for a 12-month-old?",
+        "similarity": 0.6064485311508179,
+        "quality": "medium",
+        "num_docs_retrieved": 10
+      }
+    ],
+    "avg_similarity": 0.5761398702859879,
+    "high_similarity_count": 2,
+    "medium_similarity_count": 13,
+    "low_similarity_count": 5
+  },
+  "category_performance": {
+    "fever": {
+      "count": 2,
+      "total_similarity": 1.1192156076431274,
+      "total_retrieval_score": 1.2865398192322488,
+      "queries_with_results": 2,
+      "avg_similarity": 0.5596078038215637,
+      "avg_retrieval_score": 0.6432699096161244,
+      "success_rate": 1.0
+    },
+    "vaccination": {
+      "count": 1,
+      "total_similarity": 0.5719665288925171,
+      "total_retrieval_score": 0.5166701133595646,
+      "queries_with_results": 1,
+      "avg_similarity": 0.5719665288925171,
+      "avg_retrieval_score": 0.5166701133595646,
+      "success_rate": 1.0
+    },
+    "skin_conditions": {
+      "count": 1,
+      "total_similarity": 0.42833104729652405,
+      "total_retrieval_score": 0.6040194961012505,
+      "queries_with_results": 1,
+      "avg_similarity": 0.42833104729652405,
+      "avg_retrieval_score": 0.6040194961012505,
+      "success_rate": 1.0
+    },
+    "dehydration": {
+      "count": 1,
+      "total_similarity": 0.6063528060913086,
+      "total_retrieval_score": 0.5904334058085972,
+      "queries_with_results": 1,
+      "avg_similarity": 0.6063528060913086,
+      "avg_retrieval_score": 0.5904334058085972,
+      "success_rate": 1.0
+    },
+    "development": {
+      "count": 4,
+      "total_similarity": 2.196015566587448,
+      "total_retrieval_score": 2.127827645492653,
+      "queries_with_results": 4,
+      "avg_similarity": 0.549003891646862,
+      "avg_retrieval_score": 0.5319569113731633,
+      "success_rate": 1.0
+    },
+    "respiratory": {
+      "count": 2,
+      "total_similarity": 1.3773064017295837,
+      "total_retrieval_score": 1.129790196218181,
+      "queries_with_results": 2,
+      "avg_similarity": 0.6886532008647919,
+      "avg_retrieval_score": 0.5648950981090906,
+      "success_rate": 1.0
+    },
+    "ear_infection": {
+      "count": 1,
+      "total_similarity": 0.5635043978691101,
+      "total_retrieval_score": 0.5899956376792744,
+      "queries_with_results": 1,
+      "avg_similarity": 0.5635043978691101,
+      "avg_retrieval_score": 0.5899956376792744,
+      "success_rate": 1.0
+    },
+    "nutrition": {
+      "count": 2,
+      "total_similarity": 0.9884391129016876,
+      "total_retrieval_score": 1.1168252180690892,
+      "queries_with_results": 2,
+      "avg_similarity": 0.4942195564508438,
+      "avg_retrieval_score": 0.5584126090345446,
+      "success_rate": 1.0
+    },
+    "digestive": {
+      "count": 1,
+      "total_similarity": 0.5693259835243225,
+      "total_retrieval_score": 0.6079003304632216,
+      "queries_with_results": 1,
+      "avg_similarity": 0.5693259835243225,
+      "avg_retrieval_score": 0.6079003304632216,
+      "success_rate": 1.0
+    },
+    "infectious_disease": {
+      "count": 1,
+      "total_similarity": 0.7997596859931946,
+      "total_retrieval_score": 0.565663808518674,
+      "queries_with_results": 1,
+      "avg_similarity": 0.7997596859931946,
+      "avg_retrieval_score": 0.565663808518674,
+      "success_rate": 1.0
+    },
+    "dental": {
+      "count": 1,
+      "total_similarity": 0.6348258256912231,
+      "total_retrieval_score": 0.5361873614975134,
+      "queries_with_results": 1,
+      "avg_similarity": 0.6348258256912231,
+      "avg_retrieval_score": 0.5361873614975134,
+      "success_rate": 1.0
+    },
+    "safety": {
+      "count": 1,
+      "total_similarity": 0.313485711812973,
+      "total_retrieval_score": 0.5698203646798823,
+      "queries_with_results": 1,
+      "avg_similarity": 0.313485711812973,
+      "avg_retrieval_score": 0.5698203646798823,
+      "success_rate": 1.0
+    },
+    "vital_signs": {
+      "count": 1,
+      "total_similarity": 0.6802018284797668,
+      "total_retrieval_score": 0.520454992191919,
+      "queries_with_results": 1,
+      "avg_similarity": 0.6802018284797668,
+      "avg_retrieval_score": 0.520454992191919,
+      "success_rate": 1.0
+    },
+    "first_aid": {
+      "count": 1,
+      "total_similarity": 0.6740669012069702,
+      "total_retrieval_score": 0.5455337831298411,
+      "queries_with_results": 1,
+      "avg_similarity": 0.6740669012069702,
+      "avg_retrieval_score": 0.5455337831298411,
+      "success_rate": 1.0
+    }
+  },
+  "difficulty_performance": {
+    "easy": {
+      "count": 6,
+      "total_similarity": 3.218334585428238,
+      "total_retrieval_score": 3.360242479681511,
+      "queries_with_results": 6,
+      "avg_similarity": 0.536389097571373,
+      "avg_retrieval_score": 0.5600404132802518,
+      "success_rate": 1.0
+    },
+    "medium": {
+      "count": 12,
+      "total_similarity": 7.078381180763245,
+      "total_retrieval_score": 6.8468752782881905,
+      "queries_with_results": 12,
+      "avg_similarity": 0.589865098396937,
+      "avg_retrieval_score": 0.5705729398573492,
+      "success_rate": 1.0
+    },
+    "hard": {
+      "count": 2,
+      "total_similarity": 1.2260816395282745,
+      "total_retrieval_score": 1.1005444144722079,
+      "queries_with_results": 2,
+      "avg_similarity": 0.6130408197641373,
+      "avg_retrieval_score": 0.5502722072361039,
+      "success_rate": 1.0
+    }
+  },
+  "total_evaluation_time": 13.313609838485718
+}
