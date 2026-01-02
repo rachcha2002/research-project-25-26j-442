@@ -1,3 +1,3 @@
-import { FeedingScreen } from '@/screens';
+import { NutritionFeedScreen } from '@/screens';
 
-export default FeedingScreen;
+export default NutritionFeedScreen;
