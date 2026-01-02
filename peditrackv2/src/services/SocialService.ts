@@ -46,7 +46,7 @@ export interface UserProfileOverview {
     followersCount: number;
     followingCount: number;
     postCount: number;
-    posts: Post[];
+    posts: PostWithMeta[];
 }
 
 /**
@@ -73,6 +73,36 @@ export const createPost = async (
         body: formData,
     });
     if (!response.ok) throw new Error('Failed to create post');
+    const data = await response.json();
+    return data.post;
+};
+
+// Update an existing post (with optional new file)
+export const updatePost = async (
+    UserID: string,
+    PostID: string,
+    Description: string,
+    Tags: string[] | string,
+    ApprovementReq: boolean,
+    file?: { uri: string; type: string; name: string },
+): Promise<Post> => {
+    const formData = new FormData();
+    formData.append('UserID', UserID);
+    formData.append('PostID', PostID);
+    formData.append('Description', Description);
+    formData.append('Tags', Array.isArray(Tags) ? Tags.join(',') : Tags);
+    formData.append('ApprovementReq', String(ApprovementReq));
+    if (file) formData.append('file', file as any);
+
+    const response = await fetch(`${API_BASE_URL}/posts/updatepost`, {
+        method: 'PUT',
+        body: formData,
+    });
+
+    if (!response.ok) {
+        throw new Error('Failed to update post');
+    }
+
     const data = await response.json();
     return data.post;
 };

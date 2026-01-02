@@ -101,6 +101,94 @@ exports.createPost = async (req, res) => {
     }
 };
 
+// ...existing code...
+
+exports.updatePost = async (req, res) => {
+    try {
+        const { UserID, PostID, Description, ApprovementReq, Tags } = req.body;
+
+        if (!UserID || !PostID) {
+            return res.status(400).json({ message: "UserID and PostID are required" });
+        }
+
+        // Find post
+        const post = await Post.findOne({ PostID });
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+
+        // Verify ownership
+        if (post.UserID !== UserID) {
+            return res.status(403).json({ message: "Unauthorized: UserID does not match post owner" });
+        }
+
+        // Process tags (optional)
+        if (typeof Tags !== 'undefined') {
+            if (Array.isArray(Tags)) {
+                post.Tags = Tags;
+            } else if (typeof Tags === 'string') {
+                post.Tags = Tags.split(',')
+                    .map(tag => tag.trim())
+                    .filter(tag => tag.length > 0);
+            } else {
+                post.Tags = [];
+            }
+        }
+
+        // Update description (optional)
+        if (typeof Description !== 'undefined') {
+            post.Description = Description;
+        }
+
+        // Update ApprovementReq (allow recommendations)
+        if (typeof ApprovementReq !== 'undefined') {
+            post.ApprovementReq = ApprovementReq === 'true' || ApprovementReq === true;
+        }
+
+        // Handle file replacement (optional)
+        if (req.file) {
+            try {
+                // upload new file
+                const uploadResult = await uploadToR2(req.file);
+                const newKey = uploadResult.key;
+
+                // delete old file if exists
+                if (post.PostUrl) {
+                    try {
+                        await deleteFromR2(post.PostUrl);
+                    } catch (fileError) {
+                        console.error("Error deleting old file from storage:", fileError);
+                        // continue even if file delete fails
+                    }
+                }
+
+                post.PostUrl = newKey;
+            } catch (uploadError) {
+                console.error("File upload failed during update:", uploadError);
+                return res.status(500).json({ message: "File upload failed" });
+            }
+        }
+
+        // Reset approval on any change
+        post.Approved = false;
+
+        // Update PostedTime to now
+        post.PostedTime = new Date();
+
+        await post.save();
+
+        return res.status(200).json({
+            message: "Post updated successfully",
+            post,
+        });
+    } catch (error) {
+        console.error("Error updating post:", error);
+        return res.status(500).json({ message: "Internal server error", error: error.message });
+    }
+};
+
+// ...existing code...
+
 exports.getAllPosts = async (req, res) => {
     try {
         const { UserID } = req.query;   // <-- NEW (optional)

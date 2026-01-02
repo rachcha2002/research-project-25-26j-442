@@ -1,5 +1,29 @@
 const Follow = require('../models/Follow');
 const Post = require('../models/Post'); // <- make sure this path/name matches your project
+const PostEngagement = require('../models/PostEngagement');
+const PostComment = require('../models/PostComments');
+const SavedPosts = require('../models/SavedPosts');
+
+// helper to build comment tree (same as in postController)
+const buildCommentTree = (comments) => {
+    const commentMap = {};
+    comments.forEach(c => {
+        const obj = c.toObject ? c.toObject() : { ...c };
+        obj.replies = [];
+        commentMap[obj.CommentID] = obj;
+    });
+
+    const roots = [];
+    Object.values(commentMap).forEach(comment => {
+        if (comment.Reply && comment.to && commentMap[comment.to]) {
+            commentMap[comment.to].replies.push(comment);
+        } else if (!comment.Reply) {
+            roots.push(comment);
+        }
+    });
+
+    return roots;
+};
 
 // Follow a user
 exports.followUser = async (req, res) => {
@@ -97,13 +121,55 @@ exports.getUserOverview = async (req, res) => {
             return res.status(400).json({ message: 'userId is required.' });
         }
 
-        const [followersCount, followingCount, posts, postCount] = await Promise.all([
+        const [followersCount, followingCount, rawPosts, postCount] = await Promise.all([
             Follow.countDocuments({ followingId: userId }),       // followers
             Follow.countDocuments({ followerId: userId }),        // following
-            Post.find({ UserID: userId })                         // this user's posts
-                .sort({ PostedTime: -1 }),
+            Post.find({ UserID: userId }).sort({ PostedTime: -1 }).lean(),
             Post.countDocuments({ UserID: userId })
         ]);
+
+        const postIds = rawPosts.map(p => p.PostID);
+        if (postIds.length === 0) {
+            return res.status(200).json({
+                userId,
+                followersCount,
+                followingCount,
+                postCount,
+                posts: []
+            });
+        }
+
+        // engagements
+        const engagements = await PostEngagement.find({ PostID: { $in: postIds } }).lean();
+        const engagementMap = {};
+        engagements.forEach(e => {
+            engagementMap[e.PostID] = e;
+        });
+
+        // comments
+        const comments = await PostComment.find({ PostID: { $in: postIds } })
+            .sort({ CommentTime: 1 });
+
+        const commentsByPost = {};
+        postIds.forEach(id => { commentsByPost[id] = []; });
+        comments.forEach(c => {
+            if (!commentsByPost[c.PostID]) commentsByPost[c.PostID] = [];
+            commentsByPost[c.PostID].push(c);
+        });
+
+        // optional: saved posts for this same user
+        let savedSet = new Set();
+        const saved = await SavedPosts.findOne({ UserId: userId }).lean();
+        if (saved && saved.Posts) {
+            savedSet = new Set(saved.Posts.map(id => String(id)));
+        }
+
+        const posts = rawPosts.map(post => ({
+            post,
+            engagement: engagementMap[post.PostID] || { PostID: post.PostID, LikedBy: [], DislikedBy: [] },
+            comments: buildCommentTree(commentsByPost[post.PostID] || []),
+            isSaved: savedSet.has(String(post._id)),
+        }));
 
         return res.status(200).json({
             userId,

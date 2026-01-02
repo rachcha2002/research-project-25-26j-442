@@ -6,9 +6,28 @@ import { Searchbar } from '../SubComponents/Searchbar';
 import { FeedPostCard } from '../SubComponents/FeedPostCard';
 import { CreatePostCard } from '../SubComponents/CreatePostCard';
 import { ProfileScreen } from './ProfileScreen';
+import { PostDetailsScreen } from './PostDetailsScreen';
+import { UserSearchModal } from '../SubComponents/UserSearchModal';   // <-- ADD
 import { Colors } from '../../../../constants/Colors';
 import { Layout } from '../../../../constants/Layout';
-import {getAllPosts,FILE_BASE_URL,PostWithMeta,updatePostEngagement,removePostEngagement,createPost,addComment,updateComment,deleteComment,getFollowing,followUser,savePost,removeSavedPost,deletePost,Comment as ApiComment} from '../../../../services/SocialService';
+import {
+  getAllPosts,
+  FILE_BASE_URL,
+  PostWithMeta,
+  updatePostEngagement,
+  removePostEngagement,
+  createPost,
+  addComment,
+  updateComment,
+  deleteComment,
+  getFollowing,
+  followUser,
+  savePost,
+  removeSavedPost,
+  deletePost,
+  Comment as ApiComment,
+  Follow,                              // <-- ADD
+} from '../../../../services/SocialService';
 
 // helper: add a comment (or reply) into the tree
 const addCommentToTree = (
@@ -60,25 +79,33 @@ export function NutritionFeedScreen() {
   const [isCreatePostVisible, setCreatePostVisible] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [currentView, setCurrentView] = React.useState<'feed' | 'profile'>('feed');
+  const [profileUserId, setProfileUserId] = React.useState('USR0007');       // <-- ADD
   const [activeTab, setActiveTab] = React.useState<'friends' | 'forYou'>('friends');
   const [posts, setPosts] = React.useState<PostWithMeta[]>([]);
   const [followingIds, setFollowingIds] = React.useState<string[]>([]);
   const [refreshing, setRefreshing] = React.useState(false);
+  const [selectedPost, setSelectedPost] = React.useState<any | null>(null);
+  const [startInEditMode, setStartInEditMode] = React.useState(false);
+  const [isUserModalVisible, setIsUserModalVisible] = React.useState(false); // <-- ADD
   const currentUserId = 'USR0007';
   const router = useRouter();
 
   const fetchData = React.useCallback(async () => {
     try {
-      const [postsRes, followingRes] = await Promise.all([
+      setRefreshing(true);
+      const [postsData, followingData] = await Promise.all([
         getAllPosts(currentUserId),
         getFollowing(currentUserId),
       ]);
+      setPosts(postsData);
 
-      setPosts(postsRes);
-      const ids = followingRes.following.map(f => f.followingId);
-      setFollowingIds(ids);
-    } catch (error) {
-      console.error('Failed to load feed data', error);
+      // followingData is { total, page, limit, following: Follow[] }
+      const followingList = (followingData.following || []) as Follow[];
+      setFollowingIds(
+        followingList.map((f: Follow) => f.followingId)  // <-- FIX HERE
+      );
+    } finally {
+      setRefreshing(false);
     }
   }, [currentUserId]);
 
@@ -302,46 +329,77 @@ export function NutritionFeedScreen() {
     }
   };
 
-  const handleAddFriend = async (targetUserId: string) => {
+  const handleAddFriend = async (userId: string) => {
     try {
-      await followUser(currentUserId, targetUserId);
+      await followUser(currentUserId, userId);
       setFollowingIds(prev =>
-        prev.includes(targetUserId) ? prev : [...prev, targetUserId]
+        prev.includes(userId) ? prev : [...prev, userId]
       );
     } catch (e) {
       console.error('Failed to follow user', e);
     }
   };
 
+  const handleOpenUserModal = () => {
+    if (!searchQuery.trim()) return;
+    setIsUserModalVisible(true);
+  };
+
+  const handleOpenUserProfile = (userId: string) => {
+    setIsUserModalVisible(false);
+    setProfileUserId(userId);
+    setCurrentView('profile');
+  };
+
   const handleToggleSave = async (postId: string) => {
-    const target = posts.find(p => p.post.PostID === postId);
-    if (!target) return;
-
-    const alreadySaved = target.isSaved;
-
-    // optimistic update
     setPosts(prev =>
-      prev.map(p =>
-        p.post.PostID === postId ? { ...p, isSaved: !alreadySaved } : p
-      )
+      prev.map(item =>
+        item.post.PostID === postId
+          ? { ...item, isSaved: !item.isSaved }
+          : item
+      ),
     );
 
     try {
-      if (alreadySaved) {
+      const target = posts.find(p => p.post.PostID === postId);
+      const currentlySaved = target?.isSaved;
+
+      if (currentlySaved) {
         await removeSavedPost(currentUserId, postId);
       } else {
         await savePost(currentUserId, postId);
       }
     } catch (e) {
       console.error('Failed to toggle save', e);
-      // optional: revert state or refetch
+      // revert on failure
+      setPosts(prev =>
+        prev.map(item =>
+          item.post.PostID === postId
+            ? { ...item, isSaved: !item.isSaved }
+            : item
+        ),
+      );
     }
   };
+
+  // <-- ADD: show PostDetailsScreen when editing a post
+  if (selectedPost) {
+    return (
+      <PostDetailsScreen
+        post={selectedPost}
+        currentUserId={currentUserId}
+        startInEditMode={startInEditMode}
+        onBackPress={() => setSelectedPost(null)}
+        onPostUpdated={() => fetchData()}
+      />
+    );
+  }
 
   if (currentView === 'profile') {
     return (
       <ProfileScreen
-        userId={currentUserId}
+        userId={profileUserId}
+        currentUserId={currentUserId}
         onBackPress={() => setCurrentView('feed')}
       />
     );
@@ -352,7 +410,11 @@ export function NutritionFeedScreen() {
       <TopNavBar
         onBackPress={() => router.back()}
         onAddPress={() => setCreatePostVisible(true)}
-        onProfilePress={() => setCurrentView('profile')}
+        onProfilePress={() => {
+          // always show current user's own profile
+          setProfileUserId(currentUserId);
+          setCurrentView('profile');
+        }}
         profileImage="https://randomuser.me/api/portraits/women/44.jpg"
         title="Nutrition share feed"
       />
@@ -362,7 +424,12 @@ export function NutritionFeedScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
       >
-        <Searchbar value={searchQuery} onChangeText={setSearchQuery} />
+        <Searchbar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          onFriendsPress={handleOpenUserModal}
+          disableFriends={!searchQuery.trim()}
+        />
         
         <View style={styles.toggleContainer}>
           <TouchableOpacity 
@@ -379,53 +446,105 @@ export function NutritionFeedScreen() {
           </TouchableOpacity>
         </View>
 
-        {visiblePosts.map(({ post, engagement, comments, isSaved }) => (
-          <FeedPostCard
-            key={post.PostID}
-            postId={post.PostID}
-            postOwnerId={post.UserID}
-            currentUserId={currentUserId}
-            name={post.UserID}
-            role="User"
-            time={new Date(post.PostedTime).toLocaleString()}
-            content={post.Description || ''}
-            tags={post.Tags || []}
-            image={post.PostUrl ? FILE_BASE_URL + post.PostUrl : undefined}
-            avatar="https://randomuser.me/api/portraits/lego/1.jpg"
-            stats={{
-              likes: engagement.LikedBy?.length || 0,
-              dislikes: engagement.DislikedBy?.length || 0,
-              comments: comments.length,
-              shares: 0,
-            }}
-            comments={comments}
-            isApproved={post.Approved}
-            approvedBy={undefined}
-            showAddFriend={
-              activeTab === 'forYou' &&
-              post.UserID !== currentUserId &&
-              !followingIds.includes(post.UserID)
-            }
-            onAddFriend={() => handleAddFriend(post.UserID)}
-            isOwner={post.UserID === currentUserId}
-            onEdit={undefined}
-            onDelete={() => handleDeletePost(post.PostID)}   // <-- WIRE DELETE
-            isLiked={engagement.LikedBy?.includes(currentUserId)}
-            isDisliked={engagement.DislikedBy?.includes(currentUserId)}
-            isSaved={isSaved}
-            onToggleLike={() => handleToggleLike(post.PostID)}
-            onToggleDislike={() => handleToggleDislike(post.PostID)}
-            onToggleSave={() => handleToggleSave(post.PostID)}
-            onAddComment={handleAddComment}
-            onUpdateComment={handleUpdateComment}
-            onDeleteComment={handleDeleteComment}
-          />
-        ))}
+        {visiblePosts.map(({ post, engagement, comments, isSaved }) => {
+          const isOwner = post.UserID === currentUserId;
+
+          const openDetailsForEdit = () => {
+            const uiPost = {
+              postId: post.PostID,
+              postOwnerId: post.UserID,
+              currentUserId,
+              name: post.UserID,
+              role: 'User',
+              time: new Date(post.PostedTime).toLocaleString(),
+              content: post.Description || '',
+              tags: post.Tags || [],
+              image: post.PostUrl ? FILE_BASE_URL + post.PostUrl : undefined,
+              avatar: 'https://randomuser.me/api/portraits/lego/1.jpg',
+              stats: {
+                likes: engagement.LikedBy?.length || 0,
+                dislikes: engagement.DislikedBy?.length || 0,
+                comments: comments.length,
+                shares: 0,
+              },
+              comments,
+              isApproved: post.Approved,
+              allowRecommendations: !!post.ApprovementReq,
+              showAddFriend: false,
+              onAddFriend: undefined,
+              isOwner: true,
+              isLiked: engagement.LikedBy?.includes(currentUserId),
+              isDisliked: engagement.DislikedBy?.includes(currentUserId),
+              isSaved: !!isSaved,
+              onToggleLike: () => {},
+              onToggleDislike: () => {},
+              onToggleSave: () => {},
+              onAddComment: () => {},
+              onUpdateComment: () => {},
+              onDeleteComment: () => {},
+            };
+            setSelectedPost(uiPost);
+            setStartInEditMode(true);
+          };
+
+          return (
+            <FeedPostCard
+              key={post.PostID}
+              postId={post.PostID}
+              postOwnerId={post.UserID}
+              currentUserId={currentUserId}
+              name={post.UserID}
+              role="User"
+              time={new Date(post.PostedTime).toLocaleString()}
+              content={post.Description || ''}
+              tags={post.Tags || []}
+              image={post.PostUrl ? FILE_BASE_URL + post.PostUrl : undefined}
+              avatar="https://randomuser.me/api/portraits/lego/1.jpg"
+              stats={{
+                likes: engagement.LikedBy?.length || 0,
+                dislikes: engagement.DislikedBy?.length || 0,
+                comments: comments.length,
+                shares: 0,
+              }}
+              comments={comments}
+              isApproved={post.Approved}
+              approvedBy={undefined}
+              showAddFriend={
+                activeTab === 'forYou' &&
+                post.UserID !== currentUserId &&
+                !followingIds.includes(post.UserID)
+              }
+              onAddFriend={() => handleAddFriend(post.UserID)}
+              isOwner={isOwner}
+              onEdit={isOwner ? openDetailsForEdit : undefined}          // <-- EDIT FROM FEED
+              onDelete={() => handleDeletePost(post.PostID)}
+              isLiked={engagement.LikedBy?.includes(currentUserId)}
+              isDisliked={engagement.DislikedBy?.includes(currentUserId)}
+              isSaved={isSaved}
+              onToggleLike={() => handleToggleLike(post.PostID)}
+              onToggleDislike={() => handleToggleDislike(post.PostID)}
+              onToggleSave={() => handleToggleSave(post.PostID)}
+              onAddComment={handleAddComment}
+              onUpdateComment={handleUpdateComment}
+              onDeleteComment={handleDeleteComment}
+            />
+          );
+        })}
       </ScrollView>
       <CreatePostCard 
         visible={isCreatePostVisible} 
         onClose={() => setCreatePostVisible(false)} 
         onSubmit={handleCreatePost}
+      />
+      {/* Add modal at bottom of render */}
+      <UserSearchModal
+        visible={isUserModalVisible}
+        searchText={searchQuery}
+        currentUserId={currentUserId}
+        followingIds={followingIds}
+        onClose={() => setIsUserModalVisible(false)}
+        onToggleFollow={handleAddFriend}
+        onOpenProfile={handleOpenUserProfile}
       />
     </View>
   );
