@@ -38,7 +38,6 @@ export const LocationScreen: React.FC = () => {
        {/* Main Actions */}
       <View style={styles.actionsWrap}>
        <View style={styles.emergencyHeader}>
-        <Ionicons name="alert-circle" size={22} color="#d32f2f" style={{ marginRight: 6 }} />
         <View>
          <Text style={styles.emergencyTitle}>Emergency Response</Text>
          <Text style={styles.childDetails}>
