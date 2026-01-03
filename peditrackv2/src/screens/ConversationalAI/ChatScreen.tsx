@@ -66,17 +66,12 @@ export default function ChatScreen() {
 
     const handleSend = async () => {
         if (inputText.trim() || selectedImage) {
-            // Prepare message text based on content
-            let userMessageText = inputText.trim();
+            // Use the actual text, or a placeholder for image-only messages
+            const userMessageText = inputText.trim() || '[Image attached]';
 
-            // If there's an image but no text, use placeholder
-            if (selectedImage && !userMessageText) {
-                userMessageText = '[Image attached]';
-            }
-            // If there's both image and text, mention image in message
-            else if (selectedImage && userMessageText) {
-                userMessageText = `[Image: ${userMessageText}]`;
-            }
+            console.log('🔍 Creating message with:');
+            console.log('   Text:', userMessageText);
+            console.log('   Selected Image:', selectedImage);
 
             const newMessage: Message = {
                 id: Date.now().toString(),
@@ -85,6 +80,8 @@ export default function ChatScreen() {
                 timestamp: formatTimestamp(new Date()),
                 imageUri: selectedImage || undefined,
             };
+
+            console.log('📝 New message object:', newMessage);
 
             // Add user message to UI
             setMessages(prev => [...prev, newMessage]);
@@ -95,12 +92,25 @@ export default function ChatScreen() {
             setIsTyping(true);
 
             try {
-                // Send message to chat service
-                const response = await sendChatMessage(
-                    currentText || (currentImage ? 'I have shared an image with you.' : ''),
-                    conversationId,
-                    'openai'
-                );
+                let response;
+
+                // Use different API endpoint based on whether image is attached
+                if (currentImage) {
+                    // Send message with image
+                    response = await sendChatMessageWithImage(
+                        currentText || 'Please analyze this image and provide relevant information.',
+                        currentImage,
+                        conversationId,
+                        'openai'
+                    );
+                } else {
+                    // Send text-only message
+                    response = await sendChatMessage(
+                        currentText,
+                        conversationId,
+                        'openai'
+                    );
+                }
 
                 // Update conversation ID if new
                 if (!conversationId) {
@@ -282,19 +292,34 @@ export default function ChatScreen() {
                                 {message.sender === 'user' ? (
                                     <View style={styles.userMessageContainer}>
                                         <View style={styles.userBubble}>
-                                            {message.imageUri && (
-                                                <Image
-                                                    source={{ uri: message.imageUri }}
-                                                    style={styles.messageImage}
-                                                    resizeMode="cover"
-                                                />
-                                            )}
+                                            {message.imageUri ? (() => {
+                                                console.log('🖼️  Rendering image:', message.imageUri);
+                                                return (
+                                                    <View style={styles.imageContainer}>
+                                                        <Image
+                                                            key={message.id + '-image'}
+                                                            source={{ uri: message.imageUri }}
+                                                            style={styles.messageImage}
+                                                            resizeMode="cover"
+                                                            onLoadStart={() => console.log('⏳ Image loading started...')}
+                                                            onLoad={() => console.log('✅ Image loaded successfully')}
+                                                            onError={(error) => {
+                                                                console.error('❌ Image load error:', error.nativeEvent);
+                                                                console.error('   URI was:', message.imageUri);
+                                                            }}
+                                                        />
+                                                    </View>
+                                                );
+                                            })() : null}
                                             {message.isVoice && (
                                                 <View style={styles.voiceMessageIndicator}>
                                                     <Ionicons name="mic" size={16} color={Colors.white} />
                                                 </View>
                                             )}
-                                            <Text style={styles.userMessageText}>{message.text}</Text>
+                                            {/* Only show text if it's not a placeholder */}
+                                            {message.text && !message.text.startsWith('[Image') && (
+                                                <Text style={styles.userMessageText}>{message.text}</Text>
+                                            )}
                                         </View>
                                         <Text style={styles.timestamp}>{message.timestamp}</Text>
                                     </View>
@@ -581,11 +606,15 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 4,
     },
-    messageImage: {
+    imageContainer: {
         width: '100%',
+        marginBottom: 8,
+    },
+    messageImage: {
+        width: 250,
         height: 200,
         borderRadius: 12,
-        marginBottom: 8,
+        backgroundColor: '#E5E7EB', // Placeholder background while loading
     },
     voiceMessageIndicator: {
         flexDirection: 'row',
