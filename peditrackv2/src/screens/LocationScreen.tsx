@@ -4,9 +4,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { router } from 'expo-router';
+import { TopBar } from '@/components/TopBar';
 
 export const LocationScreen: React.FC = () => {
   // Dummy recent activity data
+
+  const childName = "Thisal";
+  const childAge = 1.2; // in years
+  const childWeight = 3; // in kg
+
   const recentActivity = [
     { type: 'Assessment', date: '2025-12-23', summary: 'Moderate risk, home care advised' },
     { type: 'Teleconsultation', date: '2025-12-20', summary: 'Consulted Dr. Smith' },
@@ -29,8 +35,17 @@ export const LocationScreen: React.FC = () => {
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
 
-        {/* Main Actions */}
-        <View style={styles.actionsWrap}>
+       {/* Main Actions */}
+      <View style={styles.actionsWrap}>
+       <View style={styles.emergencyHeader}>
+        <Ionicons name="alert-circle" size={22} color="#d32f2f" style={{ marginRight: 6 }} />
+        <View>
+         <Text style={styles.emergencyTitle}>Emergency Response</Text>
+         <Text style={styles.childDetails}>
+          {childName} • {childAge} yrs • {childWeight} kg
+         </Text>
+         </View>
+        </View>
           {/* Risk Assessment */}
           <TouchableOpacity style={[styles.actionCard, { borderLeftColor: Colors.primary.DEFAULT }]} onPress={() => router.push('/assessment')}>
             <View style={[styles.iconCircle, { backgroundColor: Colors.primary.DEFAULT + '22' }]}> 
@@ -105,6 +120,25 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+  },
+  emergencyHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+    marginBottom: 10,
+    borderRadius: 10,
+    backgroundColor: "#FEE2E2",
+    paddingHorizontal: 12,
+  },
+  emergencyTitle: {
+   fontSize: 20,
+   fontWeight: "700",
+   color: "#d32f2f",
+  },
+  childDetails: {
+   marginTop: 2,
+   fontSize: 14,
+   color: "#555",
   },
   scrollContent: {
     flexGrow: 1,

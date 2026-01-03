@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, ScrollView, Image, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
+import { router } from 'expo-router';
 
 export const HomeScreen: React.FC = () => {
   return (
@@ -87,13 +88,18 @@ export const HomeScreen: React.FC = () => {
         {/* Quick Actions */}
         <View style={styles.quickActionsContainer}>
           <View style={styles.actionsRow}>
-            <View style={[styles.actionCard, styles.card, styles.actionCardLeft]}>
-              <View style={styles.actionIcon}>
-                <Text style={styles.actionEmoji}>💊</Text>
-              </View>
-              <Text style={styles.actionText}>Medications</Text>
-            </View>
-            <View style={[styles.actionCard, styles.card, styles.actionCardRight]}>
+            {/* Emergency Response */}
+             <TouchableOpacity 
+             style={[styles.actionCard, styles.card, styles.actionCardLeft]}
+             onPress={() => router.push ('/emergency-response')}  // or any action you want
+             activeOpacity={0.8}
+             >
+           <View style={styles.actionIcon}>
+            <Text style={styles.actionEmoji}>🚑</Text>
+           </View>
+           <Text style={styles.actionText}>Emergency</Text>
+             </TouchableOpacity>
+          <View style={[styles.actionCard, styles.card, styles.actionCardRight]}>
               <View style={styles.actionIcon}>
                 <Text style={styles.actionEmoji}>🍽️</Text>
               </View>
