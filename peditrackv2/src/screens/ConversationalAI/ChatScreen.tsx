@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, Image } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, Image, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors } from '@/constants/Colors';
-import { SecondaryTopBar } from '@/components/SecondaryTopBar';
+import { ChatTopBar } from '@/components/ChatTopBar';
 import { sendChatMessage, sendChatMessageWithImage } from '@/services/chatService';
 import { sendVoiceMessage } from '@/services/voiceService';
+import { chatStorageService, Conversation } from '@/services/chatStorageService';
 
 interface Message {
     id: string;
@@ -26,7 +27,14 @@ export default function ChatScreen() {
     const [isRecording, setIsRecording] = useState(false);
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [conversationHistory, setConversationHistory] = useState<Conversation[]>([]);
     const scrollViewRef = useRef<ScrollView>(null);
+
+    // Load conversation history on mount
+    useEffect(() => {
+        loadConversationHistory();
+    }, []);
 
     // Request permissions on mount
     useEffect(() => {
@@ -267,11 +275,142 @@ export default function ChatScreen() {
         setSelectedImage(null);
     };
 
+    const loadConversationHistory = async () => {
+        try {
+            console.log('📚 Loading conversation history...');
+            const history = await chatStorageService.getAllConversations();
+            console.log('   Found', history.length, 'conversations');
+            if (history.length > 0) {
+                console.log('   Latest conversation:', history[0].preview);
+            }
+            setConversationHistory(history);
+        } catch (error) {
+            console.error('❌ Error loading conversation history:', error);
+        }
+    };
+
+    const saveCurrentConversation = async () => {
+        if (messages.length > 0) {
+            try {
+                // Generate conversation ID if not exists
+                const convId = conversationId || `conv_${Date.now()}`;
+
+                console.log('💾 Attempting to save conversation...');
+                console.log('   Conversation ID:', convId);
+                console.log('   Messages count:', messages.length);
+
+                const conversation: Conversation = {
+                    id: convId,
+                    messages: messages,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    preview: chatStorageService.generatePreview(messages)
+                };
+
+                console.log('   Preview:', conversation.preview);
+
+                await chatStorageService.saveConversation(conversation);
+                await loadConversationHistory(); // Refresh the list
+                console.log('✅ Conversation saved successfully!');
+            } catch (error) {
+                console.error('❌ Error saving conversation:', error);
+                Alert.alert('Error', 'Failed to save conversation');
+            }
+        } else {
+            console.log('⚠️  No messages to save');
+        }
+    };
+
+    const handleNewChat = () => {
+        if (messages.length === 0) {
+            // No messages, just start fresh
+            setConversationId(undefined);
+            return;
+        }
+
+        Alert.alert(
+            'Start New Chat',
+            'Current chat will be saved to history.',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'New Chat',
+                    onPress: async () => {
+                        // Save current conversation
+                        await saveCurrentConversation();
+
+                        // Reset chat
+                        setMessages([]);
+                        setConversationId(undefined);
+                        setInputText('');
+                        setSelectedImage(null);
+                    }
+                }
+            ]
+        );
+    };
+
+    const handleShowHistory = () => {
+        console.log('📜 Opening history modal...');
+        console.log('   Conversation history count:', conversationHistory.length);
+        if (conversationHistory.length > 0) {
+            console.log('   First conversation:', conversationHistory[0].preview);
+            console.log('   All conversations:', conversationHistory.map(c => c.preview));
+        }
+        setShowHistoryModal(true);
+    };
+
+    const loadConversation = async (id: string) => {
+        try {
+            const conversation = await chatStorageService.getConversation(id);
+            if (conversation) {
+                // Save current conversation first if it exists
+                if (messages.length > 0 && conversationId && conversationId !== id) {
+                    await saveCurrentConversation();
+                }
+
+                // Load the selected conversation
+                setMessages(conversation.messages);
+                setConversationId(conversation.id);
+                setShowHistoryModal(false);
+                console.log('📖 Loaded conversation:', id);
+            }
+        } catch (error) {
+            console.error('Error loading conversation:', error);
+            Alert.alert('Error', 'Failed to load conversation');
+        }
+    };
+
+    const deleteConversation = async (id: string) => {
+        Alert.alert(
+            'Delete Conversation',
+            'Are you sure you want to delete this conversation?',
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        try {
+                            await chatStorageService.deleteConversation(id);
+                            await loadConversationHistory();
+                            console.log('🗑️ Conversation deleted:', id);
+                        } catch (error) {
+                            console.error('Error deleting conversation:', error);
+                            Alert.alert('Error', 'Failed to delete conversation');
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
     return (
         <View style={styles.container}>
-            <SecondaryTopBar
+            <ChatTopBar
                 showBackButton={true}
-                profileImage="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400"
+                onHistoryPress={handleShowHistory}
+                onNewChatPress={handleNewChat}
             />
 
             <SafeAreaView style={styles.safeArea} edges={['bottom']}>
@@ -429,6 +568,85 @@ export default function ChatScreen() {
                     </View>
                 </KeyboardAvoidingView>
             </SafeAreaView>
+
+            {/* Conversation History Modal */}
+            <Modal
+                visible={showHistoryModal}
+                animationType="slide"
+                transparent={true}
+                onRequestClose={() => setShowHistoryModal(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <View style={styles.modalHeader}>
+                            <Text style={styles.modalTitle}>Conversation History</Text>
+                            <View style={{ flexDirection: 'row', gap: 8 }}>
+                                <TouchableOpacity
+                                    onPress={async () => {
+                                        console.log('🔄 Refreshing history...');
+                                        await loadConversationHistory();
+                                    }}
+                                    style={styles.modalCloseButton}
+                                >
+                                    <Ionicons name="refresh" size={24} color={Colors.primary.DEFAULT} />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={() => setShowHistoryModal(false)}
+                                    style={styles.modalCloseButton}
+                                >
+                                    <Ionicons name="close" size={24} color={Colors.dark} />
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+
+                        <ScrollView style={styles.historyList}>
+                            {(() => {
+                                console.log('🎨 Rendering history modal, count:', conversationHistory.length);
+                                return conversationHistory.length === 0 ? (
+                                    <View style={styles.emptyHistory}>
+                                        <Ionicons name="chatbubbles-outline" size={64} color={Colors.inactive} />
+                                        <Text style={styles.emptyHistoryText}>No conversation history yet</Text>
+                                        <Text style={styles.emptyHistorySubtext}>
+                                            Start chatting and your conversations will appear here
+                                        </Text>
+                                    </View>
+                                ) : (
+                                    conversationHistory.map((conv, index) => {
+                                        console.log(`   Rendering conversation ${index}:`, conv.preview);
+                                        return (
+                                            <View key={conv.id} style={styles.historyItemWrapper}>
+                                                <TouchableOpacity
+                                                    style={styles.historyItem}
+                                                    onPress={() => loadConversation(conv.id)}
+                                                >
+                                                    <View style={styles.historyItemIcon}>
+                                                        <Ionicons name="chatbubble" size={20} color={Colors.primary.DEFAULT} />
+                                                    </View>
+                                                    <View style={styles.historyItemContent}>
+                                                        <Text style={styles.historyItemPreview} numberOfLines={2}>
+                                                            {conv.preview}
+                                                        </Text>
+                                                        <Text style={styles.historyItemTimestamp}>
+                                                            {new Date(conv.updatedAt).toLocaleDateString()} {new Date(conv.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                        </Text>
+                                                    </View>
+                                                    <Ionicons name="chevron-forward" size={20} color={Colors.inactive} />
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    style={styles.deleteButton}
+                                                    onPress={() => deleteConversation(conv.id)}
+                                                >
+                                                    <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                                                </TouchableOpacity>
+                                            </View>
+                                        );
+                                    })
+                                );
+                            })()}
+                        </ScrollView>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 };
@@ -648,5 +866,107 @@ const styles = StyleSheet.create({
     },
     recordingButton: {
         backgroundColor: '#EF4444',
+    },
+    // Modal styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'flex-end',
+    },
+    modalContent: {
+        backgroundColor: Colors.white,
+        borderTopLeftRadius: 24,
+        borderTopRightRadius: 24,
+        height: '80%',
+        paddingBottom: 20,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E5E7EB',
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: Colors.dark,
+    },
+    modalCloseButton: {
+        width: 32,
+        height: 32,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    historyList: {
+        flex: 1,
+        backgroundColor: Colors.white,
+    },
+    emptyHistory: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 60,
+        paddingHorizontal: 40,
+    },
+    emptyHistoryText: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: Colors.dark,
+        marginTop: 16,
+        textAlign: 'center',
+    },
+    emptyHistorySubtext: {
+        fontSize: 14,
+        color: Colors.inactive,
+        marginTop: 8,
+        textAlign: 'center',
+        lineHeight: 20,
+    },
+    historyItemWrapper: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: '#F3F4F6',
+        backgroundColor: Colors.white,
+        minHeight: 72,
+    },
+    historyItem: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 20,
+        paddingVertical: 16,
+        minHeight: 72,
+    },
+    deleteButton: {
+        paddingHorizontal: 16,
+        paddingVertical: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: 72,
+    },
+    historyItemIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: `${Colors.primary.DEFAULT}15`,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 12,
+    },
+    historyItemContent: {
+        flex: 1,
+    },
+    historyItemPreview: {
+        fontSize: 15,
+        fontWeight: '500',
+        color: Colors.dark,
+        marginBottom: 4,
+    },
+    historyItemTimestamp: {
+        fontSize: 12,
+        color: Colors.inactive,
     },
 });
