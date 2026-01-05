@@ -5,29 +5,29 @@ const { calculateGrowthVelocity, estimatePercentile, generatePredictions } = req
 const Baby = require('../models/Baby');
 
 // Add new measurement
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   try {
     const measurement = new Measurement(req.body);
     await measurement.save();
     res.status(201).json(measurement);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 });
 
 // Get all measurements for a baby
-router.get('/baby/:babyId', async (req, res) => {
+router.get('/baby/:babyId', async (req, res, next) => {
   try {
     const measurements = await Measurement.find({ babyId: req.params.babyId })
       .sort({ measurementDate: -1 });
     res.json(measurements);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // Get latest measurement for a baby
-router.get('/baby/:babyId/latest', async (req, res) => {
+router.get('/baby/:babyId/latest', async (req, res, next) => {
   try {
     const measurement = await Measurement.findOne({ babyId: req.params.babyId })
       .sort({ measurementDate: -1 });
@@ -38,12 +38,12 @@ router.get('/baby/:babyId/latest', async (req, res) => {
     
     res.json(measurement);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // Get growth analytics for a baby
-router.get('/baby/:babyId/analytics', async (req, res) => {
+router.get('/baby/:babyId/analytics', async (req, res, next) => {
   try {
     const measurements = await Measurement.find({ babyId: req.params.babyId })
       .sort({ measurementDate: -1 })
@@ -81,12 +81,12 @@ router.get('/baby/:babyId/analytics', async (req, res) => {
       totalMeasurements: measurements.length,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // Get specific measurement
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req, res, next) => {
   try {
     const measurement = await Measurement.findById(req.params.id);
     if (!measurement) {
@@ -94,12 +94,12 @@ router.get('/:id', async (req, res) => {
     }
     res.json(measurement);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // Update measurement
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req, res, next) => {
   try {
     const measurement = await Measurement.findByIdAndUpdate(
       req.params.id,
@@ -113,12 +113,12 @@ router.put('/:id', async (req, res) => {
     
     res.json(measurement);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 });
 
 // Delete measurement
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req, res, next) => {
   try {
     const measurement = await Measurement.findByIdAndDelete(req.params.id);
     
@@ -128,7 +128,7 @@ router.delete('/:id', async (req, res) => {
     
     res.json({ message: 'Measurement deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
