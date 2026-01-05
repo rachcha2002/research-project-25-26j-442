@@ -4,9 +4,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
+import { useRouter } from 'expo-router';
 import Svg, { Circle } from 'react-native-svg';
 
 export const MedsScreen: React.FC = () => {
+  const router = useRouter();
   const [showMenu1, setShowMenu1] = useState(false);
   const [showMenu2, setShowMenu2] = useState(false);
 
@@ -61,7 +63,10 @@ export const MedsScreen: React.FC = () => {
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Medications & Vaccines</Text>
-            <TouchableOpacity style={styles.addButton}>
+            <TouchableOpacity 
+              style={styles.addButton}
+              onPress={() => router.push('/health-analytics/meds/add-medication' as any)}
+            >
               <Ionicons name="add" size={24} color={Colors.primary.light} />
             </TouchableOpacity>
           </View>
@@ -141,7 +146,10 @@ export const MedsScreen: React.FC = () => {
           </View>
 
           {/* Add Medication Button */}
-          <TouchableOpacity style={styles.addMedicationButton}>
+          <TouchableOpacity 
+            style={styles.addMedicationButton}
+            onPress={() => router.push('/health-analytics/meds/add-medication' as any)}
+          >
             <Text style={styles.addMedicationText}>+ Add Medication</Text>
           </TouchableOpacity>
 
