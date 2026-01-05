@@ -1,32 +1,14 @@
 // For Android Emulator: use 10.0.2.2
 // For Physical Device: use your computer's IP address (check with ipconfig)
-// Current Wi-Fi IP: 192.168.1.3
-const API_BASE_URL = 'http://192.168.1.3:5001/api';
+// Current Wi-Fi IP: 192.168.1.153 (Updated: 2026-01-05)
+const API_BASE_URL = 'http://192.168.1.153:5001/api';
 
 /**
  * Health Analytics Service for PediTrack v2
- * Handles communication with the health analytics microservice
+ * Handles communication with the health-analytics-service microservice
  */
 
-// ===== Type Definitions =====
-
-export interface Baby {
-    _id: string;
-    accountId: string;
-    userId: string;
-    name: string;
-    dateOfBirth: string;
-    gender: 'male' | 'female' | 'other';
-    age: number;
-    parentName?: string;
-    parentEmail?: string;
-    parentPhone?: string;
-    bloodType?: string;
-    allergies?: string[];
-    isActive: boolean;
-    createdAt: string;
-    updatedAt: string;
-}
+// ==================== Interfaces ====================
 
 export interface MeasurementValue {
     value: number;
@@ -44,6 +26,24 @@ export interface Measurement {
     location?: string;
     notes?: string;
     entryMode?: 'manual' | 'photo';
+    createdAt?: string;
+    updatedAt?: string;
+}
+
+export interface Baby {
+    _id?: string;
+    accountId: string;
+    userId: string;
+    name: string;
+    dateOfBirth: string;
+    gender: 'male' | 'female' | 'other';
+    parentName?: string;
+    parentEmail?: string;
+    parentPhone?: string;
+    bloodType?: string;
+    allergies?: string[];
+    age?: number;
+    isActive?: boolean;
     createdAt?: string;
     updatedAt?: string;
 }
@@ -99,6 +99,7 @@ export interface HealthRecord {
     symptoms?: string[];
     diagnosis?: string;
     severity?: 'mild' | 'moderate' | 'severe';
+    status?: 'monitoring' | 'active' | 'resolved' | 'underTreatment';
     doctorName?: string;
     clinicName?: string;
     doctorNotes?: string;
@@ -132,23 +133,26 @@ export interface Medication {
 }
 
 export interface AIInsight {
-    _id: string;
+    _id?: string;
     babyId: string;
     insightType: 'growth_prediction' | 'health_alert' | 'milestone_tracking' | 'nutrition_recommendation';
     title: string;
     description: string;
     confidenceScore: number;
-    severity: 'info' | 'warning' | 'urgent';
+    severity: 'info' | 'warning' | 'critical';
     predictions?: GrowthPrediction;
-    status: 'active' | 'dismissed' | 'acted_upon' | 'expired';
-    actionTaken?: string;
-    actionNotes?: string;
-    createdAt: string;
-    updatedAt: string;
+    status?: 'active' | 'dismissed' | 'acted_upon' | 'expired';
+    action?: string;
+    notes?: string;
+    createdAt?: string;
+    updatedAt?: string;
 }
 
-// ===== Baby Management =====
+// ==================== Baby Management ====================
 
+/**
+ * Create a new baby profile
+ */
 export const createBaby = async (babyData: Partial<Baby>): Promise<Baby> => {
     try {
         const response = await fetch(`${API_BASE_URL}/babies`, {
@@ -163,50 +167,72 @@ export const createBaby = async (babyData: Partial<Baby>): Promise<Baby> => {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error creating baby:', error);
         throw error;
     }
 };
 
-export const getAllBabies = async (accountId?: string, userId?: string): Promise<Baby[]> => {
+/**
+ * Get all babies for an account
+ */
+export const getBabies = async (accountId?: string, userId?: string): Promise<Baby[]> => {
     try {
         const params = new URLSearchParams();
         if (accountId) params.append('accountId', accountId);
         if (userId) params.append('userId', userId);
 
-        const response = await fetch(`${API_BASE_URL}/babies?${params.toString()}`);
+        const response = await fetch(`${API_BASE_URL}/babies?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error getting babies:', error);
         throw error;
     }
 };
 
-export const getBabyById = async (babyId: string): Promise<Baby> => {
+/**
+ * Get baby by ID
+ */
+export const getBabyById = async (id: string): Promise<Baby> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/babies/${babyId}`);
+        const response = await fetch(`${API_BASE_URL}/babies/${id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error getting baby:', error);
         throw error;
     }
 };
 
-export const updateBaby = async (babyId: string, babyData: Partial<Baby>): Promise<Baby> => {
+/**
+ * Update baby profile
+ */
+export const updateBaby = async (id: string, babyData: Partial<Baby>): Promise<Baby> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/babies/${babyId}`, {
+        const response = await fetch(`${API_BASE_URL}/babies/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -218,17 +244,24 @@ export const updateBaby = async (babyId: string, babyData: Partial<Baby>): Promi
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error updating baby:', error);
         throw error;
     }
 };
 
-export const deleteBaby = async (babyId: string): Promise<void> => {
+/**
+ * Delete baby profile (soft delete)
+ */
+export const deleteBaby = async (id: string): Promise<void> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/babies/${babyId}`, {
+        const response = await fetch(`${API_BASE_URL}/babies/${id}`, {
             method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
         });
 
         if (!response.ok) {
@@ -240,9 +273,12 @@ export const deleteBaby = async (babyId: string): Promise<void> => {
     }
 };
 
-// ===== Measurements =====
+// ==================== Measurements ====================
 
-export const addMeasurement = async (measurementData: Measurement): Promise<Measurement> => {
+/**
+ * Add a new measurement
+ */
+export const addMeasurement = async (measurementData: Partial<Measurement>): Promise<Measurement> => {
     try {
         const response = await fetch(`${API_BASE_URL}/measurements`, {
             method: 'POST',
@@ -253,64 +289,96 @@ export const addMeasurement = async (measurementData: Measurement): Promise<Meas
         });
 
         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+            const errorData = await response.json();
+            throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error adding measurement:', error);
         throw error;
     }
 };
 
-export const getMeasurementsByBaby = async (babyId: string): Promise<Measurement[]> => {
+/**
+ * Get all measurements for a baby
+ */
+export const getMeasurements = async (babyId: string): Promise<Measurement[]> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/measurements/baby/${babyId}`);
+        const response = await fetch(`${API_BASE_URL}/measurements/baby/${babyId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error getting measurements:', error);
         throw error;
     }
 };
 
+/**
+ * Get latest measurement for a baby
+ */
 export const getLatestMeasurement = async (babyId: string): Promise<Measurement> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/measurements/baby/${babyId}/latest`);
+        const response = await fetch(`${API_BASE_URL}/measurements/baby/${babyId}/latest`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error getting latest measurement:', error);
         throw error;
     }
 };
 
+/**
+ * Get growth analytics for a baby
+ */
 export const getGrowthAnalytics = async (babyId: string): Promise<GrowthAnalytics> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/measurements/baby/${babyId}/analytics`);
+        const response = await fetch(`${API_BASE_URL}/measurements/baby/${babyId}/analytics`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error getting growth analytics:', error);
         throw error;
     }
 };
 
-export const updateMeasurement = async (measurementId: string, measurementData: Partial<Measurement>): Promise<Measurement> => {
+/**
+ * Update a measurement
+ */
+export const updateMeasurement = async (id: string, measurementData: Partial<Measurement>): Promise<Measurement> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/measurements/${measurementId}`, {
+        const response = await fetch(`${API_BASE_URL}/measurements/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -322,17 +390,24 @@ export const updateMeasurement = async (measurementId: string, measurementData: 
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error updating measurement:', error);
         throw error;
     }
 };
 
-export const deleteMeasurement = async (measurementId: string): Promise<void> => {
+/**
+ * Delete a measurement
+ */
+export const deleteMeasurement = async (id: string): Promise<void> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/measurements/${measurementId}`, {
+        const response = await fetch(`${API_BASE_URL}/measurements/${id}`, {
             method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
         });
 
         if (!response.ok) {
@@ -344,9 +419,12 @@ export const deleteMeasurement = async (measurementId: string): Promise<void> =>
     }
 };
 
-// ===== Health Records =====
+// ==================== Health Records ====================
 
-export const addHealthRecord = async (recordData: HealthRecord): Promise<HealthRecord> => {
+/**
+ * Add a health record
+ */
+export const addHealthRecord = async (recordData: Partial<HealthRecord>): Promise<HealthRecord> => {
     try {
         const response = await fetch(`${API_BASE_URL}/health-records`, {
             method: 'POST',
@@ -360,34 +438,71 @@ export const addHealthRecord = async (recordData: HealthRecord): Promise<HealthR
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error adding health record:', error);
         throw error;
     }
 };
 
+/**
+ * Get health records for a baby
+ */
 export const getHealthRecords = async (babyId: string, recordType?: string): Promise<HealthRecord[]> => {
     try {
         const params = new URLSearchParams();
         if (recordType) params.append('recordType', recordType);
 
-        const response = await fetch(`${API_BASE_URL}/health-records/baby/${babyId}?${params.toString()}`);
+        const response = await fetch(`${API_BASE_URL}/health-records/baby/${babyId}?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error getting health records:', error);
         throw error;
     }
 };
 
-export const updateHealthRecord = async (recordId: string, recordData: Partial<HealthRecord>): Promise<HealthRecord> => {
+/**
+ * Get a single health record by ID
+ */
+export const getHealthRecordById = async (id: string): Promise<HealthRecord> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/health-records/${recordId}`, {
+        const response = await fetch(`${API_BASE_URL}/health-records/${id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error getting health record:', error);
+        throw error;
+    }
+};
+
+/**
+ * Update a health record
+ */
+export const updateHealthRecord = async (id: string, recordData: Partial<HealthRecord>): Promise<HealthRecord> => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/health-records/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -399,17 +514,24 @@ export const updateHealthRecord = async (recordId: string, recordData: Partial<H
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error updating health record:', error);
         throw error;
     }
 };
 
-export const deleteHealthRecord = async (recordId: string): Promise<void> => {
+/**
+ * Delete a health record
+ */
+export const deleteHealthRecord = async (id: string): Promise<void> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/health-records/${recordId}`, {
+        const response = await fetch(`${API_BASE_URL}/health-records/${id}`, {
             method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
         });
 
         if (!response.ok) {
@@ -421,9 +543,12 @@ export const deleteHealthRecord = async (recordId: string): Promise<void> => {
     }
 };
 
-// ===== Medications =====
+// ==================== Medications ====================
 
-export const addMedication = async (medicationData: Medication): Promise<Medication> => {
+/**
+ * Add a medication
+ */
+export const addMedication = async (medicationData: Partial<Medication>): Promise<Medication> => {
     try {
         const response = await fetch(`${API_BASE_URL}/medications`, {
             method: 'POST',
@@ -437,49 +562,51 @@ export const addMedication = async (medicationData: Medication): Promise<Medicat
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error adding medication:', error);
         throw error;
     }
 };
 
-export const getMedications = async (babyId: string): Promise<Medication[]> => {
+/**
+ * Get medications for a baby
+ */
+export const getMedications = async (babyId: string, activeOnly: boolean = false): Promise<Medication[]> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/medications/baby/${babyId}`);
+        const endpoint = activeOnly 
+            ? `${API_BASE_URL}/medications/baby/${babyId}/active`
+            : `${API_BASE_URL}/medications/baby/${babyId}`;
+
+        const response = await fetch(endpoint, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error getting medications:', error);
         throw error;
     }
 };
 
-export const getActiveMedications = async (babyId: string): Promise<Medication[]> => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/medications/baby/${babyId}/active`);
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        return await response.json();
-    } catch (error) {
-        console.error('Error getting active medications:', error);
-        throw error;
-    }
-};
-
+/**
+ * Update medication status
+ */
 export const updateMedicationStatus = async (
-    medicationId: string,
+    id: string,
     status: 'active' | 'completed' | 'discontinued'
 ): Promise<Medication> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/medications/${medicationId}/status`, {
+        const response = await fetch(`${API_BASE_URL}/medications/${id}/status`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -491,16 +618,20 @@ export const updateMedicationStatus = async (
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error updating medication status:', error);
         throw error;
     }
 };
 
-export const updateMedication = async (medicationId: string, medicationData: Partial<Medication>): Promise<Medication> => {
+/**
+ * Update a medication
+ */
+export const updateMedication = async (id: string, medicationData: Partial<Medication>): Promise<Medication> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/medications/${medicationId}`, {
+        const response = await fetch(`${API_BASE_URL}/medications/${id}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -512,17 +643,24 @@ export const updateMedication = async (medicationId: string, medicationData: Par
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error updating medication:', error);
         throw error;
     }
 };
 
-export const deleteMedication = async (medicationId: string): Promise<void> => {
+/**
+ * Delete a medication
+ */
+export const deleteMedication = async (id: string): Promise<void> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/medications/${medicationId}`, {
+        const response = await fetch(`${API_BASE_URL}/medications/${id}`, {
             method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
         });
 
         if (!response.ok) {
@@ -534,78 +672,95 @@ export const deleteMedication = async (medicationId: string): Promise<void> => {
     }
 };
 
-// ===== AI Insights =====
+// ==================== AI Insights ====================
 
+/**
+ * Generate AI insights for a baby
+ */
 export const generateAIInsights = async (babyId: string): Promise<AIInsight[]> => {
     try {
         const response = await fetch(`${API_BASE_URL}/ai-insights/generate/${babyId}`, {
             method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
         });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error generating AI insights:', error);
         throw error;
     }
 };
 
-export const getAIInsights = async (babyId: string): Promise<AIInsight[]> => {
+/**
+ * Get AI insights for a baby
+ */
+export const getAIInsights = async (babyId: string, activeOnly: boolean = false): Promise<AIInsight[]> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/ai-insights/baby/${babyId}`);
+        const endpoint = activeOnly
+            ? `${API_BASE_URL}/ai-insights/baby/${babyId}/active`
+            : `${API_BASE_URL}/ai-insights/baby/${babyId}`;
+
+        const response = await fetch(endpoint, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error getting AI insights:', error);
         throw error;
     }
 };
 
-export const getActiveAIInsights = async (babyId: string): Promise<AIInsight[]> => {
+/**
+ * Get a specific AI insight by ID
+ */
+export const getAIInsightById = async (id: string): Promise<AIInsight> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/ai-insights/baby/${babyId}/active`);
+        const response = await fetch(`${API_BASE_URL}/ai-insights/${id}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
-    } catch (error) {
-        console.error('Error getting active AI insights:', error);
-        throw error;
-    }
-};
-
-export const getAIInsightById = async (insightId: string): Promise<AIInsight> => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/ai-insights/${insightId}`);
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error getting AI insight:', error);
         throw error;
     }
 };
 
+/**
+ * Update AI insight status
+ */
 export const updateAIInsightStatus = async (
-    insightId: string,
+    id: string, 
     status: 'active' | 'dismissed' | 'acted_upon' | 'expired',
     action?: string,
     notes?: string
 ): Promise<AIInsight> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/ai-insights/${insightId}/status`, {
+        const response = await fetch(`${API_BASE_URL}/ai-insights/${id}/status`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -617,17 +772,24 @@ export const updateAIInsightStatus = async (
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        return await response.json();
+        const data = await response.json();
+        return data;
     } catch (error) {
         console.error('Error updating AI insight status:', error);
         throw error;
     }
 };
 
-export const deleteAIInsight = async (insightId: string): Promise<void> => {
+/**
+ * Delete an AI insight
+ */
+export const deleteAIInsight = async (id: string): Promise<void> => {
     try {
-        const response = await fetch(`${API_BASE_URL}/ai-insights/${insightId}`, {
+        const response = await fetch(`${API_BASE_URL}/ai-insights/${id}`, {
             method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
         });
 
         if (!response.ok) {
@@ -639,15 +801,18 @@ export const deleteAIInsight = async (insightId: string): Promise<void> => {
     }
 };
 
-// ===== Health Check =====
+// ==================== Utility Functions ====================
 
-export const checkHealthAnalyticsService = async (): Promise<boolean> => {
+/**
+ * Check service health
+ */
+export const checkServiceHealth = async (): Promise<boolean> => {
     try {
-        const response = await fetch(`http://192.168.1.3:5001/health`);
+        const response = await fetch(`${API_BASE_URL.replace('/api', '')}/health`);
         const data = await response.json();
         return data.status === 'OK';
     } catch (error) {
-        console.error('Health analytics service health check failed:', error);
+        console.error('Service health check failed:', error);
         return false;
     }
 };
