@@ -33,84 +33,78 @@ export const LocationScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-
-       {/* Main Actions */}
-      <View style={styles.actionsWrap}>
-       <View style={styles.emergencyHeader}>
-        <View>
-         <Text style={styles.emergencyTitle}>Emergency Response</Text>
-         <Text style={styles.childDetails}>
-          {childName} • {childAge} yrs • {childWeight} kg
-         </Text>
-         </View>
-        </View>
-          {/* Risk Assessment */}
-          <TouchableOpacity style={[styles.actionCard, { borderLeftColor: Colors.primary.DEFAULT }]} onPress={() => router.push('/assessment')}>
-            <View style={[styles.iconCircle, { backgroundColor: Colors.primary.DEFAULT + '22' }]}> 
-              <MaterialCommunityIcons name="clipboard-text-search-outline" size={32} color={Colors.primary.DEFAULT} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.actionTitle, { color: Colors.primary.DEFAULT }]}>Risk Assessment</Text>
-              <Text style={styles.actionDesc}>Quickly assess your child's emergency risk</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={22} color="#94A3B8" />
-          </TouchableOpacity>
-          {/* Teleconsultation */}
-          <TouchableOpacity style={[styles.actionCard, { borderLeftColor: '#F43F5E' }]} onPress={() => router.push('/teleconsultation')}>
-            <View style={[styles.iconCircle, { backgroundColor: '#F43F5E22' }]}> 
-              <MaterialCommunityIcons name="video-account" size={32} color="#F43F5E" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.actionTitle, { color: '#F43F5E' }]}>Teleconsultation</Text>
-              <Text style={styles.actionDesc}>Connect instantly with a pediatrician</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={22} color="#94A3B8" />
-          </TouchableOpacity>
-          {/* Nearby Hospitals */}
-          <TouchableOpacity style={[styles.actionCard, { borderLeftColor: '#6366F1' }]} onPress={() => router.push('/nearby-hospitals')}>
-            <View style={[styles.iconCircle, { backgroundColor: '#6366F122' }]}> 
-              <Ionicons name="medkit" size={32} color="#6366F1" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.actionTitle, { color: '#6366F1' }]}>Nearby Hospitals</Text>
-              <Text style={styles.actionDesc}>Find the closest pediatric care centers</Text>
-            </View>
-            <Ionicons name="chevron-forward" size={22} color="#94A3B8" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Recent Activity */}
-        <View style={styles.recentActivityWrap}>
-          <Text style={styles.recentActivityTitle}>Recent Activity</Text>
-          {recentActivity.map((item, idx) => (
-            <View key={idx} style={styles.recentItem}>
-              <Ionicons
-                name={item.type === 'Assessment' ? 'analytics' : 'chatbubbles'}
-                size={18}
-                color={item.type === 'Assessment' ? Colors.primary.DEFAULT : '#F43F5E'}
-                style={{ marginRight: 8 }}
-              />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.recentType}>{item.type}</Text>
-                <Text style={styles.recentSummary}>{item.summary}</Text>
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 120 }}
+        >
+          <TopBar />
+          {/* Main Actions */}
+          <View style={styles.actionsWrap}>
+            {/* ...existing code for action cards... */}
+            <TouchableOpacity style={[styles.actionCard, { borderLeftColor: Colors.primary.DEFAULT }]} onPress={() => router.push('/assessment')}>
+              <View style={[styles.iconCircle, { backgroundColor: Colors.primary.DEFAULT + '22' }]}> 
+                <MaterialCommunityIcons name="clipboard-text-search-outline" size={32} color={Colors.primary.DEFAULT} />
               </View>
-              <Text style={styles.recentDate}>{item.date}</Text>
-            </View>
-          ))}
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.actionTitle, { color: Colors.primary.DEFAULT }]}>Risk Assessment</Text>
+                <Text style={styles.actionDesc}>Quickly assess your child's emergency risk</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={22} color="#94A3B8" />
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.actionCard, { borderLeftColor: '#F43F5E' }]} onPress={() => router.push('/teleconsultation')}>
+              <View style={[styles.iconCircle, { backgroundColor: '#F43F5E22' }]}> 
+                <MaterialCommunityIcons name="video-account" size={32} color="#F43F5E" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.actionTitle, { color: '#F43F5E' }]}>Teleconsultation</Text>
+                <Text style={styles.actionDesc}>Connect instantly with a pediatrician</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={22} color="#94A3B8" />
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.actionCard, { borderLeftColor: '#6366F1' }]} onPress={() => router.push('/nearby-hospitals')}>
+              <View style={[styles.iconCircle, { backgroundColor: '#6366F122' }]}> 
+                <Ionicons name="medkit" size={32} color="#6366F1" />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.actionTitle, { color: '#6366F1' }]}>Nearby Hospitals</Text>
+                <Text style={styles.actionDesc}>Find the closest pediatric care centers</Text>
+              </View>
+              <Ionicons name="chevron-forward" size={22} color="#94A3B8" />
+            </TouchableOpacity>
+          </View>
+          {/* Recent Activity */}
+          <View style={styles.recentActivityWrap}>
+            <Text style={styles.recentActivityTitle}>Recent Activity</Text>
+            {recentActivity.map((item, idx) => (
+              <View key={idx} style={styles.recentItem}>
+                <Ionicons
+                  name={item.type === 'Assessment' ? 'analytics' : 'chatbubbles'}
+                  size={18}
+                  color={item.type === 'Assessment' ? Colors.primary.DEFAULT : '#F43F5E'}
+                  style={{ marginRight: 8 }}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.recentType}>{item.type}</Text>
+                  <Text style={styles.recentSummary}>{item.summary}</Text>
+                </View>
+                <Text style={styles.recentDate}>{item.date}</Text>
+              </View>
+            ))}
+          </View>
+        </ScrollView>
+        {/* Bottom Emergency Buttons - fixed at bottom */}
+        <View style={styles.bottomEmergencyWrap}>
+          <TouchableOpacity style={[styles.bottomEmergencyBtn, { backgroundColor: '#EF4444' }]} onPress={handleEmergencyCall}>
+            <Ionicons name="call" size={22} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.bottomEmergencyText}>Emergency Call</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={[styles.bottomEmergencyBtn, { backgroundColor: '#0EA5E9' }]} onPress={handleSuwaseriyaCall}>
+            <MaterialCommunityIcons name="ambulance" size={22} color="#fff" style={{ marginRight: 8 }} />
+            <Text style={styles.bottomEmergencyText}>Suwaseriya 1990</Text>
+          </TouchableOpacity>
         </View>
-          {/* Bottom Emergency Buttons */}
-      <View style={styles.bottomEmergencyWrap}>
-        <TouchableOpacity style={[styles.bottomEmergencyBtn, { backgroundColor: '#EF4444' }]} onPress={handleEmergencyCall}>
-          <Ionicons name="call" size={22} color="#fff" style={{ marginRight: 8 }} />
-          <Text style={styles.bottomEmergencyText}>Emergency Call</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.bottomEmergencyBtn, { backgroundColor: '#0EA5E9' }]} onPress={handleSuwaseriyaCall}>
-          <MaterialCommunityIcons name="ambulance" size={22} color="#fff" style={{ marginRight: 8 }} />
-          <Text style={styles.bottomEmergencyText}>Suwaseriya 1990</Text>
-        </TouchableOpacity>
       </View>
-      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -153,11 +147,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     alignItems: 'center',
-    paddingBottom: 12,
-    paddingTop: 8,
     backgroundColor: 'rgba(249,250,251,0.95)',
-    zIndex: 20,
-    gap: 20,
+    zIndex: 10,
+    gap: 15,
   },
   bottomEmergencyBtn: {
     flexDirection: 'row',
@@ -280,6 +272,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 420,
     gap: 18,
+    marginTop: 12,
   },
   actionCard: {
     flexDirection: 'row',

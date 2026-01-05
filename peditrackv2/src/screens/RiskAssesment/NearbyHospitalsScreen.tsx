@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { SecondaryTopBar } from "@/components/SecondaryTopBar";
 
 const HOSPITALS = [
   {
@@ -55,7 +56,8 @@ export const NearbyHospitalsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={{ padding: 16 }} showsVerticalScrollIndicator={false}>
+      <ScrollView  showsVerticalScrollIndicator={false}>
+        <SecondaryTopBar />
         <Text style={styles.headerTitle}>Nearby Hospitals</Text>
         {/* Tabs */}
         <View style={styles.tabs}>
@@ -158,6 +160,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#22223B",
     marginBottom: 10,
+    marginTop: 6,
     textAlign: 'center',
   },
   tabs: {
