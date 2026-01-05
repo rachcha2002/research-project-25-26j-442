@@ -1,4 +1,4 @@
-import { Home, FileText } from 'lucide-react';
+import { Home, FileText, File} from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
@@ -11,6 +11,7 @@ export default function Sidebar({ isOpen }: SidebarProps) {
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: Home },
     { name: 'Post Recommendations', path: '/recommendations', icon: FileText },
+    { name: 'Consultations', path: '/consultation', icon: File },
   ];
 
   return (

@@ -4,6 +4,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import Login from './components/Login';
 import Dashboard from './components/Dashboard';
 import PostRecommendations from './components/PostRecommendations';
+import DoctorDashboard from './components/DoctorDashboard';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -50,6 +51,18 @@ function App() {
               isAuthenticated ? (
                 <Dashboard onLogout={handleLogout}>
                   <PostRecommendations />
+                </Dashboard>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/consultation"
+            element={
+              isAuthenticated ? (
+                <Dashboard onLogout={handleLogout}>
+                <DoctorDashboard />
                 </Dashboard>
               ) : (
                 <Navigate to="/login" replace />

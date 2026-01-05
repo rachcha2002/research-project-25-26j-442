@@ -1,3 +1,3 @@
-import { LocationScreen } from '@/screens';
+import { SocialScreen } from "@/screens/SocialScreen";
 
-export default LocationScreen;
+export default SocialScreen;
