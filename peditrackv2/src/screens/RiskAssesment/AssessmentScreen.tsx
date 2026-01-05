@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { submitAssessment } from "@/services/riskAssessmentService";
 import {
   View,
   Text,
@@ -12,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { SecondaryTopBar } from "@/components/SecondaryTopBar";
 
 const Colors = {
   background: "#FAFAFF",
@@ -36,7 +38,7 @@ export const EmergencyAssessmentScreen: React.FC = () => {
   const router = useRouter();
 
   // Demographics (mock data for now, fetched from profile in future)
-  const childName = "Emma";
+  const childName = "Thisal";
   const ageMonths = "24";
   const weightKg = "12.5";
 
@@ -45,7 +47,7 @@ export const EmergencyAssessmentScreen: React.FC = () => {
   const [heartRate, setHeartRate] = useState("");
   const [respRate, setRespRate] = useState("");
   const [spo2, setSpo2] = useState("");
-  const [capillaryRefill, setCapillaryRefill] = useState("");
+
   const [avpu, setAvpu] = useState<"Alert" | "Voice" | "Pain" | "Unresponsive">(
     "Alert"
   );
@@ -183,7 +185,7 @@ export const EmergencyAssessmentScreen: React.FC = () => {
         heart_rate_bpm: heartRate ? Number(heartRate) : null,
         respiratory_rate_bpm: respRate ? Number(respRate) : null,
         spo2_percent: spo2 ? Number(spo2) : null,
-        capillary_refill_sec: capillaryRefill ? Number(capillaryRefill) : null,
+
         avpu: avpu,
         pain_score: pain,
       },
@@ -209,23 +211,8 @@ export const EmergencyAssessmentScreen: React.FC = () => {
       immediate_flag: hasImmediateFlag,
     }
 
-    // Send to backend (change URL to your actual API)
     try {
-      // show a loading state in real app
-      const response = await fetch("https://your-backend.example.com/api/risk-score", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Assume response contains risk result
-      const result = await response.json();
+      const result = await submitAssessment(payload);
       // Navigate directly to result screen (ResultScreen will display the result)
       router.push({
         pathname: "/assessment-result" as any,
@@ -254,6 +241,7 @@ export const EmergencyAssessmentScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container} edges={["bottom"]}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <SecondaryTopBar  />
         <Text style={styles.title}>Emergency Assessment</Text>
 
         {/* Demographics (Profile Info) */}
@@ -582,10 +570,12 @@ const styles = StyleSheet.create({
     paddingBottom: Platform.OS === "ios" ? 36 : 24,
   },
   title: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: "700",
     color: Colors.dark,
     marginBottom: 12,
+    marginTop: 6,
+    marginLeft: 6,
   },
   card: {
     backgroundColor: Colors.card,
