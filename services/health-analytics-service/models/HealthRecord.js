@@ -53,6 +53,11 @@ const healthRecordSchema = new mongoose.Schema({
     enum: ['mild', 'moderate', 'severe', ''],
     default: '',
   },
+  status: {
+    type: String,
+    enum: ['monitoring', 'active', 'resolved', 'underTreatment', ''],
+    default: 'monitoring',
+  },
 
   // Medical professional info
   doctorName: {

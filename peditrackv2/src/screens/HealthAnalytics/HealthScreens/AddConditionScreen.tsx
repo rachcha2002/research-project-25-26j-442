@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { addHealthRecord, getHealthRecordById, updateHealthRecord } from '@/services/healthAnalyticsService';
 
 type ConditionType = 'acute' | 'chronic' | 'resolved';
 type Severity = 'mild' | 'moderate' | 'severe';
@@ -12,16 +14,24 @@ type Status = 'monitoring' | 'active' | 'resolved' | 'underTreatment';
 
 export const AddConditionScreen: React.FC = () => {
   const router = useRouter();
+  const { recordId } = useLocalSearchParams<{ recordId?: string }>();
+  const isEditMode = !!recordId;
   
   // Form state
   const [conditionName, setConditionName] = useState('');
   const [type, setType] = useState<ConditionType>('chronic');
   const [severity, setSeverity] = useState<Severity>('moderate');
-  const [diagnosisDate, setDiagnosisDate] = useState('January 2025');
+  const [diagnosisDate, setDiagnosisDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [status, setStatus] = useState<Status>('monitoring');
-  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>(['sneezing', 'runnyNose']);
+  const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loadingData, setLoadingData] = useState(isEditMode);
+  
+  // TODO: Get this from route params or context
+  const [babyId] = useState('674525cc0a8a8b29b8a2bf9c'); // Temporary placeholder
 
   const symptoms = [
     { id: 'sneezing', label: 'Sneezing' },
@@ -50,28 +60,126 @@ export const AddConditionScreen: React.FC = () => {
     return option ? option.label : '';
   };
 
-  const handleSave = () => {
+  // Load existing record data if in edit mode
+  useEffect(() => {
+    const loadRecordData = async () => {
+      if (!recordId) return;
+      
+      try {
+        setLoadingData(true);
+        const record = await getHealthRecordById(recordId);
+        
+        // Pre-fill form with existing data
+        setConditionName(record.diagnosis || '');
+        setSeverity(record.severity || 'moderate');
+        if (record.recordDate) {
+          setDiagnosisDate(new Date(record.recordDate));
+        }
+        setSelectedSymptoms(record.symptoms || []);
+        setNotes(record.notes || record.doctorNotes || '');
+        if (record.status) {
+          setStatus(record.status as Status);
+        }
+        // Note: type is not in HealthRecord, keeping default
+      } catch (error) {
+        console.error('Error loading record:', error);
+        Alert.alert('Error', 'Failed to load condition data');
+        router.back();
+      } finally {
+        setLoadingData(false);
+      }
+    };
+
+    loadRecordData();
+  }, [recordId]);
+
+  const handleSave = async () => {
+    console.log('=== SAVE BUTTON PRESSED ===');
+    console.log('Condition Name:', conditionName);
+    console.log('Baby ID:', babyId);
+    console.log('Status:', status);
+    console.log('Severity:', severity);
+    
     // Validate required fields
     if (!conditionName.trim()) {
+      console.log('Validation failed: Empty condition name');
       Alert.alert('Error', 'Please enter a condition name');
       return;
     }
 
-    // TODO: Save to backend
-    Alert.alert(
-      'Success',
-      'Condition saved successfully!',
-      [
-        {
-          text: 'OK',
-          onPress: () => router.back(),
-        },
-      ]
-    );
+    if (!babyId) {
+      console.log('Validation failed: No baby ID');
+      Alert.alert('Error', 'Baby ID is required');
+      return;
+    }
+
+    console.log('Validation passed, preparing to save...');
+    setLoading(true);
+    try {
+      const healthRecordData = {
+        babyId,
+        recordDate: diagnosisDate.toISOString().split('T')[0], // Format: YYYY-MM-DD
+        recordType: 'illness' as const, // Using 'illness' as default for conditions
+        diagnosis: conditionName,
+        severity: severity,
+        status: status, // Add status field
+        symptoms: selectedSymptoms,
+        notes: notes.trim() || undefined,
+      };
+
+      console.log('Sending data to API:', JSON.stringify(healthRecordData, null, 2));
+      
+      let result;
+      if (isEditMode && recordId) {
+        // Update existing record
+        result = await updateHealthRecord(recordId, healthRecordData);
+        console.log('Update API Response:', result);
+      } else {
+        // Create new record
+        result = await addHealthRecord(healthRecordData);
+        console.log('Create API Response:', result);
+      }
+      
+      Alert.alert(
+        'Success',
+        isEditMode ? 'Condition updated successfully!' : 'Condition saved successfully!',
+        [
+          {
+            text: 'OK',
+            onPress: () => router.back(),
+          },
+        ]
+      );
+    } catch (error) {
+      console.error('=== ERROR SAVING CONDITION ===');
+      console.error('Error details:', error);
+      Alert.alert(
+        'Error',
+        error instanceof Error ? error.message : `Failed to ${isEditMode ? 'update' : 'save'} condition. Please try again.`
+      );
+    } finally {
+      console.log('Setting loading to false');
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
     router.back();
+  };
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setDiagnosisDate(selectedDate);
+    }
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
   };
 
   return (
@@ -84,7 +192,17 @@ export const AddConditionScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
         >
           {/* Title */}
-          <Text style={styles.pageTitle}>Health Records</Text>
+          <Text style={styles.pageTitle}>{isEditMode ? 'Edit Condition' : 'Add Condition'}</Text>
+          
+          {/* Loading Indicator for Data Fetch */}
+          {loadingData && (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="large" color={Colors.primary.DEFAULT} />
+              <Text style={styles.loadingText}>Loading condition data...</Text>
+            </View>
+          )}
+
+          {!loadingData && (<>
 
           {/* Condition Name */}
           <View style={styles.section}>
@@ -167,10 +285,23 @@ export const AddConditionScreen: React.FC = () => {
           {/* Diagnosis Date */}
           <View style={styles.section}>
             <Text style={styles.label}>Diagnosis Date</Text>
-            <TouchableOpacity style={styles.dateButton}>
-              <Text style={styles.dateText}>{diagnosisDate}</Text>
+            <TouchableOpacity 
+              style={styles.dateButton}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text style={styles.dateText}>{formatDate(diagnosisDate)}</Text>
               <Ionicons name="calendar-outline" size={20} color={Colors.inactive} />
             </TouchableOpacity>
+            
+            {showDatePicker && (
+              <DateTimePicker
+                value={diagnosisDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+              />
+            )}
           </View>
 
           {/* Status */}
@@ -238,13 +369,26 @@ export const AddConditionScreen: React.FC = () => {
 
           {/* Action Buttons */}
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+            <TouchableOpacity 
+              style={styles.cancelButton} 
+              onPress={handleCancel}
+              disabled={loading}
+            >
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Text style={styles.saveButtonText}>Save Condition</Text>
+            <TouchableOpacity 
+              style={[styles.saveButton, loading && styles.disabledButton]} 
+              onPress={handleSave}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator size="small" color={Colors.white} />
+              ) : (
+                <Text style={styles.saveButtonText}>{isEditMode ? 'Update Condition' : 'Save Condition'}</Text>
+              )}
             </TouchableOpacity>
           </View>
+          </>) /* End of !loadingData wrapper */}
         </ScrollView>
       </SafeAreaView>
     </>
@@ -475,5 +619,18 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: Colors.white,
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 15,
+    color: Colors.inactive,
   },
 });
