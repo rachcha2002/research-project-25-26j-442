@@ -259,7 +259,11 @@ export const FollowListScreen: React.FC<FollowListScreenProps> = ({
 
       <View style={styles.content}>
         <View style={styles.searchContainer}>
-          <Searchbar value={searchQuery} onChangeText={setSearchQuery} />
+          <Searchbar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search user..."
+          />
         </View>
 
         <View style={styles.tabs}>

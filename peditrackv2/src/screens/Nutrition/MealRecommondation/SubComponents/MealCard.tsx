@@ -25,13 +25,13 @@ export const MealCard: React.FC<MealCardProps> = ({
       activeOpacity={0.8}
       style={[
         styles.card,
+        isPast ? styles.cardCompleted : styles.cardPending,
         isActive && styles.cardActive,
-        isPast && styles.cardPast,
       ]}
     >
       <Text style={styles.mealLabel}>{label}</Text>
       <Text style={styles.timeLabel}>{timeLabel}</Text>
-      {isActive && suggestion ? (
+      {suggestion ? (
         <View style={styles.suggestionContainer}>
           <Text style={styles.suggestionTitle}>Suggested meal</Text>
           <Text style={styles.suggestionText}>{suggestion}</Text>
@@ -56,11 +56,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   cardActive: {
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  cardCompleted: {
+    borderWidth: 2,
+    borderColor: '#10B981',
+  },
+  cardPending: {
     borderWidth: 2,
     borderColor: Colors.primary.DEFAULT,
-  },
-  cardPast: {
-    opacity: 0.4,
   },
   mealLabel: {
     fontSize: 14,

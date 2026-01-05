@@ -3,29 +3,66 @@ import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 
+type MealId = 'breakfast' | 'morningSnack' | 'lunch' | 'afternoonSnack' | 'dinner';
+
 interface DailyNutritionIntakeCardProps {
   completedMeals: number;
   totalMeals: number;
+  completedMealIds: MealId[];
 }
 
-type NutrientKey = 'energy' | 'protein' | 'iron' | 'calcium';
+type NutrientKey =
+  | 'energy'
+  | 'carbohydrates'
+  | 'protein'
+  | 'fat'
+  | 'fiber'
+  | 'iron'
+  | 'calcium'
+  | 'vitaminA'
+  | 'vitaminC'
+  | 'vitaminD'
+  | 'omega3';
 
 const NUTRIENT_LABELS: Record<NutrientKey, string> = {
   energy: 'Energy',
+  carbohydrates: 'Carbohydrates',
   protein: 'Protein',
+  fat: 'Healthy fats',
+  fiber: 'Fiber',
   iron: 'Iron',
   calcium: 'Calcium',
+  vitaminA: 'Vitamin A',
+  vitaminC: 'Vitamin C',
+  vitaminD: 'Vitamin D',
+  omega3: 'Omega-3',
+};
+
+// Which meals mainly contribute to each nutrient (simplified model)
+const NUTRIENT_SOURCES: Record<NutrientKey, MealId[]> = {
+  energy: ['breakfast', 'morningSnack', 'lunch', 'afternoonSnack', 'dinner'],
+  carbohydrates: ['breakfast', 'lunch', 'dinner'],
+  protein: ['breakfast', 'lunch', 'dinner', 'afternoonSnack'],
+  fat: ['morningSnack', 'afternoonSnack', 'dinner'],
+  fiber: ['breakfast', 'lunch', 'afternoonSnack', 'dinner'],
+  iron: ['lunch', 'dinner'],
+  calcium: ['breakfast', 'morningSnack', 'dinner'],
+  vitaminA: ['lunch', 'dinner'],
+  vitaminC: ['morningSnack', 'lunch'],
+  vitaminD: ['breakfast', 'dinner'],
+  omega3: ['lunch', 'dinner'],
 };
 
 export const DailyNutritionIntakeCard: React.FC<DailyNutritionIntakeCardProps> = ({
   completedMeals,
   totalMeals,
+  completedMealIds,
 }) => {
   const nutrients = useMemo(() => {
-    const completionRatio = totalMeals > 0 ? completedMeals / totalMeals : 0;
-
+    const completedSet = new Set<MealId>(completedMealIds);
     return (Object.keys(NUTRIENT_LABELS) as NutrientKey[]).map((key) => {
-      const met = completionRatio >= 0.8;
+      const sources = NUTRIENT_SOURCES[key];
+      const met = sources.some((mealId) => completedSet.has(mealId));
 
       return {
         key,
@@ -33,7 +70,7 @@ export const DailyNutritionIntakeCard: React.FC<DailyNutritionIntakeCardProps> =
         met,
       };
     });
-  }, [completedMeals, totalMeals]);
+  }, [completedMeals, totalMeals, completedMealIds]);
 
   return (
     <View style={styles.card}>
