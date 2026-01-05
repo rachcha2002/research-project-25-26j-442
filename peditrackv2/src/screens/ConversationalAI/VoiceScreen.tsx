@@ -22,6 +22,19 @@ export const VoiceScreen: React.FC = () => {
     const [transcription, setTranscription] = useState<string>('');
     const [robotState, setRobotState] = useState<'idle' | 'listening' | 'thinking' | 'talking'>('idle');
 
+    // Refs to track current audio instances
+    const recordingRef = useRef<Audio.Recording | null>(null);
+    const soundRef = useRef<Audio.Sound | null>(null);
+
+    // Update refs when state changes
+    useEffect(() => {
+        recordingRef.current = recording;
+    }, [recording]);
+
+    useEffect(() => {
+        soundRef.current = sound;
+    }, [sound]);
+
     useEffect(() => {
         // Request audio permissions
         (async () => {
@@ -46,17 +59,48 @@ export const VoiceScreen: React.FC = () => {
         })();
 
         return () => {
-            // Cleanup audio
-            if (recording) {
-                recording.stopAndUnloadAsync();
+            // Cleanup audio using refs to get current values
+            console.log('🧹 Cleaning up audio on unmount...');
+            if (recordingRef.current) {
+                recordingRef.current.stopAndUnloadAsync().catch(console.error);
             }
-            if (sound) {
-                sound.unloadAsync();
+            if (soundRef.current) {
+                soundRef.current.stopAsync().catch(console.error);
+                soundRef.current.unloadAsync().catch(console.error);
             }
         };
     }, []);
 
-    const handleClose = () => {
+    const handleClose = async () => {
+        console.log('🛑 Stopping all audio...');
+
+        // Stop any ongoing recording
+        if (recordingRef.current) {
+            try {
+                await recordingRef.current.stopAndUnloadAsync();
+                setRecording(null);
+                setIsRecording(false);
+            } catch (error) {
+                console.error('Error stopping recording:', error);
+            }
+        }
+
+        // Stop any playing audio
+        if (soundRef.current) {
+            try {
+                await soundRef.current.stopAsync();
+                await soundRef.current.unloadAsync();
+                setSound(null);
+            } catch (error) {
+                console.error('Error stopping sound:', error);
+            }
+        }
+
+        // Reset state
+        setRobotState('idle');
+        setIsProcessing(false);
+
+        // Navigate back
         router.back();
     };
 
@@ -170,6 +214,21 @@ export const VoiceScreen: React.FC = () => {
         }
     };
 
+    const stopAudioPlayback = async () => {
+        console.log('⏹️  Stopping audio playback...');
+        if (soundRef.current) {
+            try {
+                await soundRef.current.stopAsync();
+                await soundRef.current.unloadAsync();
+                setSound(null);
+                setRobotState('idle');
+                setStatusMessage("I'm listening, Amanda.\nWhat's on your mind?");
+            } catch (error) {
+                console.error('Error stopping audio playback:', error);
+            }
+        }
+    };
+
     const handleMicPress = async () => {
         if (isProcessing) {
             return; // Don't allow interaction while processing
@@ -236,6 +295,18 @@ export const VoiceScreen: React.FC = () => {
                     >
                         <Ionicons name="close" size={28} color={isProcessing ? Colors.inactive : "#6366F1"} />
                     </TouchableOpacity>
+
+                    {/* Show stop button when AI is talking */}
+                    {robotState === 'talking' && (
+                        <TouchableOpacity
+                            style={[styles.actionButton, styles.stopButton]}
+                            onPress={stopAudioPlayback}
+                            accessibilityLabel="Stop audio"
+                            accessibilityRole="button"
+                        >
+                            <Ionicons name="stop-circle" size={28} color="#EF4444" />
+                        </TouchableOpacity>
+                    )}
 
                     <TouchableOpacity
                         style={[
@@ -339,6 +410,9 @@ const styles = StyleSheet.create({
     },
     disabledButton: {
         opacity: 0.5,
+    },
+    stopButton: {
+        backgroundColor: '#FEE2E2',
     },
     transcriptionContainer: {
         marginTop: 16,
