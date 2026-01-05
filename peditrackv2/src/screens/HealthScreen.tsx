@@ -85,9 +85,8 @@ export const HealthScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={[styles.navIconContainer, { backgroundColor: '#E0E7FF' }]}>
-                <Svg width="50" height="50" viewBox="0 0 83 84">
-                  <Rect width="82.1271" height="83.5146" rx="10" fill="#6366F1"/>
-                </Svg>
+                <Ionicons name="heart" size={32} color="#6366F1" />
+                <Ionicons name="add-circle" size={20} color="#6366F1" style={styles.folderIcon} />
               </View>
               <Text style={styles.navCardTitle}>Health</Text>
             </TouchableOpacity>
@@ -98,9 +97,8 @@ export const HealthScreen: React.FC = () => {
               activeOpacity={0.7}
             >
               <View style={[styles.navIconContainer, { backgroundColor: '#E0E7FF' }]}>
-                <Svg width="50" height="50" viewBox="0 0 97 86">
-                  <Rect width="97" height="86" rx="19" fill="#6366F1"/>
-                </Svg>
+                <Ionicons name="trending-up" size={32} color="#6366F1" />
+                <Ionicons name="bar-chart" size={20} color="#6366F1" style={styles.chartIcon} />
               </View>
               <Text style={styles.navCardTitle}>Growth</Text>
             </TouchableOpacity>
