@@ -36,8 +36,11 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
           >
             <Ionicons name="arrow-back" size={24} color={Colors.primary.DEFAULT} />
           </TouchableOpacity>
+        </View>
 
-          {showLogo && (
+        {/* Center Section: Brand (Logo + Text) */}
+        {showLogo && (
+          <View style={styles.centerSection}>
             <View style={styles.logoWrapper}>
               <View style={styles.logoContainer}>
                 <Text style={styles.logoEmoji}>👣</Text>
@@ -47,13 +50,9 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
                 <Text style={styles.tagline}>Baby Health Care Tracking App</Text>
               </View>
             </View>
-          )}
-        </View>
+          </View>
+        )}
 
-        {/* Center Section: Title */}
-        <View style={styles.centerSection}>
-          {title && <Text style={styles.title}>{title}</Text>}
-        </View>
         
         {/* Right Section: Add + Profile */}
         {showRightSection && (

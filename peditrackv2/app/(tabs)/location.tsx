@@ -1,3 +1,3 @@
-import { SocialScreen } from "@/screens/SocialScreen";
+import { FeedingScreen } from "@/screens";
 
-export default SocialScreen;
+export default FeedingScreen;
