@@ -92,6 +92,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBackPress, userI
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFollowing, setIsFollowing] = React.useState(false); // simple local flag
+  const [followListSelectedUserId, setFollowListSelectedUserId] = useState<string | null>(null);
 
   const load = async (isRefresh = false) => {
     try {
@@ -506,6 +507,17 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBackPress, userI
     );
   }
 
+  // When a user is selected from the followers/following list, show their profile
+  if (followListSelectedUserId) {
+    return (
+      <ProfileScreen
+        userId={followListSelectedUserId}
+        currentUserId={viewerId}
+        onBackPress={() => setFollowListSelectedUserId(null)}
+      />
+    );
+  }
+
   if (showFollowList) {
     return (
       <FollowListScreen
@@ -514,6 +526,7 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBackPress, userI
         userName={user.name}
         profileUserId={profile.userId}
         currentUserId={viewerId}
+        onOpenProfile={(id: string) => setFollowListSelectedUserId(id)}
       />
     );
   }

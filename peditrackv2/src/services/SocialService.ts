@@ -1,5 +1,5 @@
-const API_BASE_URL = 'http://192.168.1.3:3007/api';
-export const FILE_BASE_URL = 'http://192.168.1.3:3007/api/file/uploads/';
+const API_BASE_URL = 'http://10.72.187.59:3007/api';
+export const FILE_BASE_URL = 'http://10.72.187.59:3007/api/file/uploads/';
 
 export interface Post {
     PostID: string;
