@@ -1,14 +1,39 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
+import { useRouter } from 'expo-router';
+import { getHealthRecords, HealthRecord } from '@/services/healthAnalyticsService';
 
 type Symptom = 'fever' | 'cold' | 'cough' | 'vomit' | 'diarrhea' | 'pain' | 'fatigue' | 'noAppetite';
 
 export const HealthDetailsScreen: React.FC = () => {
+  const router = useRouter();
   const [selectedSymptoms, setSelectedSymptoms] = useState<Symptom[]>(['fatigue']);
+  const [conditions, setConditions] = useState<HealthRecord[]>([]);
+  const [loadingConditions, setLoadingConditions] = useState(true);
+  
+  // TODO: Get this from route params or context
+  const babyId = '674525cc0a8a8b29b8a2bf9c';
+
+  // Fetch active conditions
+  useEffect(() => {
+    const fetchConditions = async () => {
+      try {
+        setLoadingConditions(true);
+        const records = await getHealthRecords(babyId, 'illness');
+        setConditions(records);
+      } catch (error) {
+        console.error('Error fetching conditions:', error);
+      } finally {
+        setLoadingConditions(false);
+      }
+    };
+
+    fetchConditions();
+  }, []);
 
   const toggleSymptom = (symptom: Symptom) => {
     if (selectedSymptoms.includes(symptom)) {
@@ -43,21 +68,50 @@ export const HealthDetailsScreen: React.FC = () => {
 
           {/* Active Conditions */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Active Conditions (1)</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                Active Conditions ({loadingConditions ? '...' : conditions.length})
+              </Text>
+              <TouchableOpacity onPress={() => router.push('/health-analytics/health-details/all-conditions' as any)}>
+                <Text style={styles.viewAllText}>View All →</Text>
+              </TouchableOpacity>
+            </View>
             
-            <TouchableOpacity style={styles.conditionCard}>
-              <View style={styles.conditionIconContainer}>
-                <Ionicons name="add" size={24} color="#EF4444" />
+            {loadingConditions ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={Colors.primary.DEFAULT} />
+                <Text style={styles.loadingText}>Loading conditions...</Text>
               </View>
-              <View style={styles.conditionContent}>
-                <Text style={styles.conditionName}>Seasonal Allergies</Text>
-                <Text style={styles.conditionStatus}>Status: Monitoring</Text>
-                <Text style={styles.conditionDate}>Since: Jan 2025</Text>
+            ) : conditions.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="medical-outline" size={40} color={Colors.inactive} />
+                <Text style={styles.emptyText}>No active conditions</Text>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={Colors.inactive} />
-            </TouchableOpacity>
+            ) : (
+              <TouchableOpacity 
+                style={styles.conditionCard}
+                onPress={() => router.push('/health-analytics/health-details/all-conditions' as any)}
+              >
+                <View style={styles.conditionIconContainer}>
+                  <Ionicons name="medical" size={24} color="#EF4444" />
+                </View>
+                <View style={styles.conditionContent}>
+                  <Text style={styles.conditionName}>{conditions[0].diagnosis || 'Condition'}</Text>
+                  <Text style={styles.conditionStatus}>
+                    Severity: {conditions[0].severity ? conditions[0].severity.charAt(0).toUpperCase() + conditions[0].severity.slice(1) : 'Unknown'}
+                  </Text>
+                  <Text style={styles.conditionDate}>
+                    Date: {new Date(conditions[0].recordDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                  </Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={Colors.inactive} />
+              </TouchableOpacity>
+            )}
 
-            <TouchableOpacity style={styles.addConditionButton}>
+            <TouchableOpacity 
+              style={styles.addConditionButton}
+              onPress={() => router.push('/health-analytics/health-details/add-condition' as any)}
+            >
               <Text style={styles.addConditionText}>+ Add Condition</Text>
             </TouchableOpacity>
           </View>
@@ -168,6 +222,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.inactive,
     marginBottom: 16,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  viewAllText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.primary.DEFAULT,
   },
   conditionCard: {
     flexDirection: 'row',
@@ -286,11 +351,6 @@ const styles = StyleSheet.create({
   viewAllButton: {
     marginTop: 8,
   },
-  viewAllText: {
-    fontSize: 15,
-    color: Colors.primary.light,
-    fontWeight: '500',
-  },
   alertCard: {
     backgroundColor: '#FEF2F2',
     borderWidth: 2,
@@ -344,5 +404,26 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#DC2626',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 20,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: Colors.inactive,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 30,
+    gap: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    color: Colors.inactive,
   },
 });

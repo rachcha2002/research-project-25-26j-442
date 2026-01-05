@@ -91,15 +91,13 @@ async function sendMessageWithImage(req, res) {
         const { message, conversationId, userId } = req.body;
         const imageFile = req.file;
 
-        // Validation
-        if (!message || message.trim().length === 0) {
-            return res.status(400).json({
-                success: false,
-                error: 'Message is required'
-            });
-        }
+        console.log('📥 Received image upload request');
+        console.log('   Message:', message || '(none)');
+        console.log('   Image file:', imageFile ? `${imageFile.originalname} (${imageFile.size} bytes, ${imageFile.mimetype})` : 'MISSING');
 
+        // Validation - at least image is required
         if (!imageFile) {
+            console.error('❌ No image file in request');
             return res.status(400).json({
                 success: false,
                 error: 'Image file is required'
@@ -109,7 +107,7 @@ async function sendMessageWithImage(req, res) {
         const convId = conversationId || uuidv4();
         const user = userId || 'anonymous';
 
-        console.log(`🖼️  New message with image in conversation ${convId}`);
+        console.log(`🖼️  Processing image in conversation ${convId}`);
 
         // Get conversation history
         const history = conversationStore.getConversation(convId) || [];
@@ -117,7 +115,7 @@ async function sendMessageWithImage(req, res) {
         // Add user message to history
         const userMessage = {
             role: 'user',
-            content: message,
+            content: message || 'Please analyze this image and provide relevant information.',
             hasImage: true,
             timestamp: new Date().toISOString()
         };
@@ -129,6 +127,8 @@ async function sendMessageWithImage(req, res) {
             content: msg.content
         }));
 
+        console.log('🤖 Calling vision API...');
+        
         // Get LLM service and generate response with image
         const llmService = getLLMService();
         const result = await llmService.generateResponseWithImage(

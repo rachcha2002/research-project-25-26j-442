@@ -134,14 +134,19 @@ export const sendChatMessageWithImage = async (
     try {
         const formData = new FormData();
 
-        // Add image file
-        const imageFile = {
-            uri: imageUri,
-            type: 'image/jpeg',
-            name: 'image.jpg',
-        } as any;
+        // For React Native, we need to create a proper file object
+        // The URI should be in the format: file:///path/to/image.jpg
+        const filename = imageUri.split('/').pop() || 'image.jpg';
+        const match = /\.(\w+)$/.exec(filename);
+        const type = match ? `image/${match[1]}` : 'image/jpeg';
 
-        formData.append('image', imageFile);
+        // React Native FormData expects this specific format
+        formData.append('image', {
+            uri: imageUri,
+            type: type,
+            name: filename,
+        } as any);
+
         formData.append('message', message);
 
         if (conversationId) {
@@ -150,19 +155,27 @@ export const sendChatMessageWithImage = async (
 
         formData.append('provider', provider);
 
+        console.log('📤 Sending image upload request...');
+        console.log('   Image URI:', imageUri);
+        console.log('   Image type:', type);
+        console.log('   Message:', message);
+
         const response = await fetch(`${API_BASE_URL}/chat/message-with-image`, {
             method: 'POST',
             body: formData,
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
+            // Don't set Content-Type header - let React Native set it automatically with boundary
         });
 
+        console.log('📥 Response status:', response.status);
+
         if (!response.ok) {
+            const errorText = await response.text();
+            console.error('❌ Server error:', errorText);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
+        console.log('✅ Image upload successful');
         return data;
     } catch (error) {
         console.error('Error sending chat message with image:', error);
