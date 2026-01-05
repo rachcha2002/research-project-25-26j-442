@@ -5,8 +5,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 
 export const AIInsightsScreen: React.FC = () => {
+  const router = useRouter();
   // Simple Bar Chart Component
   const SimpleBarChart = () => {
     const data = [4, 6, 5, 7, 6, 8, 7];
@@ -186,8 +188,18 @@ export const AIInsightsScreen: React.FC = () => {
           </View>
 
           {/* Action Buttons */}
-          <TouchableOpacity style={styles.primaryButton}>
+          <TouchableOpacity 
+            style={styles.primaryButton}
+            onPress={() => router.push('/health-analytics/growth-details/ai-predictions')}
+          >
             <Text style={styles.primaryButtonText}>View Growth Predictions</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.primaryButton}
+            onPress={() => router.push('/health-analytics/ai-insights/risk-assessment' as any)}
+          >
+            <Text style={styles.primaryButtonText}>Risk Assessment</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.secondaryButton}>

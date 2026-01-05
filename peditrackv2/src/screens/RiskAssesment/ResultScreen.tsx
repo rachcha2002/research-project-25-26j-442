@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { requestTeleconsultation } from "@/services/teleconsultationService";
 
 // Color and style presets for each risk level
 const RISK_STYLES = {
@@ -49,7 +50,7 @@ const RISK_STYLES = {
     explain:
       "Immediate medical attention is strongly recommended. Your child's symptoms indicate a potentially serious condition.",
     actions: [
-      { label: "Call Emergency Services", icon: "alert", color: "#DC2626" },
+      { label: "Emergency Teleconsultation", icon: "alert", color: "#DC2626" },
       { label: "Find Nearby Hospital", icon: "location", color: "#0ea5e9" },
       { label: "View Full Report", icon: "document-text", color: "#64748B" },
     ],
@@ -63,18 +64,17 @@ export const AssessmentResultScreen: React.FC = () => {
   // TODO: Replace with backend result when available
   const result = params.result
     ? JSON.parse(params.result as string)
-    : { risk_level: "low", score: 2.1 };
+    : { risk_level: "low", risk_score: 2.1 };
 
-  // Handle both risk_level and risk properties, with fallback to "low"
-  const riskValue = result.risk_level || result.risk || "low";
+  // Use backend risk_level, fallback to "low"
+  const riskValue = result.risk_level || "low";
   const normalizedRisk = riskValue.toLowerCase();
-  // Validate that risk is one of the valid keys, default to "low" if not
   const risk: "low" | "medium" | "high" = (normalizedRisk === "low" || normalizedRisk === "medium" || normalizedRisk === "high")
     ? normalizedRisk as "low" | "medium" | "high"
     : "low";
   const style = RISK_STYLES[risk];
-  // Dummy score for now (simulate backend)
-  const score = typeof result.score === 'number' ? result.score : (risk === 'low' ? 2.1 : risk === 'medium' ? 5.2 : 8.7);
+  // Use backend risk_score
+  const score = typeof result.risk_score === 'number' ? result.risk_score : (risk === 'low' ? 2.1 : risk === 'medium' ? 5.2 : 8.7);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -157,18 +157,43 @@ export const AssessmentResultScreen: React.FC = () => {
         {/* Recommended Actions */}
         <Text style={styles.sectionTitle}>Recommended Actions</Text>
         {style.actions.map((a: { label: string; icon: string; color: string }, index: number) => {
-          // Only connect teleconsultation/emergency for medium/high risk
-            const isTeleconsult = (a.label === "Request Teleconsultation" && (risk === "medium" || risk === "high")) ||
-              (a.label === "Call Emergency Services" && risk === "high");
-            const isNearbyHospital = a.label === "Find Nearby Hospital" && (risk === "medium" || risk === "high");
+          // Connect teleconsultation for both medium/high risk
+          const isTeleconsult = ((a.label === "Request Teleconsultation" && (risk === "medium" || risk === "high")) || (a.label === "Emergency Teleconsultation" && risk === "high"));
+          const isNearbyHospital = a.label === "Find Nearby Hospital" && (risk === "medium" || risk === "high");
           const isFullReport = a.label === "View Full Report";
+          if (isTeleconsult) {
+            console.log('Teleconsultation action is attached for', a.label, 'risk:', risk);
+          }
           return (
             <TouchableOpacity
               key={index}
               style={[styles.actionCard, { borderLeftColor: a.color, borderLeftWidth: 4, shadowColor: a.color }]}
               onPress={
                 isTeleconsult
-                  ? () => router.push("/teleconsultation")
+                  ? async () => {
+                      try {
+                        // Prepare teleconsultation payload
+                        const telePayload = {
+                          patient: {
+                            name: result.child?.name || "",
+                            age_months: result.child?.age_months || 0,
+                            weight_kg: result.child?.weight_kg || 0,
+                            assessment_id: result.assessment_id || "",
+                          },
+                          risk_level: result.risk_level,
+                          risk_score: result.risk_score,
+                          assessment_id: result.assessment_id || "",
+                        };
+                        console.log('Teleconsultation payload:', telePayload);
+                        const teleRequest = await requestTeleconsultation(telePayload);
+                        console.log('Teleconsultation request response:', teleRequest);
+                        router.push({ pathname: "/teleconsultation", params: { requestId: teleRequest._id } });
+                        console.log('Navigated to /teleconsultation with requestId:', teleRequest._id);
+                      } catch (err) {
+                        console.error('Teleconsultation error:', err);
+                        alert("Failed to request teleconsultation. Please try again.");
+                      }
+                    }
                   : isNearbyHospital
                   ? () => router.push("/nearby-hospitals")
                   : isFullReport

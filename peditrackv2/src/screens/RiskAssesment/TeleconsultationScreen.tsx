@@ -9,72 +9,190 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { SecondaryTopBar } from "@/components/SecondaryTopBar";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { getTeleconsultationRequest, getQueuePosition, getVideoToken } from "@/services/teleconsultationService";
+import { getAssessments } from "@/services/riskAssessmentService";
 
 export const TeleconsultationScreen: React.FC = () => {
-  // Dummy state for notification toggle
+  const params = useLocalSearchParams();
+  const router = useRouter();
+  const requestId = params.requestId as string | undefined;
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
+  const [queuePosition, setQueuePosition] = React.useState<number | null>(null);
+  const [estWait, setEstWait] = React.useState<number | null>(null);
+  const [status, setStatus] = React.useState<string>("pending");
+  const [videoRoom, setVideoRoom] = React.useState<string | null>(null);
+  const [joining, setJoining] = React.useState(false);
+  const [request, setRequest] = React.useState<any>(null);
+  const [assessment, setAssessment] = React.useState<any>(null);
+
+  React.useEffect(() => {
+    if (!requestId) return;
+    let interval: NodeJS.Timeout;
+    const poll = async () => {
+      try {
+        const req = await getTeleconsultationRequest(requestId);
+        setRequest(req);
+        setStatus(req.status);
+        setVideoRoom(req.videoRoom || null);
+        // Fetch assessment data if assessment_id is present
+        if (req.patient?.assessment_id) {
+          try {
+            const assessments = await getAssessments();
+            const found = assessments.find((a) => a.assessment_id === req.patient.assessment_id);
+            setAssessment(found || null);
+          } catch (err) {
+            setAssessment(null);
+          }
+        }
+        if (req.status === "pending") {
+          const pos = await getQueuePosition(requestId);
+          setQueuePosition(pos.position);
+          setEstWait(pos.estWait);
+        }
+      } catch (err) {
+        // handle error
+      }
+    };
+    poll();
+    interval = setInterval(poll, 5000); // poll every 5s
+    return () => clearInterval(interval);
+  }, [requestId]);
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={{ padding: 18 }} showsVerticalScrollIndicator={false}>
+      <ScrollView  showsVerticalScrollIndicator={false}>
         {/* Header */}
+        <SecondaryTopBar />
         <Text style={styles.headerTitle}>Teleconsultation</Text>
         {/* Queue Banner */}
         <View style={styles.queueBanner}>
-          <Text style={styles.queueStatus}>WAITING IN QUEUE</Text>
+          <Text style={styles.queueStatus}>{status === "pending" ? "WAITING IN QUEUE" : status === "accepted" ? "DOCTOR READY" : "COMPLETED"}</Text>
           <Text style={styles.queueLabel}>Position in Queue</Text>
-          <Text style={styles.queueNumber}>#3</Text>
-          <Text style={styles.queueWait}>Est. wait: 8-12 minutes</Text>
+          <Text style={styles.queueNumber}>{queuePosition !== null ? `#${queuePosition}` : "-"}</Text>
+          <Text style={styles.queueWait}>Est. wait: {estWait !== null ? `${estWait} minutes` : "-"}</Text>
         </View>
         {/* Request Card */}
-        <View style={styles.requestCard}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-            <Text style={styles.requestTitle}>Consultation Request For</Text>
-            <View style={styles.avatar}><Text style={styles.avatarText}>E</Text></View>
+        {request && (
+          <View style={styles.requestCard}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+              <Text style={styles.requestTitle}>Consultation Request For</Text>
+              <View style={styles.avatar}><Text style={styles.avatarText}>{request.patient?.name?.[0]?.toUpperCase() || 'T'}</Text></View>
+            </View>
+            <Text style={styles.patientName}>{request.patient?.name || 'Thisal'}, Age {request.patient?.age_months ? (request.patient.age_months / 12).toFixed(1) : '1.2'} yrs
+              {assessment && assessment.risk_level && (
+                <Text style={{ color: assessment.risk_level === 'high' ? '#DC2626' : assessment.risk_level === 'medium' ? '#EA580C' : '#16A34A', fontWeight: '700' }}>
+                  {`  (${assessment.risk_level.toUpperCase()} RISK)`}
+                </Text>
+              )}
+            </Text>
+            <View style={styles.requestRow}><Ionicons name="calendar" size={16} color="#6366F1" style={{ marginRight: 6 }} /><Text style={styles.requestInfo}>Requested: {request.requestedAt ? new Date(request.requestedAt).toLocaleString() : '-'}</Text></View>
+            <View style={styles.requestRow}><Ionicons name="warning" size={16} color="#DC2626" style={{ marginRight: 6 }} /><Text style={styles.requestInfo}>Risk Level: <Text style={styles.highRisk}>{request.risk_level?.toUpperCase() || '?'}</Text></Text></View>
+            {assessment && (
+              <View style={styles.requestRow}><Ionicons name="document-text" size={16} color="#6366F1" style={{ marginRight: 6 }} /><Text style={styles.requestInfo}>Assessment Score: {assessment.risk_score}</Text></View>
+            )}
           </View>
-          <Text style={styles.patientName}>Emma, Age 4</Text>
-          <View style={styles.requestRow}><Ionicons name="calendar" size={16} color="#6366F1" style={{ marginRight: 6 }} /><Text style={styles.requestInfo}>Requested: Today at 2:45 PM</Text></View>
-          <View style={styles.requestRow}><Ionicons name="warning" size={16} color="#DC2626" style={{ marginRight: 6 }} /><Text style={styles.requestInfo}>Risk Level: <Text style={styles.highRisk}>High</Text></Text></View>
-          <View style={styles.requestRow}><Ionicons name="thermometer" size={16} color="#f59e42" style={{ marginRight: 6 }} /><Text style={styles.requestInfo}>High fever, difficulty breathing</Text></View>
-          <View style={styles.requestRow}><Ionicons name="medkit" size={16} color="#06b6d4" style={{ marginRight: 6 }} /><Text style={styles.requestInfo}>Pediatric Emergency Care</Text></View>
-        </View>
+        )}
         {/* High Priority Banner */}
-        <View style={styles.priorityBanner}>
-          <Ionicons name="alert-circle" size={18} color="#EA580C" style={{ marginRight: 8 }} />
-          <Text style={styles.priorityText}>Marked as <Text style={{ fontWeight: '700' }}>HIGH PRIORITY</Text> - will be reviewed shortly</Text>
-        </View>
-        {/* What to Expect */}
+        {request?.risk_level === 'high' && (
+          <View style={styles.priorityBanner}>
+            <Ionicons name="alert-circle" size={18} color="#EA580C" style={{ marginRight: 8 }} />
+            <Text style={styles.priorityText}>Marked as <Text style={{ fontWeight: '700' }}>HIGH PRIORITY</Text> - will be reviewed shortly</Text>
+          </View>
+        )}
+        {/* What to Expect - dynamic */}
         <Text style={styles.sectionTitle}>What to Expect</Text>
-        <View style={styles.expectRow}><View style={styles.expectCircle}><Text style={styles.expectNum}>1</Text></View><Text style={styles.expectLabel}>Request Received <Text style={styles.expectSub}>In queue - 2:45 PM</Text></Text></View>
-        <View style={styles.expectRow}><View style={styles.expectCircle}><Text style={styles.expectNum}>2</Text></View><Text style={styles.expectLabel}>Doctor Assignment <Text style={styles.expectSubBlue}>In progress…</Text></Text></View>
-        <View style={styles.expectRow}><View style={styles.expectCircle}><Ionicons name="videocam" size={16} color="#6366F1" /></View><Text style={styles.expectLabel}>Video Consultation <Text style={styles.expectSub}>You'll be notified</Text></Text></View>
-        {/* Notifications Toggle */}
-        <View style={styles.notifyRow}>
-          <Ionicons name="notifications" size={18} color="#6366F1" style={{ marginRight: 8 }} />
-          <Text style={styles.notifyLabel}>Notifications Enabled</Text>
-          <Switch value={notificationsEnabled} onValueChange={setNotificationsEnabled} thumbColor={notificationsEnabled ? "#6366F1" : "#e5e7eb"} trackColor={{ true: "#c7d2fe", false: "#e5e7eb" }} />
+        <View style={styles.expectRow}>
+          <View style={styles.expectCircle}><Text style={styles.expectNum}>1</Text></View>
+          <Text style={styles.expectLabel}>
+            Request Received
+            <Text style={styles.expectSub}> {request?.requestedAt ? `at ${new Date(request.requestedAt).toLocaleTimeString()}` : ''}</Text>
+            {status === 'pending' && <Text style={styles.expectSubBlue}> (In queue)</Text>}
+            {status !== 'pending' && <Text style={styles.expectSubBlue}> (Processed)</Text>}
+          </Text>
         </View>
-        <Text style={styles.notifySub}>We'll alert you when ready</Text>
-        {/* Immediate Help */}
-        <Text style={styles.sectionTitle}>Need Immediate Help?</Text>
-        <View style={styles.helpRow}>
-          <TouchableOpacity style={styles.helpBtn}>
-            <Ionicons name="call" size={20} color="#6366F1" />
-            <Text style={styles.helpBtnText}>Call 1990{''}<Text style={styles.helpBtnSub}>Emergency</Text></Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.helpBtn}>
-            <Ionicons name="chatbubble-ellipses" size={20} color="#6366F1" />
-            <Text style={styles.helpBtnText}>Live Chat{''}<Text style={styles.helpBtnSub}>Support</Text></Text>
-          </TouchableOpacity>
+        <View style={styles.expectRow}>
+          <View style={styles.expectCircle}><Text style={styles.expectNum}>2</Text></View>
+          <Text style={styles.expectLabel}>
+            Doctor Assignment
+            {status === 'pending' && <Text style={styles.expectSubBlue}> In progress…</Text>}
+            {status === 'accepted' && <Text style={styles.expectSubBlue}> Assigned</Text>}
+            {status === 'completed' && <Text style={styles.expectSubBlue}> Completed</Text>}
+          </Text>
         </View>
-        <View style={styles.consultInfoRow}>
-          <Ionicons name="information-circle-outline" size={16} color="#64748B" style={{ marginRight: 6 }} />
-          <Text style={styles.consultInfoText}>Average consultation: 15-20 min. Ensure stable</Text>
+        <View style={styles.expectRow}>
+          <View style={styles.expectCircle}><Ionicons name="videocam" size={16} color="#6366F1" /></View>
+          <Text style={styles.expectLabel}>
+            Video Consultation
+            {status === 'pending' && <Text style={styles.expectSub}> You'll be notified</Text>}
+            {status === 'accepted' && <Text style={styles.expectSubBlue}> Ready to join</Text>}
+            {status === 'completed' && <Text style={styles.expectSubBlue}> Finished</Text>}
+          </Text>
         </View>
-        {/* Footer Buttons */}
+        {/* Immediate Help - dynamic (show only if status is not completed) */}
+        {status !== 'completed' && (
+          <>
+            <Text style={styles.sectionTitle}>Need Immediate Help?</Text>
+            <View style={styles.helpRow}>
+              <TouchableOpacity style={styles.helpBtn} onPress={() => {/* TODO: implement emergency call */}}>
+                <Ionicons name="call" size={20} color="#6366F1" />
+                <Text style={styles.helpBtnText}>Call 1990<Text style={styles.helpBtnSub}> Emergency</Text></Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.helpBtn} onPress={() => {/* TODO: implement live chat */}}>
+                <Ionicons name="call" size={20} color="#6366F1" />
+                <Text style={styles.helpBtnText}>Call 119<Text style={styles.helpBtnSub}> Emergency</Text></Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.consultInfoRow}>
+              <Ionicons name="information-circle-outline" size={16} color="#64748B" style={{ marginRight: 6 }} />
+              <Text style={styles.consultInfoText}>Average consultation: 15-20 min. Ensure stable connection.</Text>
+            </View>
+          </>
+        )}
+        {/* Doctor Ready Banner */}
+        {status === "accepted" && videoRoom && (
+          <View style={{ marginVertical: 20 }}>
+            <Text style={{ color: '#16A34A', fontWeight: '700', fontSize: 16, textAlign: 'center' }}>Doctor is ready! Join the video call below:</Text>
+            <TouchableOpacity
+              style={[styles.helpBtn, { backgroundColor: '#6366F1', marginTop: 12 }]}
+              disabled={joining}
+              onPress={async () => {
+                if (!requestId || !videoRoom) return;
+                setJoining(true);
+                try {
+                  // Use requestId as identity for now
+                  const identity = requestId;
+                  const { token } = await getVideoToken(identity, videoRoom);
+                  router.push({
+                    pathname: "/videocall-screen",
+                    params: { token, roomName: videoRoom, identity },
+                  });
+                } catch (err) {
+                  alert("Failed to join video call. Please try again.");
+                } finally {
+                  setJoining(false);
+                }
+              }}
+            >
+              <Ionicons name="videocam" size={22} color="#fff" />
+              <Text style={{ color: '#fff', fontWeight: '700', marginLeft: 8 }}>{joining ? "Joining..." : "Join Video Call"}</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+        {/* Footer Buttons - dynamic */}
         <View style={styles.footerRow}>
-          <TouchableOpacity style={styles.cancelBtn}><Text style={styles.cancelBtnText}>Cancel Request</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.contactBtn}><Ionicons name="call" size={18} color="#fff" /><Text style={styles.contactBtnText}>Contact Doctor</Text></TouchableOpacity>
+          {status !== 'completed' && (
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => {/* TODO: implement cancel request */}}>
+              <Text style={styles.cancelBtnText}>Cancel Request</Text>
+            </TouchableOpacity>
+          )}
+          {status === 'accepted' && (
+            <TouchableOpacity style={styles.contactBtn} onPress={() => router.push('/videocall-screen')}>
+              <Ionicons name="call" size={18} color="#fff" />
+              <Text style={styles.contactBtnText}>Contact Doctor</Text>
+            </TouchableOpacity>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>

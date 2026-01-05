@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
+import { getMeasurements, Measurement } from '@/services/healthAnalyticsService';
 
 const { width } = Dimensions.get('window');
 
@@ -14,13 +15,40 @@ type MetricTab = 'Height' | 'Weight' | 'BMI' | 'Head';
 export const GrowthDetailsScreen: React.FC = () => {
   const router = useRouter();
   const [selectedTab, setSelectedTab] = useState<MetricTab>('Height');
+  const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const measurements = [
-    { date: 'Nov 10, 2024', height: '95.5 cm', weight: '14.2 kg', location: 'Home' },
-    { date: 'Oct 10, 2024', height: '94.5 cm', weight: '14.0 kg', location: 'Home' },
-    { date: 'Sep 10, 2024', height: '93.0 cm', weight: '13.8 kg', location: 'Clinic' },
-    { date: 'Aug 10, 2024', height: '91.0 cm', weight: '13.5 kg', location: 'Home' },
-  ];
+  // TODO: Get this from route params or context
+  const babyId = '674525cc0a8a8b29b8a2bf9c'; // Temporary placeholder
+
+  useEffect(() => {
+    loadMeasurements();
+  }, []);
+
+  const loadMeasurements = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getMeasurements(babyId);
+      // Get only the last 5 measurements
+      setMeasurements(data.slice(0, 5));
+    } catch (err) {
+      console.error('Error loading measurements:', err);
+      setError('Failed to load measurements.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
 
   const chartData = {
     labels: ['2y', '2.5y', '3y', '3.5y'],
@@ -135,23 +163,52 @@ export const GrowthDetailsScreen: React.FC = () => {
           <View style={styles.measurementsCard}>
             <Text style={styles.sectionTitle}>Recent Measurements (Last 5)</Text>
             
-            {measurements.map((measurement, index) => (
-              <View key={index} style={styles.measurementItem}>
-                <View style={styles.measurementLeft}>
-                  <View style={styles.dateRow}>
-                    <Ionicons name="calendar-outline" size={16} color={Colors.inactive} />
-                    <Text style={styles.measurementDate}>{measurement.date}</Text>
-                  </View>
-                  <Text style={styles.measurementValues}>
-                    {measurement.height} | {measurement.weight} |
-                  </Text>
-                  <Text style={styles.measurementLocation}>{measurement.location}</Text>
-                </View>
-                <TouchableOpacity style={styles.editButton}>
-                  <Ionicons name="create-outline" size={20} color={Colors.inactive} />
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={Colors.primary.DEFAULT} />
+                <Text style={styles.loadingText}>Loading measurements...</Text>
+              </View>
+            ) : error ? (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{error}</Text>
+                <TouchableOpacity style={styles.retryButton} onPress={loadMeasurements}>
+                  <Text style={styles.retryText}>Retry</Text>
                 </TouchableOpacity>
               </View>
-            ))}
+            ) : measurements.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No measurements yet</Text>
+                <Text style={styles.emptySubtext}>Start tracking by adding a measurement</Text>
+              </View>
+            ) : (
+              measurements.map((measurement) => (
+                <View key={measurement._id} style={styles.measurementItem}>
+                  <View style={styles.measurementLeft}>
+                    <View style={styles.dateRow}>
+                      <Ionicons name="calendar-outline" size={16} color={Colors.inactive} />
+                      <Text style={styles.measurementDate}>{formatDate(measurement.measurementDate)}</Text>
+                    </View>
+                    <Text style={styles.measurementValues}>
+                      {measurement.height.value} {measurement.height.unit} | {measurement.weight.value} {measurement.weight.unit}
+                      {measurement.headCircumference?.value && ` | ${measurement.headCircumference.value} ${measurement.headCircumference.unit}`}
+                    </Text>
+                    <Text style={styles.measurementLocation}>{measurement.location || 'Not specified'}</Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.editButton}
+                    onPress={() => router.push({
+                      pathname: '/health-analytics/growth-details/add-measurement',
+                      params: {
+                        measurementId: measurement._id,
+                        measurementData: JSON.stringify(measurement)
+                      }
+                    })}
+                  >
+                    <Ionicons name="create-outline" size={20} color={Colors.inactive} />
+                  </TouchableOpacity>
+                </View>
+              ))
+            )}
 
             <TouchableOpacity 
               style={styles.viewAllButton}
@@ -405,5 +462,50 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: Colors.primary.DEFAULT,
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 24,
+    gap: 12,
+  },
+  loadingText: {
+    fontSize: 14,
+    color: Colors.inactive,
+  },
+  errorContainer: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  errorText: {
+    fontSize: 14,
+    color: Colors.dark,
+    marginBottom: 12,
+  },
+  retryButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: Colors.primary.DEFAULT,
+    borderRadius: 6,
+  },
+  retryText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+  emptyContainer: {
+    alignItems: 'center',
+    paddingVertical: 24,
+  },
+  emptyText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.dark,
+    marginBottom: 4,
+  },
+  emptySubtext: {
+    fontSize: 13,
+    color: Colors.inactive,
   },
 });
