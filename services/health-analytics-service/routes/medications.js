@@ -3,29 +3,29 @@ const router = express.Router();
 const Medication = require('../models/Medication');
 
 // Add new medication
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   try {
     const medication = new Medication(req.body);
     await medication.save();
     res.status(201).json(medication);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 });
 
 // Get all medications for a baby
-router.get('/baby/:babyId', async (req, res) => {
+router.get('/baby/:babyId', async (req, res, next) => {
   try {
     const medications = await Medication.find({ babyId: req.params.babyId })
       .sort({ startDate: -1 });
     res.json(medications);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // Get active medications only
-router.get('/baby/:babyId/active', async (req, res) => {
+router.get('/baby/:babyId/active', async (req, res, next) => {
   try {
     const medications = await Medication.find({ 
       babyId: req.params.babyId,
@@ -42,12 +42,12 @@ router.get('/baby/:babyId/active', async (req, res) => {
     
     res.json(activeMedications);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // Get specific medication
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req, res, next) => {
   try {
     const medication = await Medication.findById(req.params.id);
     if (!medication) {
@@ -55,12 +55,12 @@ router.get('/:id', async (req, res) => {
     }
     res.json(medication);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // Update medication
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req, res, next) => {
   try {
     const medication = await Medication.findByIdAndUpdate(
       req.params.id,
@@ -74,12 +74,12 @@ router.put('/:id', async (req, res) => {
     
     res.json(medication);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 });
 
 // Update medication status
-router.patch('/:id/status', async (req, res) => {
+router.patch('/:id/status', async (req, res, next) => {
   try {
     const { status } = req.body;
     
@@ -99,12 +99,12 @@ router.patch('/:id/status', async (req, res) => {
     
     res.json(medication);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 });
 
 // Delete medication
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req, res, next) => {
   try {
     const medication = await Medication.findByIdAndDelete(req.params.id);
     
@@ -114,7 +114,7 @@ router.delete('/:id', async (req, res) => {
     
     res.json({ message: 'Medication deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 

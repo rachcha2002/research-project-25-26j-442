@@ -1,22 +1,47 @@
-﻿import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+﻿import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
+import { getMeasurements, Measurement } from '@/services/healthAnalyticsService';
 
 export const MeasurementHistoryScreen: React.FC = () => {
   const router = useRouter();
+  const [measurements, setMeasurements] = useState<Measurement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const allMeasurements = [
-    { date: 'Nov 10, 2024', height: '95.5 cm', weight: '14.2 kg', head: '48.0 cm', location: 'Home' },
-    { date: 'Oct 10, 2024', height: '94.5 cm', weight: '14.0 kg', head: '47.8 cm', location: 'Home' },
-    { date: 'Sep 10, 2024', height: '93.0 cm', weight: '13.8 kg', head: '47.5 cm', location: 'Clinic' },
-    { date: 'Aug 10, 2024', height: '91.0 cm', weight: '13.5 kg', head: '47.2 cm', location: 'Home' },
-    { date: 'Jul 10, 2024', height: '89.5 cm', weight: '13.2 kg', head: '47.0 cm', location: 'Clinic' },
-    { date: 'Jun 10, 2024', height: '88.0 cm', weight: '13.0 kg', head: '46.8 cm', location: 'Home' },
-  ];
+  // TODO: Get this from route params or context
+  const babyId = '674525cc0a8a8b29b8a2bf9c'; // Temporary placeholder
+
+  useEffect(() => {
+    loadMeasurements();
+  }, []);
+
+  const loadMeasurements = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await getMeasurements(babyId);
+      setMeasurements(data);
+    } catch (err) {
+      console.error('Error loading measurements:', err);
+      setError('Failed to load measurements. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      year: 'numeric', 
+      month: 'short', 
+      day: 'numeric' 
+    });
+  };
 
   return (
     <>
@@ -28,39 +53,73 @@ export const MeasurementHistoryScreen: React.FC = () => {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        {allMeasurements.map((measurement, index) => (
-          <View key={index} style={styles.measurementCard}>
-            <View style={styles.dateHeader}>
-              <View style={styles.dateRow}>
-                <Ionicons name="calendar" size={16} color={Colors.primary.DEFAULT} />
-                <Text style={styles.dateText}>{measurement.date}</Text>
-              </View>
-              <TouchableOpacity>
-                <Ionicons name="create-outline" size={20} color={Colors.inactive} />
-              </TouchableOpacity>
-            </View>
-
-            <View style={styles.metricsGrid}>
-              <View style={styles.metricItem}>
-                <Text style={styles.metricLabel}>Height</Text>
-                <Text style={styles.metricValue}>{measurement.height}</Text>
-              </View>
-              <View style={styles.metricItem}>
-                <Text style={styles.metricLabel}>Weight</Text>
-                <Text style={styles.metricValue}>{measurement.weight}</Text>
-              </View>
-              <View style={styles.metricItem}>
-                <Text style={styles.metricLabel}>Head</Text>
-                <Text style={styles.metricValue}>{measurement.head}</Text>
-              </View>
-            </View>
-
-            <View style={styles.locationRow}>
-              <Ionicons name="location-outline" size={14} color={Colors.inactive} />
-              <Text style={styles.locationText}>{measurement.location}</Text>
-            </View>
+        {loading ? (
+          <View style={styles.centerContainer}>
+            <ActivityIndicator size="large" color={Colors.primary.DEFAULT} />
+            <Text style={styles.loadingText}>Loading measurements...</Text>
           </View>
-        ))}
+        ) : error ? (
+          <View style={styles.centerContainer}>
+            <Ionicons name="alert-circle" size={48} color={Colors.inactive} />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={loadMeasurements}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : measurements.length === 0 ? (
+          <View style={styles.centerContainer}>
+            <Ionicons name="analytics-outline" size={48} color={Colors.inactive} />
+            <Text style={styles.emptyText}>No measurements yet</Text>
+            <Text style={styles.emptySubtext}>Start tracking your baby's growth by adding measurements</Text>
+          </View>
+        ) : (
+          measurements.map((measurement) => (
+            <View key={measurement._id} style={styles.measurementCard}>
+              <View style={styles.dateHeader}>
+                <View style={styles.dateRow}>
+                  <Ionicons name="calendar" size={16} color={Colors.primary.DEFAULT} />
+                  <Text style={styles.dateText}>{formatDate(measurement.measurementDate)}</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => router.push({
+                    pathname: '/health-analytics/growth-details/add-measurement',
+                    params: {
+                      measurementId: measurement._id,
+                      measurementData: JSON.stringify(measurement)
+                    }
+                  })}
+                >
+                  <Ionicons name="create-outline" size={20} color={Colors.inactive} />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.metricsGrid}>
+                <View style={styles.metricItem}>
+                  <Text style={styles.metricLabel}>Height</Text>
+                  <Text style={styles.metricValue}>{measurement.height.value} {measurement.height.unit}</Text>
+                </View>
+                <View style={styles.metricItem}>
+                  <Text style={styles.metricLabel}>Weight</Text>
+                  <Text style={styles.metricValue}>{measurement.weight.value} {measurement.weight.unit}</Text>
+                </View>
+                <View style={styles.metricItem}>
+                  <Text style={styles.metricLabel}>Head</Text>
+                  <Text style={styles.metricValue}>
+                    {measurement.headCircumference?.value ? 
+                      `${measurement.headCircumference.value} ${measurement.headCircumference.unit}` : 
+                      'N/A'
+                    }
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.locationRow}>
+                <Ionicons name="location-outline" size={14} color={Colors.inactive} />
+                <Text style={styles.locationText}>{measurement.location || 'Not specified'}</Text>
+              </View>
+            </View>
+          ))
+        )}
       </ScrollView>
     </SafeAreaView>
     </>
@@ -154,5 +213,47 @@ const styles = StyleSheet.create({
   locationText: {
     fontSize: 12,
     color: Colors.inactive,
+  },
+  centerContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 60,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 14,
+    color: Colors.inactive,
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 14,
+    color: Colors.dark,
+    textAlign: 'center',
+  },
+  retryButton: {
+    marginTop: 16,
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    backgroundColor: Colors.primary.DEFAULT,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+  emptyText: {
+    marginTop: 16,
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.dark,
+  },
+  emptySubtext: {
+    marginTop: 8,
+    fontSize: 14,
+    color: Colors.inactive,
+    textAlign: 'center',
+    paddingHorizontal: 40,
   },
 });

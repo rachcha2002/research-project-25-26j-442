@@ -1,27 +1,37 @@
-﻿import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator } from 'react-native';
+﻿import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert, ActivityIndicator, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
-import { addMeasurement } from '@/services/healthAnalyticsService';
+import { addMeasurement, updateMeasurement, Measurement } from '@/services/healthAnalyticsService';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 type EntryMode = 'manual' | 'photo';
 
 export const AddMeasurementScreen: React.FC = () => {
   const router = useRouter();
-  const [entryMode, setEntryMode] = useState<EntryMode>('manual');
-  const [height, setHeight] = useState(95.5);
-  const [weight, setWeight] = useState(14.2);
-  const [headCircumference, setHeadCircumference] = useState(50.0);
-  const [location, setLocation] = useState('');
-  const [notes, setNotes] = useState('');
-  const [measurementDate, setMeasurementDate] = useState(new Date());
+  const params = useLocalSearchParams();
+  
+  // Check if we're editing an existing measurement
+  const editMode = !!params.measurementId;
+  const measurementData = params.measurementData ? JSON.parse(params.measurementData as string) as Measurement : null;
+  
+  const [entryMode, setEntryMode] = useState<EntryMode>(measurementData?.entryMode || 'manual');
+  const [height, setHeight] = useState(measurementData?.height.value || 0);
+  const [weight, setWeight] = useState(measurementData?.weight.value || 0);
+  const [headCircumference, setHeadCircumference] = useState(measurementData?.headCircumference?.value || 0);
+  const [location, setLocation] = useState(measurementData?.location || '');
+  const [notes, setNotes] = useState(measurementData?.notes || '');
+  const [measurementDate, setMeasurementDate] = useState(
+    measurementData?.measurementDate ? new Date(measurementData.measurementDate) : new Date()
+  );
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
   
   // TODO: Get this from route params or context
-  const [babyId, setBabyId] = useState('674525cc0a8a8b29b8a2bf9c'); // Temporary placeholder
+  const [babyId, setBabyId] = useState(measurementData?.babyId || '674525cc0a8a8b29b8a2bf9c');
 
   // Calculate BMI
   const calculateBMI = () => {
@@ -56,7 +66,7 @@ export const AddMeasurementScreen: React.FC = () => {
 
     setLoading(true);
     try {
-      const measurementData = {
+      const measurementPayload = {
         babyId,
         measurementDate: measurementDate.toISOString().split('T')[0], // Format: YYYY-MM-DD
         height: {
@@ -76,21 +86,29 @@ export const AddMeasurementScreen: React.FC = () => {
         entryMode,
       };
 
-      const result = await addMeasurement(measurementData);
+      let result;
+      if (editMode && params.measurementId) {
+        // Update existing measurement
+        result = await updateMeasurement(params.measurementId as string, measurementPayload);
+      } else {
+        // Add new measurement
+        result = await addMeasurement(measurementPayload);
+      }
       
       Alert.alert(
         'Success',
-        'Measurement saved successfully!',
+        editMode ? 'Measurement updated successfully!' : 'Measurement saved successfully!',
         [
           {
             text: 'OK',
             onPress: () => {
-              if (saveAndAddAnother) {
-                // Reset form for new entry
+              if (saveAndAddAnother && !editMode) {
+                // Reset form for new entry (only in add mode)
                 setHeight(0);
                 setWeight(0);
                 setHeadCircumference(0);
                 setNotes('');
+                setLocation('');
                 setMeasurementDate(new Date());
               } else {
                 // Navigate back to growth details screen
@@ -104,7 +122,7 @@ export const AddMeasurementScreen: React.FC = () => {
       console.error('Error saving measurement:', error);
       Alert.alert(
         'Error',
-        error instanceof Error ? error.message : 'Failed to save measurement. Please try again.'
+        error instanceof Error ? error.message : `Failed to ${editMode ? 'update' : 'save'} measurement. Please try again.`
       );
     } finally {
       setLoading(false);
@@ -153,7 +171,10 @@ export const AddMeasurementScreen: React.FC = () => {
           {/* Measurement Date */}
           <View style={styles.section}>
             <Text style={styles.label}>Measurement Date</Text>
-            <TouchableOpacity style={styles.dateButton}>
+            <TouchableOpacity 
+              style={styles.dateButton}
+              onPress={() => setShowDatePicker(true)}
+            >
               <Text style={styles.dateText}>
                 {measurementDate.toLocaleDateString('en-US', { 
                   year: 'numeric', 
@@ -163,6 +184,19 @@ export const AddMeasurementScreen: React.FC = () => {
               </Text>
               <Ionicons name="calendar-outline" size={20} color={Colors.inactive} />
             </TouchableOpacity>
+            {showDatePicker && (
+              <DateTimePicker
+                value={measurementDate}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={(event, selectedDate) => {
+                  setShowDatePicker(Platform.OS === 'ios');
+                  if (selectedDate) {
+                    setMeasurementDate(selectedDate);
+                  }
+                }}
+              />
+            )}
           </View>
 
           {/* Height */}
@@ -283,26 +317,30 @@ export const AddMeasurementScreen: React.FC = () => {
 
           {/* Action Buttons */}
           <View style={styles.buttonContainer}>
+            {!editMode && (
+              <TouchableOpacity 
+                style={[styles.secondaryButton, loading && styles.disabledButton]}
+                onPress={() => saveMeasurement(true)}
+                disabled={loading}
+              >
+                {loading ? (
+                  <ActivityIndicator size="small" color={Colors.dark} />
+                ) : (
+                  <Text style={styles.secondaryButtonText}>Save & Add Another</Text>
+                )}
+              </TouchableOpacity>
+            )}
             <TouchableOpacity 
-              style={[styles.secondaryButton, loading && styles.disabledButton]}
-              onPress={() => saveMeasurement(true)}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color={Colors.dark} />
-              ) : (
-                <Text style={styles.secondaryButtonText}>Save & Add Another</Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.primaryButton, loading && styles.disabledButton]}
+              style={[editMode ? styles.primaryButtonFull : styles.primaryButton, loading && styles.disabledButton]}
               onPress={() => saveMeasurement(false)}
               disabled={loading}
             >
               {loading ? (
                 <ActivityIndicator size="small" color={Colors.white} />
               ) : (
-                <Text style={styles.primaryButtonText}>Save Measurement</Text>
+                <Text style={styles.primaryButtonText}>
+                  {editMode ? 'Update Measurement' : 'Save Measurement'}
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -521,6 +559,12 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     flex: 1,
+    backgroundColor: '#3B82F6',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  primaryButtonFull: {
     backgroundColor: '#3B82F6',
     paddingVertical: 16,
     borderRadius: 12,

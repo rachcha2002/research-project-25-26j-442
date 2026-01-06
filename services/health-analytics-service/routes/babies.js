@@ -3,18 +3,18 @@ const router = express.Router();
 const Baby = require('../models/Baby');
 
 // Create a new baby profile
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   try {
     const baby = new Baby(req.body);
     await baby.save();
     res.status(201).json(baby);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 });
 
 // Get all babies for an account
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const { accountId, userId } = req.query;
     
@@ -26,12 +26,12 @@ router.get('/', async (req, res) => {
     const babies = await Baby.find(filter).sort({ createdAt: -1 });
     res.json(babies);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // Get specific baby by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req, res, next) => {
   try {
     const baby = await Baby.findById(req.params.id);
     if (!baby) {
@@ -39,12 +39,12 @@ router.get('/:id', async (req, res) => {
     }
     res.json(baby);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // Update baby information
-router.put('/:id', async (req, res) => {
+router.put('/:id', async (req, res, next) => {
   try {
     const baby = await Baby.findByIdAndUpdate(
       req.params.id,
@@ -58,12 +58,12 @@ router.put('/:id', async (req, res) => {
     
     res.json(baby);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 });
 
 // Delete baby profile (soft delete)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req, res, next) => {
   try {
     const baby = await Baby.findByIdAndUpdate(
       req.params.id,
@@ -77,7 +77,7 @@ router.delete('/:id', async (req, res) => {
     
     res.json({ message: 'Baby profile deactivated successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 

@@ -61,7 +61,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="feeding"
           options={{
-            title: 'Feeding',
+            title: 'MomHub',
             tabBarIcon: ({ focused }) => (
               <TabBarIcon name="feeding" focused={focused} />
             ),
@@ -71,7 +71,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="location"
           options={{
-            title: 'Other',
+            title: 'Feeding',
             tabBarIcon: ({ focused }) => (
               <TabBarIcon name="location" focused={focused} />
             ),

@@ -4,7 +4,6 @@ import { Colors } from '../../../../constants/Colors';
 import { TopNavBar } from '../SubComponents/TopNavBar';
 import { Searchbar } from '../SubComponents/Searchbar';
 import { UserListItem } from '../SubComponents/UserListItem';
-import { ProfileScreen } from './ProfileScreen';
 import {
   getFollowers,
   getFollowing,
@@ -18,6 +17,7 @@ interface FollowListScreenProps {
   userName: string;       // display name of the profile owner
   profileUserId: string;  // whose followers/following we are viewing
   currentUserId: string;  // logged-in user id (for follow/unfollow)
+  onOpenProfile?: (userId: string) => void; // open another user's profile
 }
 
 const PAGE_LIMIT = 20;
@@ -28,6 +28,7 @@ export const FollowListScreen: React.FC<FollowListScreenProps> = ({
   userName,
   profileUserId,
   currentUserId,
+  onOpenProfile,
 }) => {
   const [activeTab, setActiveTab] = useState<'followers' | 'following'>(initialTab);
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,8 +43,6 @@ export const FollowListScreen: React.FC<FollowListScreenProps> = ({
 
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
-
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
 
   // set of userIds the *current user* is following
   const [currentUserFollowingIds, setCurrentUserFollowingIds] = useState<Set<string>>(new Set());
@@ -248,17 +247,6 @@ export const FollowListScreen: React.FC<FollowListScreenProps> = ({
     return matchesSearch;
   });
 
-  // Open another user's profile from the list
-  if (selectedUserId) {
-    return (
-      <ProfileScreen
-        userId={selectedUserId}
-        currentUserId={currentUserId}
-        onBackPress={() => setSelectedUserId(null)}
-      />
-    );
-  }
-
   return (
     <View style={styles.container}>
       <TopNavBar
@@ -300,7 +288,7 @@ export const FollowListScreen: React.FC<FollowListScreenProps> = ({
             <UserListItem
               user={item}
               onFollowPress={handleFollowPress}
-              onPress={(u: any) => setSelectedUserId(u.id)}
+              onPress={(u: any) => onOpenProfile && onOpenProfile(u.id)}
             />
           )}
           showsVerticalScrollIndicator={false}

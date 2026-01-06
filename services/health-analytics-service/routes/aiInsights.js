@@ -6,7 +6,7 @@ const { generatePredictions } = require('../utils/calculations');
 const Baby = require('../models/Baby');
 
 // Generate AI insights for a baby
-router.post('/generate/:babyId', async (req, res) => {
+router.post('/generate/:babyId', async (req, res, next) => {
   try {
     const baby = await Baby.findById(req.params.babyId);
     if (!baby) {
@@ -72,23 +72,23 @@ router.post('/generate/:babyId', async (req, res) => {
 
     res.status(201).json(insights);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // Get all AI insights for a baby
-router.get('/baby/:babyId', async (req, res) => {
+router.get('/baby/:babyId', async (req, res, next) => {
   try {
     const insights = await AIInsight.find({ babyId: req.params.babyId })
       .sort({ generatedDate: -1 });
     res.json(insights);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // Get active/recent insights
-router.get('/baby/:babyId/active', async (req, res) => {
+router.get('/baby/:babyId/active', async (req, res, next) => {
   try {
     const insights = await AIInsight.find({ 
       babyId: req.params.babyId,
@@ -104,12 +104,12 @@ router.get('/baby/:babyId/active', async (req, res) => {
     
     res.json(activeInsights);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // Get specific insight
-router.get('/:id', async (req, res) => {
+router.get('/:id', async (req, res, next) => {
   try {
     const insight = await AIInsight.findById(req.params.id)
       .populate('relatedMeasurementIds')
@@ -120,12 +120,12 @@ router.get('/:id', async (req, res) => {
     }
     res.json(insight);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 
 // Update insight status
-router.patch('/:id/status', async (req, res) => {
+router.patch('/:id/status', async (req, res, next) => {
   try {
     const { status, action, notes } = req.body;
     
@@ -157,12 +157,12 @@ router.patch('/:id/status', async (req, res) => {
     
     res.json(insight);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    next(error);
   }
 });
 
 // Delete insight
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', async (req, res, next) => {
   try {
     const insight = await AIInsight.findByIdAndDelete(req.params.id);
     
@@ -172,7 +172,7 @@ router.delete('/:id', async (req, res) => {
     
     res.json({ message: 'Insight deleted successfully' });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    next(error);
   }
 });
 

@@ -91,7 +91,7 @@ const measurementSchema = new mongoose.Schema({
 measurementSchema.index({ babyId: 1, measurementDate: -1 });
 
 // Pre-save hook to calculate BMI
-measurementSchema.pre('save', function(next) {
+measurementSchema.pre('save', async function() {
   if (this.height.value && this.weight.value) {
     // Convert height to meters if in cm
     const heightInMeters = this.height.unit === 'cm' 
@@ -105,7 +105,6 @@ measurementSchema.pre('save', function(next) {
     
     this.bmi = Number((weightInKg / (heightInMeters * heightInMeters)).toFixed(2));
   }
-  next();
 });
 
 module.exports = mongoose.model('Measurement', measurementSchema);
