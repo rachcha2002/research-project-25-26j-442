@@ -9,6 +9,7 @@ interface SearchbarProps {
   onChangeText: (text: string) => void;
   onFriendsPress?: () => void;
   disableFriends?: boolean;
+  placeholder?: string;
 }
 
 export const Searchbar: React.FC<SearchbarProps> = ({
@@ -16,12 +17,13 @@ export const Searchbar: React.FC<SearchbarProps> = ({
   onChangeText,
   onFriendsPress,
   disableFriends,
+  placeholder,
 }) => (
   <View style={styles.container}>
     <Ionicons name="search-outline" size={18} color={Colors.inactive} style={styles.icon} />
     <TextInput
       style={styles.input}
-      placeholder="Search posts..."
+      placeholder={placeholder ?? 'Search posts...'}
       placeholderTextColor={Colors.inactive}
       value={value}
       onChangeText={onChangeText}
