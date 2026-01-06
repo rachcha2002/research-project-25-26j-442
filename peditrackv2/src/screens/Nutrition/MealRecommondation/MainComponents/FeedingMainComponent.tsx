@@ -109,81 +109,87 @@ export const FeedingMainComponent: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <View style={styles.mealRowWrapper}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.mealRowContent}
-        >
-          {mealsWithDate.map((meal) => {
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.mealRowWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.mealRowContent}
+          >
+            {mealsWithDate.map((meal) => {
               // Treat dinner as incomplete by time, but allow manual completion override
               const isPastByTime = meal.id !== 'dinner' && meal.dateTime < now;
               const isPast =
                 (manuallyCompletedId && meal.id === manuallyCompletedId) || isPastByTime;
-            const isActive = meal.id === activeMealId;
+              const isActive = meal.id === activeMealId;
 
-            return (
-              <MealCard
-                key={meal.id}
-                label={meal.label}
-                timeLabel={meal.timeLabel}
-                suggestion={meal.suggestion}
-                isPast={isPast}
-                isActive={isActive}
-                onPress={() => {
-                  setActiveMealId(meal.id);
-                  router.push({
-                    pathname: '/meal-details',
-                    params: {
-                      id: meal.id,
-                      label: meal.label,
-                      timeLabel: meal.timeLabel,
-                      suggestion: meal.suggestion,
-                      isPast: String(isPast),
-                    },
-                  });
-                }}
-              />
-            );
-          })}
-        </ScrollView>
-      </View>
+              return (
+                <MealCard
+                  key={meal.id}
+                  label={meal.label}
+                  timeLabel={meal.timeLabel}
+                  suggestion={meal.suggestion}
+                  isPast={isPast}
+                  isActive={isActive}
+                  onPress={() => {
+                    setActiveMealId(meal.id);
+                    router.push({
+                      pathname: '/meal-details',
+                      params: {
+                        id: meal.id,
+                        label: meal.label,
+                        timeLabel: meal.timeLabel,
+                        suggestion: meal.suggestion,
+                        isPast: String(isPast),
+                      },
+                    });
+                  }}
+                />
+              );
+            })}
+          </ScrollView>
+        </View>
 
-      <View style={styles.nutritionCardWrapper}>
-        <DailyNutritionIntakeCard
-          completedMeals={completedMealsCount}
-          totalMeals={mealsWithDate.length}
-          completedMealIds={completedMealIds}
-        />
-      </View>
+        <View style={styles.nutritionCardWrapper}>
+          <DailyNutritionIntakeCard
+            completedMeals={completedMealsCount}
+            totalMeals={mealsWithDate.length}
+            completedMealIds={completedMealIds}
+          />
+        </View>
 
-      <View style={styles.actionsRow}>
-        <TouchableOpacity
-          style={styles.actionButton}
-          activeOpacity={0.8}
-          onPress={() => {
-            router.push('/nutrition-tracker');
-          }}
-        >
-          <View style={[styles.actionIconContainer, { backgroundColor: '#E0E7FF' }]}>
-            <Ionicons name="add-circle" size={24} color={Colors.primary.light} />
-          </View>
-          <Text style={styles.actionTitle}>Nutrition Checker</Text>
-        </TouchableOpacity>
+        <View style={styles.actionsRow}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            activeOpacity={0.8}
+            onPress={() => {
+              router.push('/nutrition-tracker');
+            }}
+          >
+            <View style={[styles.actionIconContainer, { backgroundColor: '#E0E7FF' }]}>
+              <Ionicons name="add-circle" size={24} color={Colors.primary.light} />
+            </View>
+            <Text style={styles.actionTitle}>Nutrition Checker</Text>
+          </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.actionButton}
-          activeOpacity={0.8}
-          onPress={() => {
-            router.push('/past-data');
-          }}
-        >
-          <View style={[styles.actionIconContainer, { backgroundColor: '#E0E7FF' }]}>
-            <Ionicons name="time" size={24} color={Colors.primary.light} />
-          </View>
-          <Text style={styles.actionTitle}>Past data</Text>
-        </TouchableOpacity>
-      </View>
+          <TouchableOpacity
+            style={styles.actionButton}
+            activeOpacity={0.8}
+            onPress={() => {
+              router.push('/past-data');
+            }}
+          >
+            <View style={[styles.actionIconContainer, { backgroundColor: '#E0E7FF' }]}>
+              <Ionicons name="time" size={24} color={Colors.primary.light} />
+            </View>
+            <Text style={styles.actionTitle}>Past data</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -193,6 +199,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
     paddingTop: 8,
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 24,
   },
   mealRowWrapper: {
     paddingVertical: 8,

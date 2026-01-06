@@ -61,7 +61,7 @@ export const TeleconsultationScreen: React.FC = () => {
   }, [requestId]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView  showsVerticalScrollIndicator={false}>
         {/* Header */}
         <SecondaryTopBar />
@@ -195,7 +195,7 @@ export const TeleconsultationScreen: React.FC = () => {
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -203,11 +203,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F9FAFB",
+    paddingLeft: 20,
+    paddingRight: 20,
   },
   headerTitle: {
     fontSize: 19,
     fontWeight: "700",
     color: "#22223B",
+    marginTop: 16,
     marginBottom: 10,
     textAlign: 'center',
   },

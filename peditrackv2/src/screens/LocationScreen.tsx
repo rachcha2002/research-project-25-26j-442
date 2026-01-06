@@ -33,7 +33,7 @@ export const LocationScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <View style={{ flex: 1 }}>
+      <View >
         <ScrollView
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 120 }}
@@ -113,6 +113,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
+    
   },
   emergencyHeader: {
     flexDirection: "row",
@@ -220,12 +221,14 @@ const styles = StyleSheet.create({
       maxWidth: 420,
       backgroundColor: Colors.white,
       borderRadius: 14,
-      padding: 18,
+      padding: 20,
       shadowColor: '#000',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.06,
       shadowRadius: 4,
       elevation: 1,
+      marginLeft: 'auto',
+      marginRight: 'auto',
     },
     recentActivityTitle: {
       fontSize: 16,
@@ -273,13 +276,16 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     gap: 18,
     marginTop: 12,
+    padding: 20,
+    marginLeft: 'auto',
+    marginRight: 'auto',
   },
   actionCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.white,
     borderRadius: 18,
-    padding: 20,
+    padding: 25,
     marginBottom: 0,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

@@ -239,7 +239,7 @@ export const EmergencyAssessmentScreen: React.FC = () => {
   ];
 
   return (
-    <SafeAreaView style={styles.container} edges={["bottom"]}>
+    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <SecondaryTopBar  />
         <Text style={styles.title}>Emergency Assessment</Text>
@@ -555,7 +555,7 @@ export const EmergencyAssessmentScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+      </View>
   );
 };
 
@@ -574,8 +574,9 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: Colors.dark,
     marginBottom: 12,
-    marginTop: 6,
-    marginLeft: 6,
+    marginTop: 20,
+    marginLeft:'auto',
+    marginRight:'auto',
   },
   card: {
     backgroundColor: Colors.card,
