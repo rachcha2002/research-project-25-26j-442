@@ -1,7 +1,9 @@
 // For Android Emulator: use 10.0.2.2
 // For Physical Device: use your computer's IP address (check with ipconfig)
 // Current Wi-Fi IP: 192.168.1.3
+
 const API_BASE_URL = 'http://10.72.187.59:3001/api';
+
 
 import * as FileSystem from 'expo-file-system';
 
