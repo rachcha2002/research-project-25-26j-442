@@ -55,7 +55,7 @@ export const NearbyHospitalsScreen: React.FC = () => {
   const [selectedTab, setSelectedTab] = React.useState("All Facilities");
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView  showsVerticalScrollIndicator={false}>
         <SecondaryTopBar />
         <Text style={styles.headerTitle}>Nearby Hospitals</Text>
@@ -146,7 +146,7 @@ export const NearbyHospitalsScreen: React.FC = () => {
           <Text style={styles.mapBtnText}>View on Map</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#22223B",
     marginBottom: 10,
-    marginTop: 6,
+    marginTop: 20,
     textAlign: 'center',
   },
   tabs: {

@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { SecondaryTopBar } from "@/components/SecondaryTopBar";
 
 // Dummy data for demonstration
 const DUMMY_REPORT = {
@@ -57,7 +58,8 @@ export const FullReportScreen: React.FC = () => {
   const riskColor = assessment.risk === "High" ? "#DC2626" : assessment.risk === "Medium" ? "#EA580C" : "#16A34A";
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <SecondaryTopBar />
       <ScrollView contentContainerStyle={{ padding: 18 }} showsVerticalScrollIndicator={false}>
         <Text style={styles.headerTitle}>Assessment Full Report</Text>
         {/* Child Info */}
@@ -142,7 +144,7 @@ export const FullReportScreen: React.FC = () => {
           <TouchableOpacity style={styles.footerBtn}><Ionicons name="share-social" size={18} color="#6366F1" style={{ marginRight: 8 }} /><Text style={styles.footerBtnText}>Share</Text></TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

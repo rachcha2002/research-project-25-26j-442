@@ -41,7 +41,7 @@ export const HomeScreen: React.FC = () => {
               <View style={styles.ageRow}>
                 <View>
                   <Text style={styles.label}>Age</Text>
-                  <Text style={styles.value}>1 Year 2 months</Text>
+                  <Text style={styles.value}>3 Year 2 months</Text>
                 </View>
               </View>
             </View>
