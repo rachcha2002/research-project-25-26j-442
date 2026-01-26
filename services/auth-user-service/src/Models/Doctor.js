@@ -8,6 +8,7 @@ const DoctorSchema = new mongoose.Schema({
   gender: { type: String, enum: ['Male', 'Female', 'Other'], required: true },
   date_of_birth: { type: Date, required: true },
   email: { type: String, required: true, unique: true },
+  password: { type: String },
   phone_number: { type: String, required: true },
   country: { type: String, required: true },
   languages_spoken: [{ type: String }],

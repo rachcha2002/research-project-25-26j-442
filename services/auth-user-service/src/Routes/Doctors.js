@@ -13,4 +13,7 @@ router.get('/google/callback', passport.authenticate('google', { failureRedirect
   }
 );
 
+router.post('/register', doctorController.register);
+router.post('/login', doctorController.login);
+
 module.exports = router;
