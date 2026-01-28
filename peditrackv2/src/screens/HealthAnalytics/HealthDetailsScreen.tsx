@@ -159,7 +159,10 @@ export const HealthDetailsScreen: React.FC = () => {
                 </View>
               </View>
 
-              <TouchableOpacity style={styles.viewAllButton}>
+              <TouchableOpacity 
+                style={styles.viewAllButton}
+                onPress={() => router.push('/health-analytics/health-details/symptoms-history' as any)}
+              >
                 <Text style={styles.viewAllText}>View All History →</Text>
               </TouchableOpacity>
             </View>
