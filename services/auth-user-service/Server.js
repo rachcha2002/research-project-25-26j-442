@@ -4,7 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const session = require('express-session');
 const passport = require('passport');
-require('./src/Config/GoogleAuth'); // Import GoogleAuth config
+require('./src/Config/GoogleAuth');
 
 const doctorRoutes = require('./src/Routes/Doctors');
 const app = express();
