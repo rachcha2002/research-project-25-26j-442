@@ -12,7 +12,7 @@ const DoctorSchema = new mongoose.Schema({
   phone_number: { type: String, required: true },
   country: { type: String, required: true },
   languages_spoken: [{ type: String }],
-  medical_license_number: { type: String, required: true, unique: true },
+  medical_license_number: { type: String, default: null },
   license_issuing_authority: { type: String, required: true },
   license_country: { type: String, required: true },
   license_expiry_date: { type: Date, required: true },
@@ -26,8 +26,6 @@ const DoctorSchema = new mongoose.Schema({
   total_consultations: { type: Number, default: 0 },
   created_at: { type: Date, default: Date.now },
   updated_at: { type: Date, default: Date.now },
-
-  // Google sign up/in fields
   google_id: { type: String, unique: true, sparse: true },
   auth_provider: { type: String, enum: ['local', 'google'], default: 'local' }
 });

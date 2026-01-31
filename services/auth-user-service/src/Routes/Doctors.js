@@ -1,20 +1,13 @@
 const express = require('express');
 const passport = require('passport');
 const router = express.Router();
-const {register, login} = require('../Controllers/Doctors');
-
-// Start Google OAuth
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-
-// Google OAuth callback
-router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/' }),
-  (req, res) => {
-    // Redirect or respond after successful login
-    res.json({ message: 'Google login successful', doctor: req.user });
-  }
-);
+const { register, login, googleCallback, completeProfile } = require('../Controllers/Doctors');
+const upload = require('../Middleware/multer');
 
 router.post('/register', register);
 router.post('/login', login);
+router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/' }), googleCallback);
+router.put('/complete-profile',upload.fields([{ name: 'profile_photo', maxCount: 1 },{ name: 'medical_license_document', maxCount: 1 }]),completeProfile);
 
 module.exports = router;
