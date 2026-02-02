@@ -3,6 +3,7 @@ const { PutObjectCommand } = require('@aws-sdk/client-s3');
 const path = require('path');
 const Doctor = require('../Models/Doctor');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 // Manual registration (basic info only)
 exports.register = async (req, res) => {
@@ -81,14 +82,18 @@ exports.login = async (req, res) => {
       return res.status(400).json({ message: 'Invalid email or password.' });
     }
 
-    // Set session
-    req.session.doctorId = doctor._id;
+    // Generate JWT
+    const token = jwt.sign(
+      { doctor_id: doctor.doctor_id, email: doctor.email, role: doctor.role },
+      process.env.JWT_SECRET,
+      { expiresIn: '7d' }
+    );
 
     // Remove password from response
     const doctorObj = doctor.toObject();
     delete doctorObj.password;
 
-    res.status(200).json({ message: 'Login successful', doctor: doctorObj });
+    res.status(200).json({ message: 'Login successful', token, doctor: doctorObj });
   } catch (error) {
     res.status(500).json({ message: 'Login failed', error: error.message });
   }
@@ -96,13 +101,20 @@ exports.login = async (req, res) => {
 
 // Google OAuth callback handler
 exports.googleCallback = (req, res) => {
-  res.json({ message: 'Google login successful', doctor: req.user });
+  const doctor = req.user;
+  const jwt = require('jsonwebtoken');
+  const token = jwt.sign(
+    { doctor_id: doctor.doctor_id, email: doctor.email, role: doctor.role },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+  res.json({ message: 'Google login successful', token, doctor });
 };
 
 // Complete profile
 exports.completeProfile = async (req, res) => {
   try {
-    const doctorId = req.session.doctorId;
+    const doctorId = req.doctor.doctor_id;
     if (!doctorId) {
       return res.status(401).json({ message: 'Not authenticated' });
     }
