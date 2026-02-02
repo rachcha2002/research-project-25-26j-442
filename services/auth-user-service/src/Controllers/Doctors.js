@@ -108,7 +108,11 @@ exports.googleCallback = (req, res) => {
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );
-  res.json({ message: 'Google login successful', token, doctor });
+
+  // Redirect to frontend with token and doctor info as query params
+  const frontendUrl = process.env.FRONTEND_URL;
+  const doctorStr = encodeURIComponent(JSON.stringify(doctor));
+  res.redirect(`${frontendUrl}/google/callback?token=${token}&doctor=${doctorStr}`);
 };
 
 // Complete profile

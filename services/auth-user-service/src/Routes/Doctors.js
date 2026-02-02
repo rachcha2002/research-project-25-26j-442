@@ -8,7 +8,11 @@ const auth = require('../Middleware/auth');
 router.post('/register', register);
 router.post('/login', login);
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/' }), googleCallback);
+router.get(
+  '/google/callback',
+  passport.authenticate('google', { failureRedirect: '/' }),
+  googleCallback
+);
 router.put(
   '/complete-profile',
   auth,
