@@ -119,11 +119,14 @@ exports.googleCallback = (req, res) => {
 exports.completeProfile = async (req, res) => {
   try {
     const doctorId = req.doctor.doctor_id;
+    console.log('Authenticated doctor ID:', doctorId);
     if (!doctorId) {
+      console.log('No doctor ID found in request');
       return res.status(401).json({ message: 'Not authenticated' });
     }
 
-    const doctor = await Doctor.findById(doctorId);
+    const doctor = await Doctor.findOne({ doctor_id: doctorId });
+    console.log('Doctor fetched from DB:', doctor);
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
     }
@@ -131,7 +134,8 @@ exports.completeProfile = async (req, res) => {
     // Handle file uploads
     let profile_photo_url = doctor.profile_photo_url;
     let medical_license_document_url = doctor.medical_license_document_url;
-
+    
+    console.log('Files received:', req.files);
     if (req.files && req.files.profile_photo) {
       const file = req.files.profile_photo[0];
       const key = `profile_photos/${doctor.doctor_id}_${Date.now()}${path.extname(file.originalname)}`;
@@ -156,6 +160,7 @@ exports.completeProfile = async (req, res) => {
       medical_license_document_url = `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com/${process.env.R2_BUCKET_NAME}/${key}`;
     }
 
+    console.log('Updating profile with data:', req.body);
     // Update doctor profile
     const updateFields = {
       ...req.body,
@@ -165,13 +170,14 @@ exports.completeProfile = async (req, res) => {
       updated_at: new Date(),
     };
 
+    console.log('Final update fields:', updateFields);
     // Remove fields that shouldn't be updated
     delete updateFields.email;
     delete updateFields.password;
     delete updateFields.auth_provider;
 
-    const updatedDoctor = await Doctor.findByIdAndUpdate(
-      doctorId,
+    const updatedDoctor = await Doctor.findOneAndUpdate(
+      { doctor_id: doctorId },
       { $set: updateFields },
       { new: true }
     );

@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { Slot } from "@radix-ui/react-slot@1.1.2";
-import { VariantProps, cva } from "class-variance-authority@0.7.1";
-import { PanelLeftIcon } from "lucide-react@0.487.0";
+import { Slot } from "@radix-ui/react-slot";
+import { VariantProps, cva } from "class-variance-authority";
+import { PanelLeftIcon } from "lucide-react";
 
 import { useIsMobile } from "./use-mobile";
 import { cn } from "./utils";
@@ -24,6 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./tooltip";
+import { useAuth } from '../../context/AuthContext';
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -267,7 +268,7 @@ function SidebarTrigger({
       variant="ghost"
       size="icon"
       className={cn("size-7", className)}
-      onClick={(event) => {
+      onClick={(event: React.MouseEvent<HTMLButtonElement>) => {
         onClick?.(event);
         toggleSidebar();
       }}
@@ -344,13 +345,26 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
+  const { logout } = useAuth();
+
   return (
     <div
       data-slot="sidebar-footer"
       data-sidebar="footer"
       className={cn("flex flex-col gap-2 p-2", className)}
       {...props}
-    />
+    >
+      {/* ...other footer content... */}
+      <button
+        onClick={() => {
+          logout();
+          window.location.href = '/login';
+        }}
+        className="w-full mt-4 bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 transition-colors"
+      >
+        Logout
+      </button>
+    </div>
   );
 }
 

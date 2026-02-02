@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import api from '../../utils/api';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function ProfileCompletion() {
   const { doctor, token, login } = useAuth();
@@ -18,6 +19,7 @@ export default function ProfileCompletion() {
   const [licenseDoc, setLicenseDoc] = useState<File | null>(null);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -47,6 +49,9 @@ export default function ProfileCompletion() {
       });
       setSuccess('Profile completed successfully!');
       login(res.data.doctor, token!); // Update context with new doctor info
+
+      // Navigate to dashboard after a short delay or immediately
+      navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Profile completion failed');
     }
