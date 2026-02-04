@@ -1,9 +1,10 @@
 const { s3Client } = require('../Config/Driveconfig');
-const { PutObjectCommand } = require('@aws-sdk/client-s3');
+const { Upload } = require('@aws-sdk/lib-storage');
 const path = require('path');
 const Doctor = require('../Models/Doctor');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const { GetObjectCommand } = require('@aws-sdk/client-s3');
 
 // Manual registration (basic info only)
 exports.register = async (req, res) => {
@@ -116,51 +117,53 @@ exports.googleCallback = (req, res) => {
 };
 
 // Complete profile
+async function uploadFileToR2(file, folder) {
+  const remoteKey = `${folder}/${Date.now()}-${file.originalname}`;
+  const uploader = new Upload({
+    client: s3Client,
+    params: {
+      Bucket: process.env.R2_BUCKET_NAME,
+      Key: remoteKey,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+    },
+  });
+  const data = await uploader.done();
+  console.log('File uploaded to R2:', data);
+  return {
+    url: data.Location,
+    key: remoteKey,
+  };
+}
+
 exports.completeProfile = async (req, res) => {
   try {
     const doctorId = req.doctor.doctor_id;
-    console.log('Authenticated doctor ID:', doctorId);
     if (!doctorId) {
-      console.log('No doctor ID found in request');
       return res.status(401).json({ message: 'Not authenticated' });
     }
 
     const doctor = await Doctor.findOne({ doctor_id: doctorId });
-    console.log('Doctor fetched from DB:', doctor);
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
-    // Handle file uploads
+    // Handle file uploads using helper
     let profile_photo_url = doctor.profile_photo_url;
     let medical_license_document_url = doctor.medical_license_document_url;
-    
-    console.log('Files received:', req.files);
+
     if (req.files && req.files.profile_photo) {
       const file = req.files.profile_photo[0];
-      const key = `profile_photos/${doctor.doctor_id}_${Date.now()}${path.extname(file.originalname)}`;
-      await s3Client.send(new PutObjectCommand({
-        Bucket: process.env.R2_BUCKET_NAME,
-        Key: key,
-        Body: file.buffer,
-        ContentType: file.mimetype,
-      }));
-      profile_photo_url = `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com/${process.env.R2_BUCKET_NAME}/${key}`;
+      const uploadResult = await uploadFileToR2(file, 'profile_photos');
+      profile_photo_url = uploadResult.url;
     }
 
     if (req.files && req.files.medical_license_document) {
       const file = req.files.medical_license_document[0];
-      const key = `medical_licenses/${doctor.doctor_id}_${Date.now()}${path.extname(file.originalname)}`;
-      await s3Client.send(new PutObjectCommand({
-        Bucket: process.env.R2_BUCKET_NAME,
-        Key: key,
-        Body: file.buffer,
-        ContentType: file.mimetype,
-      }));
-      medical_license_document_url = `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com/${process.env.R2_BUCKET_NAME}/${key}`;
+      const uploadResult = await uploadFileToR2(file, 'medical_licenses');
+      medical_license_document_url = uploadResult.url;
     }
 
-    console.log('Updating profile with data:', req.body);
     // Update doctor profile
     const updateFields = {
       ...req.body,
@@ -170,8 +173,6 @@ exports.completeProfile = async (req, res) => {
       updated_at: new Date(),
     };
 
-    console.log('Final update fields:', updateFields);
-    // Remove fields that shouldn't be updated
     delete updateFields.email;
     delete updateFields.password;
     delete updateFields.auth_provider;
@@ -185,5 +186,34 @@ exports.completeProfile = async (req, res) => {
     res.json({ message: 'Profile completed successfully', doctor: updatedDoctor });
   } catch (error) {
     res.status(500).json({ message: 'Profile completion failed', error: error.message });
+  }
+};
+
+// Get doctor file
+exports.getDoctorFile = async (req, res) => {
+  try {
+    const { folder, filename } = req.params;
+    const key = `${folder}/${filename}`;
+    
+    if (!folder || !filename) {
+      return res.status(400).json({ message: "File key is required" });
+    }
+    
+    const command = new GetObjectCommand({
+      Bucket: process.env.R2_BUCKET_NAME,
+      Key: key
+    });
+    const data = await s3Client.send(command);
+
+    res.setHeader("Content-Type", data.ContentType || "application/octet-stream");
+    res.setHeader("Content-Length", data.ContentLength);
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="${filename}"`
+    );
+    data.Body.pipe(res);
+  } catch (error) {
+    console.error("Error retrieving file:", error);
+    res.status(500).json({ message: "Error downloading file from R2" });
   }
 };

@@ -67,13 +67,17 @@ export default function Login() {
           </div>
           <button
             type="submit"
-            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
+            className="mb-2 w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors"
           >
             Sign In
           </button>
         </form>
         <div className="mt-6">
           <GoogleLoginButton />
+        </div>
+        <div className="mt-4 text-center">
+          <span className="text-gray-600 dark:text-gray-400">Don't have an account? </span>
+          <a href="/register" className="text-indigo-600 hover:underline">Register</a>
         </div>
       </div>
     </div>

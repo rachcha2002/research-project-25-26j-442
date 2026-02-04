@@ -23,21 +23,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [token, setTokenState] = useState<string | null>(getToken());
 
   useEffect(() => {
-    if (token && !doctor) {
-      // Optionally, fetch doctor profile here using the token
+    const storedToken = getToken();
+    const storedDoctor = localStorage.getItem('doctor');
+    if (storedToken && storedDoctor) {
+      setTokenState(storedToken);
+      setDoctor(JSON.parse(storedDoctor));
     }
-  }, [token, doctor]);
+  }, []);
 
-  const login = (doctor: Doctor, token: string) => {
-    setDoctor(doctor);
-    setToken(token);
-    setTokenState(token);
+  const login = (doctorData: Doctor, jwt: string) => {
+    setTokenState(jwt);
+    setToken(jwt);
+    setDoctor(doctorData);
+    localStorage.setItem('doctor', JSON.stringify(doctorData));
   };
 
   const logout = () => {
-    setDoctor(null);
-    removeToken();
     setTokenState(null);
+    removeToken();
+    setDoctor(null);
+    localStorage.removeItem('doctor');
   };
 
   return (
