@@ -3,6 +3,8 @@ import { Menu, X, LogOut, User, Sun, Moon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import Sidebar from './Sidebar';
+import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
+import { useAuth } from '../context/AuthContext';
 
 interface DashboardProps {
   children: ReactNode;
@@ -14,7 +16,9 @@ export default function Dashboard({ children, onLogout }: DashboardProps) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
+  const { doctor } = useAuth();
 
+  console.log('Doctor in Dashboard:', doctor);
   const handleLogout = () => {
     onLogout();
     navigate('/login');
@@ -56,9 +60,13 @@ export default function Dashboard({ children, onLogout }: DashboardProps) {
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
                 className="flex items-center gap-2 p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
-                <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-white" />
-                </div>
+                <Avatar>
+                  <AvatarImage src={doctor?.profile_photo_url || ''} alt="Profile" />
+                  <AvatarFallback>
+                    {doctor?.first_name?.[0] || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="ml-2">{doctor?.first_name}</span>
               </button>
 
               {isMenuOpen && (

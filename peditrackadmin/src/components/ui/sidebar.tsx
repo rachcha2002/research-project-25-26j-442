@@ -24,7 +24,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./tooltip";
-import { useAuth } from '../../context/AuthContext';
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state";
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
@@ -345,25 +344,13 @@ function SidebarHeader({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 function SidebarFooter({ className, ...props }: React.ComponentProps<"div">) {
-  const { logout } = useAuth();
-
-  return (
+   return (
     <div
       data-slot="sidebar-footer"
       data-sidebar="footer"
       className={cn("flex flex-col gap-2 p-2", className)}
       {...props}
     >
-      {/* ...other footer content... */}
-      <button
-        onClick={() => {
-          logout();
-          window.location.href = '/login';
-        }}
-        className="w-full mt-4 bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 transition-colors"
-      >
-        Logout
-      </button>
     </div>
   );
 }
