@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const { createPost, updatePost, getAllPosts, deletePost, updatePostEngagement, removePostEngagement, getPostWithEngagement, addComment, updateComment, deleteComment, savePost, removeSavedPost, getSavedPostsByUser } = require('../controllers/postController');
+const { createPost, getPostsRequiringApproval, approvePost, updatePost, getAllPosts, deletePost, updatePostEngagement, removePostEngagement, getPostWithEngagement, addComment, updateComment, deleteComment, savePost, removeSavedPost, getSavedPostsByUser } = require('../controllers/postController');
 
 const router = express.Router();
 const upload = multer({ storage: multer.memoryStorage() });
@@ -18,5 +18,7 @@ router.delete('/deletecomment', deleteComment);
 router.put('/savepost', savePost);
 router.put('/removesavedpost', removeSavedPost);
 router.put('/updatepost', upload.single('file'), updatePost);
+router.get('/getpostsrequiringapproval/:DoctorID', getPostsRequiringApproval);
+router.put('/approvepost', approvePost);
 
 module.exports = router;
