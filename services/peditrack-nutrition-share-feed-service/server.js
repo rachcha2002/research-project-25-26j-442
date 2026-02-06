@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors');
 require('dotenv').config();
 const connectDB = require('./src/db/DBConnectivity');
 const uploadRoutes = require('./src/routes/uploadRoutes');
@@ -13,6 +14,14 @@ if (typeof connectDB === 'function') {
 
 const app = express();
 const port = process.env.PORT;
+
+// CORS configuration
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:5173'], // Add your frontend URLs
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 
 // Middleware to parse JSON bodies
 app.use(express.json());

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Menu, LogOut, User, Sun, Moon } from "lucide-react";
+import { Menu, LogOut, Sun, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface Doctor {
@@ -85,7 +85,6 @@ export default function Navbar({
               <span className="text-sm font-medium dark:text-gray-300">
                 {doctor?.first_name}
               </span>
-              <User className="w-4 h-4 opacity-70 dark:text-gray-300" />
             </button>
 
             {isMenuOpen && (
