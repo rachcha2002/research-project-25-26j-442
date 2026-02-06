@@ -1,134 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import PostCard from './PostCard';
-import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
-
-interface Post {
-  PostID: string;
-  UserID: string;
-  PostUrl: string | null;
-  Description: string;
-  Tags: string[];
-  PostedTime: string;
-  ApprovementReq: boolean;
-  Approved: boolean;
-}
-
-interface PostData {
-  post: Post;
-  engagement: {
-    PostID: string;
-    LikedBy: string[];
-    DislikedBy: string[];
-  };
-  comments: any[];
-}
-
-interface DisplayPost {
-  id: string;
-  user: {
-    name: string;
-    avatar: string;
-  };
-  description: string;
-  image?: string;
-  status: 'pending' | 'approved';
-  timestamp: string;
-  originalData: Post;
-}
-
-const POST_URL = import.meta.env.VITE_POST_URL;
-const FILE_BASE_URL = `${POST_URL.replace('/posts', '')}/file/uploads/`;
+import { usePostRecommendations } from '../hooks/usePostRecommendations';
 
 export default function PostRecommendations() {
-  const { doctor } = useAuth();
-  const [posts, setPosts] = useState<DisplayPost[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { posts, loading, error, handleApprove, handleRevert } = usePostRecommendations();
   const [activeTab, setActiveTab] = useState<'pending' | 'approved'>('pending');
-
-  useEffect(() => {
-    fetchPosts();
-  }, [doctor]);
-
-  const fetchPosts = async () => {
-    if (!doctor?.doctor_id) return;
-
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await axios.get(`${POST_URL}/getpostsrequiringapproval/${doctor.doctor_id}`);
-      
-      const formattedPosts: DisplayPost[] = response.data.map((item: PostData) => ({
-        id: item.post.PostID,
-        user: {
-          name: item.post.UserID,
-          avatar: item.post.UserID.substring(0, 2).toUpperCase(),
-        },
-        description: item.post.Description || '',
-        image: item.post.PostUrl ? `${FILE_BASE_URL}${item.post.PostUrl}` : undefined,
-        status: item.post.Approved ? 'approved' : 'pending',
-        timestamp: new Date(item.post.PostedTime).toLocaleString(),
-        originalData: item.post,
-      }));
-      
-      console.log('Fetched posts:', formattedPosts);
-      console.log('Sample image URL:', formattedPosts[0]?.image);
-      setPosts(formattedPosts);
-    } catch (err: any) {
-      console.error('Error fetching posts:', err);
-      setError(err.response?.data?.message || 'Failed to fetch posts');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleApprove = async (postId: string) => {
-    if (!doctor?.doctor_id) return;
-
-    try {
-      await axios.put(`${POST_URL}/approvepost`, {
-        DoctorID: doctor.doctor_id,
-        PostID: postId,
-        Approved: true,
-      });
-
-      setPosts(prevPosts =>
-        prevPosts.map(post =>
-          post.id === postId ? { ...post, status: 'approved' as const } : post
-        )
-      );
-    } catch (err: any) {
-      console.error('Error approving post:', err);
-      alert(err.response?.data?.message || 'Failed to approve post');
-    }
-  };
-
-  const handleRevert = async (postId: string) => {
-    if (!doctor?.doctor_id) return;
-
-    try {
-      await axios.put(`${POST_URL}/approvepost`, {
-        DoctorID: doctor.doctor_id,
-        PostID: postId,
-        Approved: false,
-      });
-
-      setPosts(prevPosts =>
-        prevPosts.map(post =>
-          post.id === postId ? { ...post, status: 'pending' as const } : post
-        )
-      );
-    } catch (err: any) {
-      console.error('Error reverting post:', err);
-      alert(err.response?.data?.message || 'Failed to revert post');
-    }
-  };
 
   const pendingPosts = posts.filter(post => post.status === 'pending');
   const approvedPosts = posts.filter(post => post.status === 'approved');
-
   const displayPosts = activeTab === 'approved' ? approvedPosts : pendingPosts;
+
+  const onApprove = async (postId: string) => {
+    try {
+      await handleApprove(postId);
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
+
+  const onRevert = async (postId: string) => {
+    try {
+      await handleRevert(postId);
+    } catch (err: any) {
+      alert(err.message);
+    }
+  };
 
   if (loading) {
     return (
@@ -154,7 +50,9 @@ export default function PostRecommendations() {
     <div className="p-8">
       <div className="mb-6">
         <h1 className="text-3xl mb-2 dark:text-white">Post Recommendations</h1>
-        <p className="text-gray-600 dark:text-gray-400">Review and approve posts from mothers with babies aged 2-5 years</p>
+        <p className="text-gray-600 dark:text-gray-400">
+          Review and approve posts from mothers with babies aged 2-5 years
+        </p>
       </div>
 
       {/* Tabs */}
@@ -204,19 +102,12 @@ export default function PostRecommendations() {
         {displayPosts.length === 0 ? (
           <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <p className="text-gray-500 dark:text-gray-400">
-              {activeTab === 'approved' 
-                ? 'No recommended posts yet' 
-                : 'No posts to review'}
+              {activeTab === 'approved' ? 'No recommended posts yet' : 'No posts to review'}
             </p>
           </div>
         ) : (
           displayPosts.map(post => (
-            <PostCard
-              key={post.id}
-              post={post}
-              onApprove={handleApprove}
-              onRevert={handleRevert}
-            />
+            <PostCard key={post.id} post={post} onApprove={onApprove} onRevert={onRevert} />
           ))
         )}
       </div>
