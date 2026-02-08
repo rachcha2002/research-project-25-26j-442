@@ -1,9 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import { MealCard } from '../SubComponents/MealCard';
 import { DailyNutritionIntakeCard } from '../SubComponents/DailyNutritionIntakeCard';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 
 type MealId = 'breakfast' | 'morningSnack' | 'lunch' | 'afternoonSnack' | 'dinner';
 
@@ -20,7 +22,7 @@ const TODAY_MEALS: Meal[] = [
   {
     id: 'breakfast',
     label: 'Breakfast',
-    hour: 8,
+    hour: 0,
     minute: 0,
     timeLabel: '8:00 AM',
     suggestion: 'Oatmeal with banana and warm milk',
@@ -60,6 +62,9 @@ const TODAY_MEALS: Meal[] = [
 ];
 
 export const FeedingMainComponent: React.FC = () => {
+  const router = useRouter();
+  const params = useLocalSearchParams<{ completedMealId?: string }>();
+  const manuallyCompletedId = (params.completedMealId as MealId | undefined) ?? undefined;
   const { mealsWithDate, initialActiveMealId, now } = useMemo(() => {
     const today = new Date();
     const now = new Date();
@@ -88,52 +93,103 @@ export const FeedingMainComponent: React.FC = () => {
 
   const [activeMealId, setActiveMealId] = useState<MealId>(initialActiveMealId);
 
-  const completedMealsCount = useMemo(
-    () => mealsWithDate.filter((m) => m.dateTime < now).length,
-    [mealsWithDate, now],
+  const completedMealIds = useMemo(
+    () =>
+      mealsWithDate
+        .filter(
+          (m) =>
+            (m.id !== 'dinner' && m.dateTime < now) ||
+            (manuallyCompletedId && m.id === manuallyCompletedId),
+        )
+        .map((m) => m.id),
+    [mealsWithDate, now, manuallyCompletedId],
   );
+
+  const completedMealsCount = completedMealIds.length;
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
-      <View style={styles.mealRowWrapper}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.mealRowContent}
-        >
-          {mealsWithDate.map((meal) => {
-            const isPast = meal.dateTime < now;
-            const isActive = meal.id === activeMealId;
+      <ScrollView
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.mealRowWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.mealRowContent}
+          >
+            {mealsWithDate.map((meal) => {
+              // Treat dinner as incomplete by time, but allow manual completion override
+              const isPastByTime = meal.id !== 'dinner' && meal.dateTime < now;
+              const isPast =
+                (manuallyCompletedId && meal.id === manuallyCompletedId) || isPastByTime;
+              const isActive = meal.id === activeMealId;
 
-            return (
-              <MealCard
-                key={meal.id}
-                label={meal.label}
-                timeLabel={meal.timeLabel}
-                suggestion={meal.suggestion}
-                isPast={isPast}
-                isActive={isActive}
-                onPress={() => setActiveMealId(meal.id)}
-              />
-            );
-          })}
-        </ScrollView>
-      </View>
+              return (
+                <MealCard
+                  key={meal.id}
+                  label={meal.label}
+                  timeLabel={meal.timeLabel}
+                  suggestion={meal.suggestion}
+                  isPast={isPast}
+                  isActive={isActive}
+                  onPress={() => {
+                    setActiveMealId(meal.id);
+                    router.push({
+                      pathname: '/meal-details',
+                      params: {
+                        id: meal.id,
+                        label: meal.label,
+                        timeLabel: meal.timeLabel,
+                        suggestion: meal.suggestion,
+                        isPast: String(isPast),
+                      },
+                    });
+                  }}
+                />
+              );
+            })}
+          </ScrollView>
+        </View>
 
-      <View style={styles.nutritionCardWrapper}>
-        <DailyNutritionIntakeCard
-          completedMeals={completedMealsCount}
-          totalMeals={mealsWithDate.length}
-        />
-      </View>
+        <View style={styles.nutritionCardWrapper}>
+          <DailyNutritionIntakeCard
+            completedMeals={completedMealsCount}
+            totalMeals={mealsWithDate.length}
+            completedMealIds={completedMealIds}
+          />
+        </View>
 
-      <View style={styles.bodyPlaceholder}>
-        <Text style={styles.bodyTitle}>Today&apos;s Feeding Overview</Text>
-        <Text style={styles.bodyDescription}>
-          Select a meal card above to view or update feeding details. This area can show
-          logs, notes, and more in the next iteration.
-        </Text>
-      </View>
+        <View style={styles.actionsRow}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            activeOpacity={0.8}
+            onPress={() => {
+              router.push('/nutrition-tracker');
+            }}
+          >
+            <View style={[styles.actionIconContainer, { backgroundColor: '#E0E7FF' }]}>
+              <Ionicons name="add-circle" size={24} color={Colors.primary.light} />
+            </View>
+            <Text style={styles.actionTitle}>Nutrition Checker</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionButton}
+            activeOpacity={0.8}
+            onPress={() => {
+              router.push('/past-data');
+            }}
+          >
+            <View style={[styles.actionIconContainer, { backgroundColor: '#E0E7FF' }]}>
+              <Ionicons name="time" size={24} color={Colors.primary.light} />
+            </View>
+            <Text style={styles.actionTitle}>Past data</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -143,6 +199,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
     paddingTop: 8,
+  },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingBottom: 24,
   },
   mealRowWrapper: {
     paddingVertical: 8,
@@ -154,6 +216,39 @@ const styles = StyleSheet.create({
   nutritionCardWrapper: {
     paddingHorizontal: 16,
     marginTop: 8,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 16,
+    paddingHorizontal: 16,
+    marginTop: 16,
+  },
+  actionButton: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 14,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  actionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  actionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.dark,
+    textAlign: 'center',
   },
   bodyPlaceholder: {
     flex: 1,

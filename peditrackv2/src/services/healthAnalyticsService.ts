@@ -1,7 +1,7 @@
 // For Android Emulator: use 10.0.2.2
 // For Physical Device: use your computer's IP address (check with ipconfig)
 // Current Wi-Fi IP: 192.168.1.153 (Updated: 2026-01-05)
-const API_BASE_URL = 'http://192.168.1.179:5001/api';
+const API_BASE_URL = 'http://10.72.187.59:5001/api';
 
 /**
  * Health Analytics Service for PediTrack v2

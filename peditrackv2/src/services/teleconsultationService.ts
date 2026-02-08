@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://192.168.1.6:4000/api/teleconsultation';
+const API_BASE_URL = 'http://10.72.187.59:4000/api/teleconsultation';
 
 export interface TeleconsultationRequestPayload {
   patient: {

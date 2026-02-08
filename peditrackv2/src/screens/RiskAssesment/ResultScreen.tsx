@@ -10,6 +10,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { requestTeleconsultation } from "@/services/teleconsultationService";
+import { SecondaryTopBar } from "@/components/SecondaryTopBar";
 
 // Color and style presets for each risk level
 const RISK_STYLES = {
@@ -77,7 +78,8 @@ export const AssessmentResultScreen: React.FC = () => {
   const score = typeof result.risk_score === 'number' ? result.risk_score : (risk === 'low' ? 2.1 : risk === 'medium' ? 5.2 : 8.7);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <SecondaryTopBar />
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={{ padding: 20 }}
@@ -237,7 +239,7 @@ export const AssessmentResultScreen: React.FC = () => {
           <Text style={[styles.footerText, { color: "#fff" }]}>Done</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

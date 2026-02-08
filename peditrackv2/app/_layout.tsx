@@ -11,6 +11,9 @@ export default function RootLayout() {
       <Stack.Screen name="assessment" options={{ headerShown: false }} />
       <Stack.Screen name="teleconsultation" options={{ headerShown: false }} />
       <Stack.Screen name="nearby-hospitals" options={{ headerShown: false }} />
+      <Stack.Screen name="meal-details" options={{ headerShown: false }} />
+      <Stack.Screen name="nutrition-tracker" options={{ headerShown: false }} />
+      <Stack.Screen name="past-data" options={{ headerShown: false }} />
     </Stack>
   );
 }
