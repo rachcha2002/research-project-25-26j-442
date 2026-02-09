@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice Chat Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .status {
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+            background: #e3f2fd;
+            color: #1976d2;
+            text-align: center;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        #recordBtn {
+            background: #4CAF50;
+            color: white;
+        }
+        #recordBtn.recording {
+            background: #f44336;
+        }
+        #recordBtn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #4CAF50;
+            min-height: 50px;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            border-left-color: #c62828;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 10px;
+            background: #263238;
+            color: #aed581;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎤 Voice Chat Test</h1>
+        
+        <div class="status" id="status">
+            Click "Start Recording" to begin
+        </div>
+
+        <button id="recordBtn">Start Recording</button>
+
+        <div class="response" id="response">
+            AI response will appear here...
+        </div>
+
+        <div class="log" id="log">
+            Console log will appear here...
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://192.168.1.2:3001/api/voice/chat';
+        
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let isRecording = false;
+
+        const recordBtn = document.getElementById('recordBtn');
+        const status = document.getElementById('status');
+        const response = document.getElementById('response');
+        const logDiv = document.getElementById('log');
+
+        function log(message) {
+            console.log(message);
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${message}<br>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        recordBtn.addEventListener('click', async () => {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                await startRecording();
+            }
+        });
+
+        async function startRecording() {
+            try {
+                log('🎤 Requesting microphone access...');
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                
+                log('✅ Microphone access granted');
+                
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) {
+                        audioChunks.push(e.data);
+                        log(`📦 Audio chunk: ${e.data.size} bytes`);
+                    }
+                };
+
+                mediaRecorder.onstop = async () => {
+                    log('🛑 Recording stopped');
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    log(`📦 Total audio: ${audioBlob.size} bytes`);
+                    
+                    stream.getTracks().forEach(track => track.stop());
+                    await sendAudio(audioBlob);
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                
+                recordBtn.textContent = 'Stop Recording';
+                recordBtn.classList.add('recording');
+                status.textContent = '🔴 Recording... Click to stop';
+                status.style.background = '#ffebee';
+                status.style.color = '#c62828';
+                
+                log('🎙️ Recording started');
+
+            } catch (err) {
+                log('❌ Error: ' + err.message);
+                response.textContent = 'Error: ' + err.message;
+                response.classList.add('error');
+            }
+        }
+
+        function stopRecording() {
+            if (mediaRecorder && isRecording) {
+                mediaRecorder.stop();
+                isRecording = false;
+                
+                recordBtn.textContent = 'Processing...';
+                recordBtn.disabled = true;
+                status.textContent = '⏳ Processing your speech...';
+                status.style.background = '#fff3e0';
+                status.style.color = '#e65100';
+            }
+        }
+
+        async function sendAudio(audioBlob) {
+            try {
+                log('📤 Sending audio to server...');
+                log(`📍 URL: ${API_URL}`);
+                
+                const formData = new FormData();
+                formData.append('audio', audioBlob, 'recording.webm');
+
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                log(`📨 Response status: ${res.status}`);
+                
+                const data = await res.json();
+                log(`📨 Response data: ${JSON.stringify(data)}`);
+
+                if (data.success) {
+                    response.textContent = data.text;
+                    response.classList.remove('error');
+                    status.textContent = '✅ Success! Click to record again';
+                    status.style.background = '#e8f5e9';
+                    status.style.color = '#2e7d32';
+                    
+                    log('✅ Success! Speaking response...');
+                    speakText(data.text);
+                } else {
+                    throw new Error(data.error || 'Unknown error');
+                }
+
+            } catch (err) {
+                log('❌ Error: ' + err.message);
+                response.textContent = 'Error: ' + err.message;
+                response.classList.add('error');
+                status.textContent = '❌ Error occurred';
+                status.style.background = '#ffebee';
+                status.style.color = '#c62828';
+            } finally {
+                recordBtn.textContent = 'Start Recording';
+                recordBtn.disabled = false;
+            }
+        }
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                utterance.pitch = 1.0;
+                window.speechSynthesis.speak(utterance);
+                log('🔊 Speaking response');
+            } else {
+                log('⚠️ Text-to-speech not supported');
+            }
+        }
+
+        log('🚀 Voice chat test page loaded');
+        log(`📍 API URL: ${API_URL}`);
+    </script>
+</body>
+</html>

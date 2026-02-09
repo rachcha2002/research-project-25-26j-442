@@ -1,3 +1,4 @@
 export { ChatScreen } from './ChatScreen';
-export { VoiceScreen } from './VoiceScreen';
+// Using WebView-based voice interface for better real-time performance
+export { default as VoiceScreen } from './WebVoiceScreen';
 

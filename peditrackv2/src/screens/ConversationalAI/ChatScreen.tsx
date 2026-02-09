@@ -7,6 +7,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Colors } from '@/constants/Colors';
 import { ChatTopBar } from '@/components/ChatTopBar';
 import { sendChatMessage, sendChatMessageWithImage } from '@/services/chatService';
+// @deprecated - Old HTTP voice service. TODO: Replace with geminiLiveVoiceService for real-time streaming
 import { sendVoiceMessage } from '@/services/voiceService';
 import { chatStorageService, Conversation } from '@/services/chatStorageService';
 
@@ -109,14 +110,14 @@ export default function ChatScreen() {
                         currentText || 'Please analyze this image and provide relevant information.',
                         currentImage,
                         conversationId,
-                        'openai'
+                        'google'
                     );
                 } else {
                     // Send text-only message
                     response = await sendChatMessage(
                         currentText,
                         conversationId,
-                        'openai'
+                        'google'
                     );
                 }
 
@@ -140,7 +141,7 @@ export default function ChatScreen() {
                 // Show error message to user
                 Alert.alert(
                     'Connection Error',
-                    'Unable to connect to the chat service. Please make sure the service is running on http://192.168.1.3:3001',
+                    'Unable to connect to the chat service. Please check your internet connection.',
                     [{ text: 'OK' }]
                 );
 

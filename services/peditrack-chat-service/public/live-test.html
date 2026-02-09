@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Live WebSocket Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #333; color: #fff; }
+        .btn { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px; }
+        .green { background: #4caf50; color: white; border: none; }
+        .red { background: #f44336; color: white; border: none; }
+        #log { background: #000; padding: 10px; border: 1px solid #555; height: 300px; overflow-y: scroll; white-space: pre-wrap; margin-top: 20px; }
+        .status { font-weight: bold; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Gemini Live WebSocket Test</h1>
+    <div class="status" id="connectionStatus">Status: Disconnected</div>
+    <div class="status" id="audioStatus">Audio: Inactive</div>
+    
+    <div>
+        <button id="connectBtn" class="btn green">1. Connect WebSocket</button>
+        <button id="disconnectBtn" class="btn red" disabled>Disconnect</button>
+    </div>
+    <div>
+        <button id="startMicBtn" class="btn green" disabled>2. Start Mic & Stream</button>
+        <button id="stopMicBtn" class="btn red" disabled>Stop Mic</button>
+    </div>
+
+    <div id="log"></div>
+
+    <script>
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const WS_URL = protocol + '//' + window.location.host + '/ws/live';
+        let ws;
+        let audioContext;
+        let processor;
+        let input;
+        let isStreaming = false;
+
+        const logDiv = document.getElementById('log');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const startMicBtn = document.getElementById('startMicBtn');
+        const stopMicBtn = document.getElementById('stopMicBtn');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const audioStatus = document.getElementById('audioStatus');
+
+        function log(msg) {
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${time}] ${msg}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        function updateUI(connected, streaming) {
+            connectBtn.disabled = connected;
+            disconnectBtn.disabled = !connected;
+            startMicBtn.disabled = !connected || streaming;
+            stopMicBtn.disabled = !streaming;
+            
+            connectionStatus.innerText = `Status: ${connected ? 'CONNECTED ✅' : 'DISCONNECTED ❌'}`;
+            audioStatus.innerText = `Audio: ${streaming ? 'STREAMING 🎤' : 'INACTIVE 🔇'}`;
+        }
+
+        connectBtn.onclick = () => {
+            log(`Connecting to ${WS_URL}...`);
+            ws = new WebSocket(WS_URL);
+
+            ws.onopen = () => {
+                log('✅ WebSocket Connected');
+                updateUI(true, false);
+            };
+
+            ws.onmessage = async (event) => {
+                const msg = JSON.parse(event.data);
+                if (msg.type === 'session_created') {
+                    log(`🎉 Session Created: ${msg.sessionId}`);
+                } else if (msg.type === 'audio') {
+                    log(`🔊 Received Audio chunk (${msg.data.length} chars)`);
+                    playPcmAudio(msg.data);
+                } else if (msg.type === 'text') {
+                    log(`📝 AI: "${msg.text}"`);
+                } else if (msg.type === 'error') {
+                    log(`❌ Server Error: ${msg.error}`);
+                }
+            };
+
+            ws.onclose = () => {
+                log('🔌 WebSocket Disconnected');
+                updateUI(false, false);
+                stopStreaming();
+            };
+
+            ws.onerror = (e) => {
+                log('❌ WebSocket Error');
+                console.error(e);
+            };
+        };
+
+        disconnectBtn.onclick = () => {
+            if (ws) ws.close();
+        };
+
+        startMicBtn.onclick = async () => {
+            try {
+                log('Asking for mic permission...');
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    audio: { 
+                        channelCount: 1, 
+                        sampleRate: 16000,
+                        echoCancellation: true
+                    } 
+                });
+                
+                log('🎤 Mic permission granted');
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+                input = audioContext.createMediaStreamSource(stream);
+                processor = audioContext.createScriptProcessor(4096, 1, 1);
+
+                input.connect(processor);
+                processor.connect(audioContext.destination);
+
+                processor.onaudioprocess = (e) => {
+                    if (!isStreaming || ws.readyState !== WebSocket.OPEN) return;
+
+                    const inputData = e.inputBuffer.getChannelData(0);
+                    const pcmData = floatTo16BitPCM(inputData);
+                    const base64Data = arrayBufferToBase64(pcmData);
+
+                    ws.send(JSON.stringify({
+                        type: 'audio',
+                        data: base64Data
+                    }));
+                };
+
+                isStreaming = true;
+                updateUI(true, true);
+                log('🌊 Audio streaming started');
+
+            } catch (err) {
+                log(`❌ Mic Error: ${err.message}`);
+                console.error(err);
+            }
+        };
+
+        stopMicBtn.onclick = stopStreaming;
+
+        function stopStreaming() {
+            if (isStreaming) {
+                isStreaming = false;
+                if (processor) processor.disconnect();
+                if (input) input.disconnect();
+                if (audioContext) audioContext.close();
+                log('🛑 Audio streaming stopped');
+                updateUI(true, false);
+            }
+        }
+
+        // --- Helpers ---
+        function floatTo16BitPCM(output, offset = 0) {
+            const buffer = new ArrayBuffer(output.length * 2);
+            const view = new DataView(buffer);
+            for (let i = 0; i < output.length; i++, offset += 2) {
+                const s = Math.max(-1, Math.min(1, output[i]));
+                view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+            }
+            return buffer;
+        }
+
+        function arrayBufferToBase64(buffer) {
+            let binary = '';
+            const bytes = new Uint8Array(buffer);
+            for (let i = 0; i < bytes.byteLength; i++) {
+                binary += String.fromCharCode(bytes[i]);
+            }
+            return window.btoa(binary);
+        }
+
+        function playPcmAudio(base64Data) {
+            if (!audioContext) return;
+            try {
+                const binaryString = window.atob(base64Data);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+                
+                const int16 = new Int16Array(bytes.buffer);
+                const float32 = new Float32Array(int16.length);
+                for(let i=0; i<int16.length; i++) float32[i] = int16[i] / 32768;
+
+                const buffer = audioContext.createBuffer(1, float32.length, 24000);
+                buffer.getChannelData(0).set(float32);
+
+                const source = audioContext.createBufferSource();
+                source.buffer = buffer;
+                source.connect(audioContext.destination);
+                source.start();
+            } catch (e) {
+                log('❌ Audio Playback Error: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,8 +1,18 @@
-// For Android Emulator: use 10.0.2.2
-// For Physical Device: use your computer's IP address (check with ipconfig)
-// Current Wi-Fi IP: 192.168.1.3
+// Using Railway hosted backend
+// @deprecated This service is deprecated. Use geminiLiveVoiceService.ts instead.
 
-const API_BASE_URL = 'http://10.72.187.59:3001/api';
+/**
+ * @deprecated This service is deprecated. Use geminiLiveVoiceService.ts for real-time voice conversations.
+ * 
+ * DEPRECATION NOTICE: This file uses the old HTTP-based voice pipeline (OpenAI Whisper/TTS).
+ * Please migrate to geminiLiveVoiceService.ts for:
+ * - Real-time bidirectional audio streaming
+ * - Lower latency (<1s vs 3-5s)
+ * - Natural interruptions
+ * - Better voice quality
+ */
+
+const API_BASE_URL = 'https://peditrack-chat-service-production-0d1d.up.railway.app/api';
 
 
 import * as FileSystem from 'expo-file-system';
