@@ -7,6 +7,7 @@ import { useRouter } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { getMeasurements, Measurement } from '@/services/healthAnalyticsService';
+import { useBaby } from '@/contexts/BabyContext';
 
 const { width } = Dimensions.get('window');
 
@@ -14,25 +15,36 @@ type MetricTab = 'Height' | 'Weight' | 'BMI' | 'Head';
 
 export const GrowthDetailsScreen: React.FC = () => {
   const router = useRouter();
+  const { selectedBaby } = useBaby();
   const [selectedTab, setSelectedTab] = useState<MetricTab>('Height');
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // TODO: Get this from route params or context
-  const babyId = '674525cc0a8a8b29b8a2bf9c'; // Temporary placeholder
-
   useEffect(() => {
-    loadMeasurements();
-  }, []);
+    if (selectedBaby) {
+      loadMeasurements();
+    } else {
+      setLoading(false);
+    }
+  }, [selectedBaby]);
 
   const loadMeasurements = async () => {
+    if (!selectedBaby) return;
+    
     try {
       setLoading(true);
       setError(null);
-      const data = await getMeasurements(babyId);
+      const data = await getMeasurements(selectedBaby._id);
+      
+      // Sort by date descending (newest first)
+      const sortedData = data.sort((a, b) => {
+        return new Date(b.measurementDate).getTime() - new Date(a.measurementDate).getTime();
+      });
+      
       // Get only the last 5 measurements
-      setMeasurements(data.slice(0, 5));
+      setMeasurements(sortedData.slice(0, 5));
+      console.log('[GrowthDetails] Loaded measurements:', sortedData.length, 'total,', sortedData.slice(0, 5).length, 'displayed');
     } catch (err) {
       console.error('Error loading measurements:', err);
       setError('Failed to load measurements.');

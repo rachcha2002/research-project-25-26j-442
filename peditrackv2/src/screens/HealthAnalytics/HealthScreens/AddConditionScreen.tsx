@@ -7,6 +7,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { addHealthRecord, getHealthRecordById, updateHealthRecord } from '@/services/healthAnalyticsService';
+import { useBaby } from '@/contexts/BabyContext';
 
 type ConditionType = 'acute' | 'chronic' | 'resolved';
 type Severity = 'mild' | 'moderate' | 'severe';
@@ -14,6 +15,7 @@ type Status = 'monitoring' | 'active' | 'resolved' | 'underTreatment';
 
 export const AddConditionScreen: React.FC = () => {
   const router = useRouter();
+  const { selectedBaby } = useBaby();
   const { recordId } = useLocalSearchParams<{ recordId?: string }>();
   const isEditMode = !!recordId;
   
@@ -29,9 +31,6 @@ export const AddConditionScreen: React.FC = () => {
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(isEditMode);
-  
-  // TODO: Get this from route params or context
-  const [babyId] = useState('674525cc0a8a8b29b8a2bf9c'); // Temporary placeholder
 
   const symptoms = [
     { id: 'sneezing', label: 'Sneezing' },
@@ -96,7 +95,7 @@ export const AddConditionScreen: React.FC = () => {
   const handleSave = async () => {
     console.log('=== SAVE BUTTON PRESSED ===');
     console.log('Condition Name:', conditionName);
-    console.log('Baby ID:', babyId);
+    console.log('Baby ID:', selectedBaby?._id);
     console.log('Status:', status);
     console.log('Severity:', severity);
     
@@ -107,9 +106,9 @@ export const AddConditionScreen: React.FC = () => {
       return;
     }
 
-    if (!babyId) {
-      console.log('Validation failed: No baby ID');
-      Alert.alert('Error', 'Baby ID is required');
+    if (!selectedBaby?._id) {
+      console.log('Validation failed: No baby selected');
+      Alert.alert('Error', 'Please select a baby profile first');
       return;
     }
 
@@ -117,7 +116,7 @@ export const AddConditionScreen: React.FC = () => {
     setLoading(true);
     try {
       const healthRecordData = {
-        babyId,
+        babyId: selectedBaby._id,
         recordDate: diagnosisDate.toISOString().split('T')[0], // Format: YYYY-MM-DD
         recordType: 'illness' as const, // Using 'illness' as default for conditions
         diagnosis: conditionName,

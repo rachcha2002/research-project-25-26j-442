@@ -1,0 +1,1 @@
+export { VaccinationsListScreen } from './VaccinationsListScreen';

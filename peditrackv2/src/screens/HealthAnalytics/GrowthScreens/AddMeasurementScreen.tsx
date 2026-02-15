@@ -7,11 +7,13 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { addMeasurement, updateMeasurement, Measurement } from '@/services/healthAnalyticsService';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useBaby } from '@/contexts/BabyContext';
 
 type EntryMode = 'manual' | 'photo';
 
 export const AddMeasurementScreen: React.FC = () => {
   const router = useRouter();
+  const { selectedBaby } = useBaby();
   const params = useLocalSearchParams();
   
   // Check if we're editing an existing measurement
@@ -29,9 +31,6 @@ export const AddMeasurementScreen: React.FC = () => {
   );
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [loading, setLoading] = useState(false);
-  
-  // TODO: Get this from route params or context
-  const [babyId, setBabyId] = useState(measurementData?.babyId || '674525cc0a8a8b29b8a2bf9c');
 
   // Calculate BMI
   const calculateBMI = () => {
@@ -54,8 +53,8 @@ export const AddMeasurementScreen: React.FC = () => {
 
   const saveMeasurement = async (saveAndAddAnother: boolean = false) => {
     // Validate required fields
-    if (!babyId) {
-      Alert.alert('Error', 'Baby ID is required');
+    if (!selectedBaby?._id) {
+      Alert.alert('Error', 'Please select a baby profile first');
       return;
     }
 
@@ -67,7 +66,7 @@ export const AddMeasurementScreen: React.FC = () => {
     setLoading(true);
     try {
       const measurementPayload = {
-        babyId,
+        babyId: selectedBaby._id,
         measurementDate: measurementDate.toISOString().split('T')[0], // Format: YYYY-MM-DD
         height: {
           value: height,
@@ -89,7 +88,7 @@ export const AddMeasurementScreen: React.FC = () => {
       let result;
       if (editMode && params.measurementId) {
         // Update existing measurement
-        result = await updateMeasurement(params.measurementId as string, measurementPayload);
+        result = await updateMeasurement(selectedBaby._id, params.measurementId as string, measurementPayload);
       } else {
         // Add new measurement
         result = await addMeasurement(measurementPayload);
