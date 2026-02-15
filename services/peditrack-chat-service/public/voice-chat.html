@@ -187,6 +187,31 @@
         .ai-speech-box .content {
             color: #fff;
         }
+        .language-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin: 10px 0 6px;
+        }
+        .language-row label {
+            font-size: 0.85rem;
+            opacity: 0.85;
+        }
+        .language-select {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 0.9rem;
+        }
+        .language-note {
+            font-size: 0.75rem;
+            color: #fbbf24;
+            min-height: 18px;
+            margin-bottom: 4px;
+        }
     </style>
 </head>
 <body>
@@ -205,6 +230,16 @@
             <span class="label">🤖 AI Response (Text):</span>
             <span class="content" id="aiSpeechContent">AI will respond here...</span>
         </div>
+
+        <div class="language-row">
+            <label for="languageSelect">Language</label>
+            <select id="languageSelect" class="language-select">
+                <option value="en">English</option>
+                <option value="ta">தமிழ் (Tamil)</option>
+                <option value="si">සිංහල (Sinhala)</option>
+            </select>
+        </div>
+        <div id="languageNote" class="language-note"></div>
 
         <div class="transcript-area" id="transcript">
             Tap the microphone to start a live conversation...
@@ -248,9 +283,37 @@
         const debugInfo = document.getElementById('debugInfo');
         const userSpeechContent = document.getElementById('userSpeechContent');
         const aiSpeechContent = document.getElementById('aiSpeechContent');
+        const languageSelect = document.getElementById('languageSelect');
+        const languageNote = document.getElementById('languageNote');
+
+        const LANGUAGE_LABELS = {
+            en: 'English',
+            ta: 'Tamil',
+            si: 'Sinhala'
+        };
+        let selectedLanguage = 'en';
 
         // Show debug info
         debugInfo.textContent = 'Waiting for connection...';
+
+        function updateLanguageNote() {
+            if (selectedLanguage === 'si') {
+                languageNote.textContent = 'Sinhala support depends on Live model language coverage and may be less accurate than English/Tamil.';
+            } else {
+                languageNote.textContent = '';
+            }
+        }
+
+        languageSelect.addEventListener('change', () => {
+            selectedLanguage = languageSelect.value;
+            updateLanguageNote();
+
+            // Apply on next session; reconnect if currently active
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                endCall();
+            }
+        });
+        updateLanguageNote();
 
         // Create visualizer bars
         for (let i = 0; i < 15; i++) {
@@ -406,9 +469,9 @@
             return new Promise((resolve, reject) => {
                 // Generate fresh ID for every connection to ensure no memory of previous chat
                 const conversationId = 'voice-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now();
-                const wsUrl = `wss://${SERVER_HOST}/ws/live?conversationId=${conversationId}`;
+                const wsUrl = `wss://${SERVER_HOST}/ws/live?conversationId=${conversationId}&language=${encodeURIComponent(selectedLanguage)}`;
                 
-                log(`Connecting to new session...`);
+                log(`Connecting (${LANGUAGE_LABELS[selectedLanguage] || selectedLanguage})...`);
                 updateStatus('Connecting...', 'connecting');
                 isConnecting = true;
 
@@ -462,6 +525,11 @@
                             nextStartTime = audioContext ? audioContext.currentTime : 0;
                         } else if (msg.type === 'session_created') {
                             log('Session: ' + msg.sessionId.substring(0, 8) + '...');
+                            if (msg.language) {
+                                selectedLanguage = msg.language;
+                                languageSelect.value = msg.language;
+                                updateLanguageNote();
+                            }
                         } else if (msg.type === 'setup_complete') {
                             log('Gemini ready');
                             transcriptEl.innerHTML = '<span style="opacity:0.5">Listening... Speak now!</span>';

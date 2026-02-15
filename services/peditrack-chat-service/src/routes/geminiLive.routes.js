@@ -22,8 +22,12 @@ function registerGeminiLiveRoutes(app) {
         let sessionId = null;
         const geminiLiveService = getGeminiLiveService();
         const conversationId = req.query.conversationId || uuidv4();
+        const requestedLanguage = typeof req.query.language === 'string' ? req.query.language.toLowerCase() : 'en';
+        const allowedLanguages = new Set(['en', 'ta', 'si']);
+        const language = allowedLanguages.has(requestedLanguage) ? requestedLanguage : 'en';
 
         console.log(`🎙️  Conversation ID: ${conversationId}`);
+        console.log(`🌐 Requested language: ${language}`);
 
         try {
             // Get API key from environment
@@ -38,13 +42,14 @@ function registerGeminiLiveRoutes(app) {
             }
 
             // Create Gemini Live session
-            sessionId = await geminiLiveService.createSession(conversationId, apiKey);
+            sessionId = await geminiLiveService.createSession(conversationId, apiKey, language);
 
             // Send session created confirmation
             ws.send(JSON.stringify({
                 type: 'session_created',
                 sessionId,
-                conversationId
+                conversationId,
+                language
             }));
 
             // Set up Gemini message handler

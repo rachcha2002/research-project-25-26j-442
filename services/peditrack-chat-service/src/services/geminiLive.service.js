@@ -18,7 +18,7 @@ class GeminiLiveService {
     /**
      * Create a new Gemini Live session
      */
-    async createSession(conversationId, apiKey) {
+    async createSession(conversationId, apiKey, language = 'en') {
         try {
             const sessionId = uuidv4();
             console.log(`🎙️  Creating Gemini Live session: ${sessionId}`);
@@ -50,7 +50,7 @@ class GeminiLiveService {
             */
 
             // Build system instruction with RAG context
-            const systemInstruction = this._buildSystemInstruction(ragContext);
+            const systemInstruction = this._buildSystemInstruction(ragContext, language);
 
             // Connect to Gemini Live API
             const ws = new WebSocket(`${this.GEMINI_LIVE_URL}?key=${apiKey}`);
@@ -101,7 +101,8 @@ class GeminiLiveService {
                         ws,
                         conversationId,
                         createdAt: Date.now(),
-                        ragContext
+                        ragContext,
+                        language
                     });
 
                     resolve(sessionId);
@@ -362,10 +363,28 @@ class GeminiLiveService {
      * OPTIMIZED: Natural, concise system instruction
      * Removed excessive repetitive warnings that confuse the AI
      */
-    _buildSystemInstruction(ragContext = '') {
+    _buildSystemInstruction(ragContext = '', language = 'en') {
+        const languageRules = {
+            en: {
+                name: 'English',
+                directive: 'Respond only in English.'
+            },
+            ta: {
+                name: 'Tamil',
+                directive: 'Respond only in Tamil (தமிழ்). If the user speaks another language, ask them in Tamil to continue in Tamil.'
+            },
+            si: {
+                name: 'Sinhala',
+                directive: 'Respond only in Sinhala (සිංහල). If the user speaks another language, ask them in Sinhala to continue in Sinhala.'
+            }
+        };
+
+        const chosen = languageRules[language] || languageRules.en;
+
        let instruction = `You are PediTrack AI, a helpful pediatric health assistant for Sri Lankan families.
 
-You communicate in English through natural voice conversation. Listen carefully and respond warmly.
+You communicate in ${chosen.name} through natural voice conversation. Listen carefully and respond warmly.
+${chosen.directive}
 
 Guidelines:
 - Speak naturally (2-3 sentences typically)
