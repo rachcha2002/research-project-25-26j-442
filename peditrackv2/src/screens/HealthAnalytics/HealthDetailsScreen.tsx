@@ -5,26 +5,36 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { useRouter } from 'expo-router';
-import { getHealthRecords, HealthRecord } from '@/services/healthAnalyticsService';
+import { getHealthRecords, HealthRecord, getActiveMedications, Medication } from '@/services/healthAnalyticsService';
+import { useBaby } from '@/contexts/BabyContext';
 
 type Symptom = 'fever' | 'cold' | 'cough' | 'vomit' | 'diarrhea' | 'pain' | 'fatigue' | 'noAppetite';
 
 export const HealthDetailsScreen: React.FC = () => {
   const router = useRouter();
+  const { selectedBaby } = useBaby();
   const [selectedSymptoms, setSelectedSymptoms] = useState<Symptom[]>(['fatigue']);
   const [conditions, setConditions] = useState<HealthRecord[]>([]);
   const [loadingConditions, setLoadingConditions] = useState(true);
-  
-  // TODO: Get this from route params or context
-  const babyId = '674525cc0a8a8b29b8a2bf9c';
+  const [medications, setMedications] = useState<Medication[]>([]);
+  const [loadingMedications, setLoadingMedications] = useState(true);
 
   // Fetch active conditions
   useEffect(() => {
     const fetchConditions = async () => {
+      if (!selectedBaby) {
+        setLoadingConditions(false);
+        return;
+      }
+
       try {
         setLoadingConditions(true);
-        const records = await getHealthRecords(babyId, 'illness');
-        setConditions(records);
+        const records = await getHealthRecords(selectedBaby._id, 'illness');
+        // Filter for active conditions only (status is 'active' or 'monitoring' or 'underTreatment')
+        const activeRecords = records.filter(
+          record => record.status === 'active' || record.status === 'monitoring' || record.status === 'underTreatment'
+        );
+        setConditions(activeRecords);
       } catch (error) {
         console.error('Error fetching conditions:', error);
       } finally {
@@ -33,7 +43,29 @@ export const HealthDetailsScreen: React.FC = () => {
     };
 
     fetchConditions();
-  }, []);
+  }, [selectedBaby]);
+
+  // Fetch active medications
+  useEffect(() => {
+    const fetchMedications = async () => {
+      if (!selectedBaby) {
+        setLoadingMedications(false);
+        return;
+      }
+
+      try {
+        setLoadingMedications(true);
+        const activeMeds = await getActiveMedications(selectedBaby._id);
+        setMedications(activeMeds);
+      } catch (error) {
+        console.error('Error fetching medications:', error);
+      } finally {
+        setLoadingMedications(false);
+      }
+    };
+
+    fetchMedications();
+  }, [selectedBaby]);
 
   const toggleSymptom = (symptom: Symptom) => {
     if (selectedSymptoms.includes(symptom)) {
@@ -88,24 +120,29 @@ export const HealthDetailsScreen: React.FC = () => {
                 <Text style={styles.emptyText}>No active conditions</Text>
               </View>
             ) : (
-              <TouchableOpacity 
-                style={styles.conditionCard}
-                onPress={() => router.push('/health-analytics/health-details/all-conditions' as any)}
-              >
-                <View style={styles.conditionIconContainer}>
-                  <Ionicons name="medical" size={24} color="#EF4444" />
-                </View>
-                <View style={styles.conditionContent}>
-                  <Text style={styles.conditionName}>{conditions[0].diagnosis || 'Condition'}</Text>
-                  <Text style={styles.conditionStatus}>
-                    Severity: {conditions[0].severity ? conditions[0].severity.charAt(0).toUpperCase() + conditions[0].severity.slice(1) : 'Unknown'}
-                  </Text>
-                  <Text style={styles.conditionDate}>
-                    Date: {new Date(conditions[0].recordDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={Colors.inactive} />
-              </TouchableOpacity>
+              <>
+                {conditions.slice(0, 3).map((condition, index) => (
+                  <TouchableOpacity 
+                    key={condition._id || index}
+                    style={[styles.conditionCard, index > 0 && { marginTop: 12 }]}
+                    onPress={() => router.push('/health-analytics/health-details/all-conditions' as any)}
+                  >
+                    <View style={styles.conditionIconContainer}>
+                      <Ionicons name="medical" size={24} color="#EF4444" />
+                    </View>
+                    <View style={styles.conditionContent}>
+                      <Text style={styles.conditionName}>{condition.diagnosis || 'Condition'}</Text>
+                      <Text style={styles.conditionStatus}>
+                        Severity: {condition.severity ? condition.severity.charAt(0).toUpperCase() + condition.severity.slice(1) : 'Unknown'}
+                      </Text>
+                      <Text style={styles.conditionDate}>
+                        Date: {new Date(condition.recordDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={Colors.inactive} />
+                  </TouchableOpacity>
+                ))}
+              </>
             )}
 
             <TouchableOpacity 
@@ -113,6 +150,64 @@ export const HealthDetailsScreen: React.FC = () => {
               onPress={() => router.push('/health-analytics/health-details/add-condition' as any)}
             >
               <Text style={styles.addConditionText}>+ Add Condition</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Active Medications */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                Active Medications ({loadingMedications ? '...' : medications.length})
+              </Text>
+              <TouchableOpacity onPress={() => router.push('/health-analytics/medications' as any)}>
+                <Text style={styles.viewAllText}>View All →</Text>
+              </TouchableOpacity>
+            </View>
+            
+            {loadingMedications ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={Colors.primary.DEFAULT} />
+                <Text style={styles.loadingText}>Loading medications...</Text>
+              </View>
+            ) : medications.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="medical-outline" size={40} color={Colors.inactive} />
+                <Text style={styles.emptyText}>No active medications</Text>
+              </View>
+            ) : (
+              <>
+                {medications.slice(0, 2).map((medication, index) => (
+                  <TouchableOpacity 
+                    key={medication._id || index}
+                    style={[styles.medicationCard, index > 0 && { marginTop: 12 }]}
+                    onPress={() => router.push('/health-analytics/medications' as any)}
+                  >
+                    <View style={styles.medIconContainer}>
+                      <Ionicons name="medical" size={24} color={Colors.primary.DEFAULT} />
+                    </View>
+                    <View style={styles.medContent}>
+                      <Text style={styles.medName}>{medication.name}</Text>
+                      <Text style={styles.medDosage}>
+                        {medication.dosage.amount}{medication.dosage.unit} - {medication.frequency}
+                      </Text>
+                      {medication.reminderEnabled && (
+                        <View style={styles.reminderBadge}>
+                          <Ionicons name="notifications" size={12} color={Colors.primary.DEFAULT} />
+                          <Text style={styles.reminderText}>Reminders On</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={Colors.inactive} />
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
+
+            <TouchableOpacity 
+              style={styles.addConditionButton}
+              onPress={() => router.push('/health-analytics/medications/add' as any)}
+            >
+              <Text style={styles.addConditionText}>+ Add Medication</Text>
             </TouchableOpacity>
           </View>
 
@@ -428,5 +523,53 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: Colors.inactive,
+  },
+  // Medication styles
+  medicationCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  medIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primary.light + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  medContent: {
+    flex: 1,
+  },
+  medName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.dark,
+    marginBottom: 4,
+  },
+  medDosage: {
+    fontSize: 13,
+    color: Colors.inactive,
+    marginBottom: 4,
+  },
+  reminderBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    backgroundColor: Colors.primary.light + '15',
+    alignSelf: 'flex-start',
+  },
+  reminderText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: Colors.primary.DEFAULT,
   },
 });

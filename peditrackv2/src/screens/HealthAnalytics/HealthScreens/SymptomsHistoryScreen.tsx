@@ -6,6 +6,7 @@ import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { getHealthRecords, HealthRecord } from '@/services/healthAnalyticsService';
+import { useBaby } from '@/contexts/BabyContext';
 
 type DateRange = 'month' | '3months' | '6months' | 'custom';
 
@@ -24,6 +25,7 @@ interface SymptomRecord {
 
 export const SymptomsHistoryScreen: React.FC = () => {
   const router = useRouter();
+  const { selectedBaby } = useBaby();
   const [selectedRange, setSelectedRange] = useState<DateRange>('month');
   const [symptomRecords, setSymptomRecords] = useState<SymptomRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,9 +33,6 @@ export const SymptomsHistoryScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedRecord, setSelectedRecord] = useState<SymptomRecord | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
-
-  // TODO: Get this from route params or context
-  const babyId = '674525cc0a8a8b29b8a2bf9c';
 
   // Calculate date range based on selection
   const getDateRange = (range: DateRange): { startDate: Date; endDate: Date } => {
@@ -81,9 +80,14 @@ export const SymptomsHistoryScreen: React.FC = () => {
 
   // Fetch symptoms data
   const fetchSymptoms = async () => {
+    if (!selectedBaby) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setError(null);
-      const records = await getHealthRecords(babyId);
+      const records = await getHealthRecords(selectedBaby._id);
       
       // Filter records by date range and map to symptom records
       const { startDate, endDate } = getDateRange(selectedRange);
@@ -110,7 +114,7 @@ export const SymptomsHistoryScreen: React.FC = () => {
   useEffect(() => {
     setLoading(true);
     fetchSymptoms();
-  }, [selectedRange]);
+  }, [selectedRange, selectedBaby]);
 
   const handleRefresh = () => {
     setRefreshing(true);
