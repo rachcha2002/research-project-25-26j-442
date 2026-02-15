@@ -28,6 +28,7 @@ class GeminiLiveService {
             
             // Try to get RAG context from the last user message if available
             let ragContext = '';
+            /* DISABLE RAG TEMPORARILY TO FIX HALLUCINATIONS
             if (history.length > 0) {
                 const lastUserMessage = [...history].reverse().find(msg => msg.role === 'user');
                 if (lastUserMessage) {
@@ -46,6 +47,7 @@ class GeminiLiveService {
                     }
                 }
             }
+            */
 
             // Build system instruction with RAG context
             const systemInstruction = this._buildSystemInstruction(ragContext);
@@ -70,15 +72,17 @@ class GeminiLiveService {
                                 speech_config: {
                                     voice_config: {
                                         prebuilt_voice_config: {
-                                            voice_name: 'Fenrir' // Deeper, often clearer voice
+                                            voice_name: 'Aoede'
                                         }
                                     }
                                 }
                             },
-                            // Enable Voice Activity Detection for auto-detection of speech
+                            // Enable Voice Activity Detection
                             realtime_input_config: {
                                 automatic_activity_detection: {
-                                    disabled: false
+                                    disabled: false,
+                                    prefix_padding_ms: 180,
+                                    silence_duration_ms: 450
                                 }
                             },
                             // Enable transcription for debugging
@@ -147,6 +151,28 @@ class GeminiLiveService {
             session.ws.send(JSON.stringify(message));
         } catch (error) {
             console.error('❌ Error sending audio:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * Notify Gemini that current audio stream has paused/ended
+     * Helps flush buffered speech and improves final-word transcription quality.
+     */
+    async sendAudioStreamEnd(sessionId) {
+        const session = this.activeSessions.get(sessionId);
+        if (!session) {
+            throw new Error('Session not found');
+        }
+
+        try {
+            session.ws.send(JSON.stringify({
+                realtime_input: {
+                    audio_stream_end: true
+                }
+            }));
+        } catch (error) {
+            console.error('❌ Error sending audio_stream_end:', error);
             throw error;
         }
     }
@@ -246,6 +272,29 @@ class GeminiLiveService {
                     if (content.turnComplete) {
                         callback({ type: 'turn_complete' });
                     }
+
+                    // Handle interruption signal (clear any queued playback on clients)
+                    if (content.interrupted === true) {
+                        callback({ type: 'interrupted' });
+                    }
+                    
+                    // Handle user input transcription (what the user said)
+                    if (content.input_transcription?.text) {
+                        console.log('🗣️  User said:', content.input_transcription.text);
+                        callback({
+                            type: 'user_transcript',
+                            text: content.input_transcription.text
+                        });
+                    }
+                    
+                    // Handle model output transcription (what AI said - text version)
+                    if (content.output_transcription?.text) {
+                        console.log('🤖 AI said:', content.output_transcription.text);
+                        callback({
+                            type: 'ai_transcript',
+                            text: content.output_transcription.text
+                        });
+                    }
                 }
 
                 // Handle errors
@@ -310,26 +359,25 @@ class GeminiLiveService {
     }
 
     /**
-     * Build system instruction with RAG context
+     * OPTIMIZED: Natural, concise system instruction
+     * Removed excessive repetitive warnings that confuse the AI
      */
     _buildSystemInstruction(ragContext = '') {
-        let instruction = `You are PediTrack AI Voice Assistant, a helpful and knowledgeable pediatric health assistant specifically designed for Sri Lankan families.
+       let instruction = `You are PediTrack AI, a helpful pediatric health assistant for Sri Lankan families.
 
-You are having a VOICE CONVERSATION with a parent. Speak naturally, warmly, and conversationally.
+You communicate in English through natural voice conversation. Listen carefully and respond warmly.
 
-Guidelines for voice interaction:
-- Use a warm, friendly, and reassuring tone
-- Keep responses concise and conversational (2-3 sentences typically)
-- Speak clearly and at a moderate pace
-- Use simple language suitable for Sri Lankan English speakers
-- Be empathetic and supportive
-- Provide actionable advice when appropriate
-- Always prioritize child safety and well-being
-- Reference Sri Lankan context (local foods, healthcare system, climate)
-- Recommend consulting local healthcare professionals when needed
-- If you need clarification, ask brief follow-up questions
+Guidelines:
+- Speak naturally (2-3 sentences typically)
+- Be warm and supportive
+- Use clear, simple language
+- Provide practical advice
+- Prioritize child safety
+- Reference Sri Lankan context (foods, climate, healthcare)
+- Ask brief questions if unclear
+- Recommend doctors for serious concerns
 
-Remember: You're having a natural voice conversation, not writing an essay. Be concise, warm, and helpful.`;
+Wait for the parent to speak first.`;
 
         if (ragContext) {
             instruction += `\n\nRELEVANT MEDICAL KNOWLEDGE:\n${ragContext}\n\nUse this information to provide accurate, evidence-based answers when relevant.`;

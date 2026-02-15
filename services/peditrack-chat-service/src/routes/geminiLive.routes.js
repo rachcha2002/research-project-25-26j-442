@@ -62,6 +62,9 @@ function registerGeminiLiveRoutes(app) {
                         case 'audio':
                             // Client sending audio chunk
                             if (message.data) {
+                                // Log sample rate periodically (or just once per session if possible, but here for debug)
+                                if (Math.random() < 0.05) console.log(`🎙️  RX Audio: ${message.sampleRate}Hz`);
+                                
                                 const audioBuffer = Buffer.from(message.data, 'base64');
                                 await geminiLiveService.sendAudio(sessionId, audioBuffer, message.sampleRate || 16000);
                             }
@@ -77,6 +80,11 @@ function registerGeminiLiveRoutes(app) {
                         case 'interrupt':
                             // Client wants to interrupt AI
                             await geminiLiveService.interrupt(sessionId);
+                            break;
+
+                        case 'audio_stream_end':
+                            // Client paused/stopped mic, flush pending speech for final transcription
+                            await geminiLiveService.sendAudioStreamEnd(sessionId);
                             break;
 
                         default:
