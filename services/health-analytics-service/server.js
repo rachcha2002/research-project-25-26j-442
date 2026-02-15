@@ -24,6 +24,7 @@ app.use('/api/babies', require('./routes/babies'));
 app.use('/api/measurements', require('./routes/measurements'));
 app.use('/api/health-records', require('./routes/healthRecords'));
 app.use('/api/medications', require('./routes/medications'));
+app.use('/api/vaccinations', require('./routes/vaccinations'));
 app.use('/api/ai-insights', require('./routes/aiInsights'));
 
 // 404 handler
