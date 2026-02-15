@@ -11,25 +11,26 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #1a1b1e;
             color: white;
-            height: 100vh;
+            min-height: 100dvh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             overflow: hidden;
         }
         .container {
             width: 100%;
             max-width: 500px;
-            padding: 20px;
+            padding: 14px 14px 10px;
             text-align: center;
             display: flex;
             flex-direction: column;
-            height: 100%;
+            gap: 10px;
+            height: 100dvh;
+            overflow: hidden;
         }
         .header {
-            margin-bottom: auto;
-            padding-top: 20px;
+            padding-top: 4px;
         }
         .status-badge {
             display: inline-block;
@@ -45,12 +46,13 @@
         .status-badge.connecting { background: rgba(251, 191, 36, 0.2); color: #FBBF24; }
         
         .visualizer {
-            height: 150px;
+            height: 110px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 20px 0;
+            margin: 0;
             gap: 4px;
+            flex-shrink: 0;
         }
         .bar {
             width: 6px;
@@ -62,12 +64,12 @@
         .bar.active { background: #818cf8; box-shadow: 0 0 10px #818cf8; }
         
         .controls {
-            margin-top: auto;
-            margin-bottom: 40px;
             display: flex;
             gap: 20px;
             justify-content: center;
             align-items: center;
+            padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
+            flex-shrink: 0;
         }
         .mic-btn {
             width: 80px;
@@ -119,10 +121,10 @@
         .transcript-area {
             background: rgba(255,255,255,0.05);
             border-radius: 12px;
-            padding: 15px;
-            margin: 20px 0;
-            min-height: 120px;
-            max-height: 200px;
+            padding: 12px;
+            margin: 0;
+            min-height: 110px;
+            flex: 1;
             overflow-y: auto;
             text-align: left;
             font-size: 1rem;
@@ -152,7 +154,7 @@
             border: 1px solid rgba(96, 165, 250, 0.3);
             border-radius: 12px;
             padding: 12px 15px;
-            margin: 10px 0;
+            margin: 0;
             min-height: 50px;
             text-align: left;
             font-size: 0.95rem;
@@ -166,13 +168,15 @@
         }
         .user-speech-box .content {
             color: #fff;
+            display: block;
+            word-break: break-word;
         }
         .ai-speech-box {
             background: rgba(34, 197, 94, 0.15);
             border: 1px solid rgba(34, 197, 94, 0.3);
             border-radius: 12px;
             padding: 12px 15px;
-            margin: 10px 0;
+            margin: 0;
             min-height: 50px;
             text-align: left;
             font-size: 0.95rem;
@@ -186,13 +190,16 @@
         }
         .ai-speech-box .content {
             color: #fff;
+            display: block;
+            word-break: break-word;
         }
         .language-row {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 10px;
-            margin: 10px 0 6px;
+            margin: 0;
+            flex-wrap: wrap;
         }
         .language-row label {
             font-size: 0.85rem;
@@ -210,7 +217,40 @@
             font-size: 0.75rem;
             color: #fbbf24;
             min-height: 18px;
-            margin-bottom: 4px;
+            margin: 0;
+        }
+
+        @media (max-height: 760px) {
+            .container {
+                gap: 8px;
+                padding: 10px 10px 8px;
+            }
+            .mic-btn {
+                width: 68px;
+                height: 68px;
+                font-size: 28px;
+            }
+            .stop-btn {
+                width: 54px;
+                height: 54px;
+                font-size: 22px;
+            }
+            .visualizer {
+                height: 78px;
+            }
+            .user-speech-box,
+            .ai-speech-box {
+                padding: 10px 12px;
+                min-height: 44px;
+                font-size: 0.9rem;
+            }
+            .transcript-area {
+                min-height: 90px;
+                font-size: 0.92rem;
+            }
+            .debug-info {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -273,6 +313,7 @@
         let mediaStream = null;
         let isListening = false;
         let isConnecting = false;
+        let isIntentionalClose = false;
 
         // ===== DOM ELEMENTS =====
         const statusEl = document.getElementById('status');
@@ -492,6 +533,7 @@
                 ws.onopen = () => {
                     clearTimeout(timeout);
                     isConnecting = false;
+                    isIntentionalClose = false;
                     log('Connected!');
                     updateStatus('Connected', 'connected');
                     stopBtn.classList.add('visible'); // Show stop button
@@ -548,9 +590,17 @@
                     isConnecting = false;
                     isListening = false;
                     micBtn.classList.remove('listening');
-                    log(`Disconnected (code: ${event.code})`);
-                    updateStatus('Disconnected', 'error');
-                    transcriptEl.textContent = 'Connection closed. Tap to reconnect.';
+                    if (isIntentionalClose) {
+                        isIntentionalClose = false;
+                        updateStatus('Ready', '');
+                        transcriptEl.textContent = 'Call ended. Tap the microphone to start a new conversation.';
+                        log('Call ended');
+                    } else {
+                        log(`Disconnected (code: ${event.code})`);
+                        updateStatus('Disconnected', 'error');
+                        transcriptEl.textContent = 'Connection closed. Tap to reconnect.';
+                    }
+                    stopBtn.classList.remove('visible');
                     ws = null;
                 };
 
@@ -649,6 +699,7 @@
             isListening = false;
             isConnecting = false;
             micBtn.classList.remove('listening');
+            isIntentionalClose = true;
             
             // Close WebSocket
             if (ws) {
@@ -656,7 +707,8 @@
                     ws.send(JSON.stringify({ type: 'audio_stream_end' }));
                 }
                 ws.close();
-                ws = null;
+            } else {
+                isIntentionalClose = false;
             }
             
             // Clear audio queue
