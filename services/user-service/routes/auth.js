@@ -39,12 +39,11 @@ router.post('/register', validateRegistration, async (req, res) => {
     await user.save();
 
     res.status(201).json({
+      success: true,
       message: 'User registered successfully',
       user: user.toJSON(),
-      tokens: {
-        accessToken,
-        refreshToken
-      }
+      accessToken,
+      refreshToken
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -89,12 +88,11 @@ router.post('/login', validateLogin, async (req, res) => {
     await user.save();
 
     res.json({
+      success: true,
       message: 'Login successful',
       user: user.toJSON(),
-      tokens: {
-        accessToken,
-        refreshToken
-      }
+      accessToken,
+      refreshToken
     });
   } catch (error) {
     console.error('Login error:', error);

@@ -41,8 +41,9 @@ router.post('/', auth, validateCreateBaby, async (req, res) => {
     }
 
     res.status(201).json({
+      success: true,
       message: 'Baby profile created successfully',
-      babyProfile
+      baby: babyProfile
     });
   } catch (error) {
     console.error('Create baby profile error:', error);
@@ -61,8 +62,8 @@ router.get('/', auth, async (req, res) => {
       .sort({ createdAt: -1 });
 
     res.json({
-      count: babyProfiles.length,
-      babyProfiles
+      success: true,
+      babies: babyProfiles
     });
   } catch (error) {
     console.error('Get baby profiles error:', error);
@@ -86,7 +87,7 @@ router.get('/:id', auth, validateObjectId, async (req, res) => {
       return res.status(404).json({ error: 'Baby profile not found' });
     }
 
-    res.json({ babyProfile });
+    res.json({ success: true, baby: babyProfile });
   } catch (error) {
     console.error('Get baby profile error:', error);
     res.status(500).json({ error: 'Failed to get baby profile' });
@@ -122,8 +123,9 @@ router.put('/:id', auth, validateObjectId, validateUpdateBaby, async (req, res) 
     }
 
     res.json({
+      success: true,
       message: 'Baby profile updated successfully',
-      babyProfile
+      baby: babyProfile
     });
   } catch (error) {
     console.error('Update baby profile error:', error);
@@ -214,8 +216,9 @@ router.put('/:id/set-default', auth, validateObjectId, async (req, res) => {
     });
 
     res.json({
+      success: true,
       message: 'Default baby profile set successfully',
-      babyProfile
+      baby: babyProfile
     });
   } catch (error) {
     console.error('Set default baby error:', error);

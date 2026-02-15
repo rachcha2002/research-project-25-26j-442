@@ -11,14 +11,16 @@ interface TopBarProps {
   profileImage?: string;
   onProfilePress?: () => void;
   onNotificationPress?: () => void;
+  onChildNamePress?: () => void;
 }
 
 export const TopBar: React.FC<TopBarProps> = ({
-  username = 'Amanda',
-  childName = 'Thisal',
+  username,
+  childName,
   profileImage,
   onProfilePress,
   onNotificationPress,
+  onChildNamePress,
 }) => {
   return (
     <>
@@ -81,11 +83,15 @@ export const TopBar: React.FC<TopBarProps> = ({
 
           {/* Bottom Section - Greeting */}
           <View style={styles.greetingSection}>
-            <Text style={styles.greeting}>Hello {username}!</Text>
-            <View style={styles.childNameRow}>
-              <Text style={styles.childName}>{childName}</Text>
-              <Ionicons name="checkmark-circle" size={16} color={Colors.white} style={styles.checkmark} />
-            </View>
+            <Text style={styles.greeting}>Hello {username || 'User'}!</Text>
+            <TouchableOpacity 
+              style={styles.childNameRow}
+              onPress={onChildNamePress}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.childName}>{childName || 'No baby selected'}</Text>
+              <Ionicons name="chevron-down" size={16} color={Colors.white} style={styles.checkmark} />
+            </TouchableOpacity>
           </View>
         </SafeAreaView>
       </LinearGradient>
