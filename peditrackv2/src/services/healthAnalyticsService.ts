@@ -568,6 +568,36 @@ export const updateMeasurement = async (
 };
 
 /**
+ * Get latest measurement for a baby
+ */
+export const getLatestMeasurement = async (babyId: string): Promise<Measurement | null> => {
+  try {
+    const headers = await createHeaders();
+    const url = `${API_BASE_URL}/measurements/baby/${babyId}/latest`;
+    console.log('[HealthAnalytics] Fetching latest measurement from:', url);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    if (response.status === 404) {
+      return null;
+    }
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error getting latest measurement:', error);
+    throw error;
+  }
+};
+
+/**
  * Delete a measurement
  */
 export const deleteMeasurement = async (babyId: string, measurementId: string): Promise<void> => {
