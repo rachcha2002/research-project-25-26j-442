@@ -430,62 +430,77 @@ class UserService {
 
   async uploadProfilePicture(imageUri: string): Promise<{ url: string }> {
     try {
+      const token = await this.getAccessToken();
       const formData = new FormData();
       
-      // Extract file extension from URI
       const fileExtension = imageUri.split('.').pop() || 'jpg';
       const fileName = `profile.${fileExtension}`;
       
       // @ts-ignore - React Native FormData accepts uri
       formData.append('image', {
         uri: imageUri,
-        type: `image/${fileExtension}`,
+        type: `image/${fileExtension === 'jpg' ? 'jpeg' : fileExtension}`,
         name: fileName,
       });
 
-      const response = await this.api.post<{ success: boolean; url: string }>(
-        '/upload/profile-picture',
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
+      const response = await fetch(`${this.api.defaults.baseURL}/upload/profile-picture`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+          // Content-Type header MUST be omitted for FormData to set boundary correctly
+        },
+        body: formData,
+      });
 
-      return { url: response.data.url };
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || 'Failed to upload image');
+      }
+
+      const data = await response.json();
+      return { url: data.url };
     } catch (error) {
-      throw this.handleError(error);
+      console.error('Upload Error:', error);
+      throw error;
     }
   }
 
   async uploadBabyPhoto(babyId: string, imageUri: string): Promise<{ url: string }> {
     try {
+      const token = await this.getAccessToken();
       const formData = new FormData();
       
       const fileExtension = imageUri.split('.').pop() || 'jpg';
       const fileName = `baby.${fileExtension}`;
       
       // @ts-ignore - React Native FormData accepts uri
-      formData.append('photo', {
+      formData.append('image', {
         uri: imageUri,
-        type: `image/${fileExtension}`,
+        type: `image/${fileExtension === 'jpg' ? 'jpeg' : fileExtension}`,
         name: fileName,
       });
 
-      const response = await this.api.post<{ success: boolean; url: string }>(
-        `/upload/baby-photo/${babyId}`,
-        formData,
-        {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        }
-      );
+      const response = await fetch(`${this.api.defaults.baseURL}/upload/baby-photo/${babyId}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: 'application/json',
+          // Content-Type header MUST be omitted for FormData to set boundary correctly
+        },
+        body: formData,
+      });
 
-      return { url: response.data.url };
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || 'Failed to upload image');
+      }
+
+      const data = await response.json();
+      return { url: data.url };
     } catch (error) {
-      throw this.handleError(error);
+       console.error('Upload Error:', error);
+       throw error;
     }
   }
 
