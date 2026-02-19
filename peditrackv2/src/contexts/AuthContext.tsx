@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import userService, { User, AuthResponse } from '../services/userService';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { APP_CONFIG } from '../config/config';
 
 /**
@@ -83,14 +84,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           console.log('[AuthContext] Fresh user data received');
           setUser(freshUser);
           await userService.saveUserData(freshUser);
-        } catch (error) {
-          // If refresh fails, use cached data
+        } catch (error: any) {
           console.error('[AuthContext] Error refreshing user:', error);
-          // If we have no cached user, clear auth state
+          
+          // If timeout or network error, tokens are likely invalid
+          // Clear them and force logout rather than using stale cached data
+          if (error?.message?.includes('timeout') || error?.message?.includes('401')) {
+            console.log('[AuthContext] Auth error detected, clearing tokens and logging out');
+            await userService.logout(); // This clears all tokens
+            setUser(null);
+            return; // Exit early, finally block will set isLoading to false
+          }
+          
+          // Check if tokens were cleared by response interceptor
+          const stillAuth = await userService.isAuthenticated();
+          if (!stillAuth) {
+            console.log('[AuthContext] Tokens were cleared (refresh token expired), forcing logout');
+            setUser(null);
+            return;
+          }
+          
+          // For other errors, if we have no cached user, clear auth state
           if (!cachedUser) {
             console.log('[AuthContext] No cached user, clearing state');
             setUser(null);
           }
+          // Otherwise, continue with cached user data
         }
       }
     } catch (error) {
@@ -108,11 +127,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setError(null);
       
       const response: AuthResponse = await userService.login(email, password);
-      setUser(response.user);
-      await userService.saveUserData(response.user);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Login failed';
-      setError(message);
+      
+      if (response.user) {
+        setUser(response.user);
+        await userService.saveUserData(response.user);
+        
+        // Mark onboarding as completed for returning users
+        await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
+      }
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message);
       throw error;
     } finally {
       setIsLoading(false);
@@ -127,6 +152,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response: AuthResponse = await userService.register(name, email, password);
       setUser(response.user);
       await userService.saveUserData(response.user);
+      
+      // Mark onboarding as completed for new users
+      await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Registration failed';
       setError(message);

@@ -9,7 +9,7 @@ import { addMeasurement, updateMeasurement, Measurement } from '@/services/healt
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useBaby } from '@/contexts/BabyContext';
 
-type EntryMode = 'manual' | 'photo';
+
 
 export const AddMeasurementScreen: React.FC = () => {
   const router = useRouter();
@@ -20,7 +20,7 @@ export const AddMeasurementScreen: React.FC = () => {
   const editMode = !!params.measurementId;
   const measurementData = params.measurementData ? JSON.parse(params.measurementData as string) as Measurement : null;
   
-  const [entryMode, setEntryMode] = useState<EntryMode>(measurementData?.entryMode || 'manual');
+
   const [height, setHeight] = useState(measurementData?.height.value || 0);
   const [weight, setWeight] = useState(measurementData?.weight.value || 0);
   const [headCircumference, setHeadCircumference] = useState(measurementData?.headCircumference?.value || 0);
@@ -82,7 +82,7 @@ export const AddMeasurementScreen: React.FC = () => {
         } : undefined,
         location: location.trim() || undefined,
         notes: notes.trim() || undefined,
-        entryMode,
+        entryMode: 'manual' as const,
       };
 
       let result;
@@ -137,35 +137,7 @@ export const AddMeasurementScreen: React.FC = () => {
           contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}
         >
-          {/* Entry Mode Tabs */}
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              style={[styles.tab, entryMode === 'manual' && styles.activeTab]}
-              onPress={() => setEntryMode('manual')}
-            >
-              <Ionicons 
-                name="create-outline" 
-                size={18} 
-                color={entryMode === 'manual' ? Colors.primary.DEFAULT : Colors.inactive} 
-              />
-              <Text style={[styles.tabText, entryMode === 'manual' && styles.activeTabText]}>
-                Manual Entry
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, entryMode === 'photo' && styles.activeTab]}
-              onPress={() => setEntryMode('photo')}
-            >
-              <Ionicons 
-                name="camera-outline" 
-                size={18} 
-                color={entryMode === 'photo' ? Colors.primary.DEFAULT : Colors.inactive} 
-              />
-              <Text style={[styles.tabText, entryMode === 'photo' && styles.activeTabText]}>
-                Photo Analysis
-              </Text>
-            </TouchableOpacity>
-          </View>
+
 
           {/* Measurement Date */}
           <View style={styles.section}>
@@ -209,7 +181,17 @@ export const AddMeasurementScreen: React.FC = () => {
                 <Ionicons name="remove" size={24} color={Colors.dark} />
               </TouchableOpacity>
               <View style={styles.valueContainer}>
-                <Text style={styles.valueText}>{height.toFixed(1)}</Text>
+                <TextInput
+                  style={styles.valueInput}
+                  value={height.toString()}
+                  onChangeText={(text) => {
+                    const value = parseFloat(text) || 0;
+                    setHeight(value);
+                  }}
+                  keyboardType="decimal-pad"
+                  placeholder="0.0"
+                  placeholderTextColor={Colors.inactive}
+                />
                 <Text style={styles.unitText}>cm</Text>
               </View>
               <TouchableOpacity 
@@ -236,7 +218,17 @@ export const AddMeasurementScreen: React.FC = () => {
                 <Ionicons name="remove" size={24} color={Colors.dark} />
               </TouchableOpacity>
               <View style={styles.valueContainer}>
-                <Text style={styles.valueText}>{weight.toFixed(1)}</Text>
+                <TextInput
+                  style={styles.valueInput}
+                  value={weight.toString()}
+                  onChangeText={(text) => {
+                    const value = parseFloat(text) || 0;
+                    setWeight(value);
+                  }}
+                  keyboardType="decimal-pad"
+                  placeholder="0.0"
+                  placeholderTextColor={Colors.inactive}
+                />
                 <Text style={styles.unitText}>kg</Text>
               </View>
               <TouchableOpacity 
@@ -265,7 +257,17 @@ export const AddMeasurementScreen: React.FC = () => {
                 <Ionicons name="remove" size={24} color={Colors.dark} />
               </TouchableOpacity>
               <View style={styles.valueContainer}>
-                <Text style={styles.valueText}>{headCircumference.toFixed(1)}</Text>
+                <TextInput
+                  style={styles.valueInput}
+                  value={headCircumference.toString()}
+                  onChangeText={(text) => {
+                    const value = parseFloat(text) || 0;
+                    setHeadCircumference(value);
+                  }}
+                  keyboardType="decimal-pad"
+                  placeholder="0.0"
+                  placeholderTextColor={Colors.inactive}
+                />
                 <Text style={styles.unitText}>cm</Text>
               </View>
               <TouchableOpacity 
@@ -316,34 +318,57 @@ export const AddMeasurementScreen: React.FC = () => {
 
           {/* Action Buttons */}
           <View style={styles.buttonContainer}>
-            {!editMode && (
-              <TouchableOpacity 
-                style={[styles.secondaryButton, loading && styles.disabledButton]}
-                onPress={() => saveMeasurement(true)}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator size="small" color={Colors.dark} />
-                ) : (
+            {editMode ? (
+              // Edit Mode: Cancel and Update buttons
+              <>
+                <TouchableOpacity 
+                  style={[styles.secondaryButton, loading && styles.disabledButton]}
+                  onPress={() => router.back()}
+                  disabled={loading}
+                >
+                  <Text style={styles.secondaryButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.primaryButton, loading && styles.disabledButton]}
+                  onPress={() => saveMeasurement(false)}
+                  disabled={loading}
+                >
+                  <Text style={styles.primaryButtonText}>Update</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              // Add Mode: Save & Add Another and Save buttons
+              <>
+                <TouchableOpacity 
+                  style={[styles.secondaryButton, loading && styles.disabledButton]}
+                  onPress={() => saveMeasurement(true)}
+                  disabled={loading}
+                >
                   <Text style={styles.secondaryButtonText}>Save & Add Another</Text>
-                )}
-              </TouchableOpacity>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.primaryButton, loading && styles.disabledButton]}
+                  onPress={() => saveMeasurement(false)}
+                  disabled={loading}
+                >
+                  <Text style={styles.primaryButtonText}>Save</Text>
+                </TouchableOpacity>
+              </>
             )}
-            <TouchableOpacity 
-              style={[editMode ? styles.primaryButtonFull : styles.primaryButton, loading && styles.disabledButton]}
-              onPress={() => saveMeasurement(false)}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator size="small" color={Colors.white} />
-              ) : (
-                <Text style={styles.primaryButtonText}>
-                  {editMode ? 'Update Measurement' : 'Save Measurement'}
-                </Text>
-              )}
-            </TouchableOpacity>
           </View>
         </ScrollView>
+        
+        {/* Full-screen loader overlay */}
+        {loading && (
+          <View style={styles.loaderOverlay}>
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color={Colors.primary.DEFAULT} />
+              <Text style={styles.loaderText}>
+                {editMode ? 'Updating measurement...' : 'Saving measurement...'}
+              </Text>
+            </View>
+          </View>
+        )}
       </SafeAreaView>
     </>
   );
@@ -361,40 +386,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 32,
-  },
-  tabContainer: {
-    flexDirection: 'row',
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  tab: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    gap: 6,
-  },
-  activeTab: {
-    backgroundColor: Colors.background,
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: Colors.inactive,
-  },
-  activeTabText: {
-    color: Colors.primary.DEFAULT,
-    fontWeight: '600',
   },
   section: {
     marginBottom: 20,
@@ -448,6 +439,14 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  valueInput: {
+    fontSize: 28,
+    fontWeight: '600',
+    color: Colors.dark,
+    textAlign: 'center',
+    minWidth: 80,
+    padding: 0,
   },
   valueText: {
     fontSize: 28,
@@ -558,13 +557,7 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     flex: 1,
-    backgroundColor: '#3B82F6',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  primaryButtonFull: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#7C3AED',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -576,5 +569,33 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.6,
+  },
+  loaderOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loaderContainer: {
+    backgroundColor: Colors.white,
+    padding: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  loaderText: {
+    marginTop: 12,
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.dark,
   },
 });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Switch, Alert, Platform } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Switch, Alert, Platform, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
@@ -7,6 +7,9 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useBaby } from '@/contexts/BabyContext';
 import { addMedication, updateMedication, getMedicationById, Medication } from '@/services/healthAnalyticsService';
+import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
+
+// Updated: 2026-02-18
 
 type RouteType = 'oral' | 'topical' | 'injection' | 'inhalation' | 'other';
 
@@ -207,312 +210,334 @@ export const AddMedicationScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      {/* Custom Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.headerButton} onPress={handleCancel}>
-          <Ionicons name="arrow-back" size={24} color={Colors.dark} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>{editMode ? 'Edit Medication' : 'Add Medication'}</Text>
-        <TouchableOpacity style={styles.headerButton} onPress={handleSave} disabled={loading}>
-          <Ionicons name="checkmark" size={24} color={loading ? Colors.inactive : Colors.primary.DEFAULT} />
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Medication Name */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Medication Name*</Text>
-          <TextInput
-            style={styles.input}
-            value={medicationName}
-            onChangeText={setMedicationName}
-            placeholder="e.g., Amoxicillin"
-            placeholderTextColor={Colors.inactive}
-          />
-        </View>
-
-        {/* Dosage */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Dosage*</Text>
-          <View style={styles.dosageContainer}>
-            <TextInput
-              style={styles.dosageInput}
-              value={dosageAmount}
-              onChangeText={setDosageAmount}
-              placeholder="250"
-              placeholderTextColor={Colors.inactive}
-              keyboardType="numeric"
-            />
-            <TouchableOpacity 
-              style={styles.unitDropdown}
-              onPress={() => setShowUnitDropdown(!showUnitDropdown)}
-            >
-              <Text style={styles.unitText}>{dosageUnit}</Text>
-              <Ionicons name="chevron-down" size={16} color={Colors.inactive} />
-            </TouchableOpacity>
-          </View>
-          
-          {showUnitDropdown && (
-            <View style={styles.dropdownMenu}>
-              {dosageUnits.map((unit) => (
-                <TouchableOpacity
-                  key={unit}
-                  style={styles.dropdownItem}
-                  onPress={() => {
-                    setDosageUnit(unit);
-                    setShowUnitDropdown(false);
-                  }}
-                >
-                  <Text style={styles.dropdownItemText}>{unit}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
-
-        {/* Frequency */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Frequency*</Text>
-          <TextInput
-            style={styles.input}
-            value={frequency}
-            onChangeText={setFrequency}
-            placeholder="e.g., Three times daily, Every 8 hours"
-            placeholderTextColor={Colors.inactive}
-          />
-        </View>
-
-        {/* Route */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Route</Text>
-          <TouchableOpacity 
-            style={styles.input}
-            onPress={() => setShowRouteDropdown(!showRouteDropdown)}
-          >
-            <View style={styles.dropdownTrigger}>
-              <Text style={styles.dropdownValue}>{route.charAt(0).toUpperCase() + route.slice(1)}</Text>
-              <Ionicons name="chevron-down" size={16} color={Colors.inactive} />
-            </View>
-          </TouchableOpacity>
-          
-          {showRouteDropdown && (
-            <View style={styles.dropdownMenu}>
-              {routes.map((r) => (
-                <TouchableOpacity
-                  key={r}
-                  style={styles.dropdownItem}
-                  onPress={() => {
-                    setRoute(r);
-                    setShowRouteDropdown(false);
-                  }}
-                >
-                  <Text style={styles.dropdownItemText}>{r.charAt(0).toUpperCase() + r.slice(1)}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
-
-        {/* Start Date */}
-        <View style={styles.section}>
-          <Text style={styles.label}>Start Date*</Text>
-          <TouchableOpacity style={styles.dateButton} onPress={() => setShowStartDatePicker(true)}>
-            <Text style={styles.dateText}>{startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</Text>
-            <Ionicons name="calendar-outline" size={20} color={Colors.inactive} />
-          </TouchableOpacity>
-          {showStartDatePicker && (
-            <DateTimePicker
-              value={startDate}
-              mode="date"
-              display="default"
-              onChange={(event, date) => {
-                setShowStartDatePicker(Platform.OS === 'ios');
-                if (date) setStartDate(date);
-              }}
-            />
-          )}
-        </View>
-
-        {/* End Date Toggle */}
-        <View style={styles.toggleContainer}>
-          <Text style={styles.label}>Set end date?</Text>
-          <Switch
-            value={hasEndDate}
-            onValueChange={(value) => {
-              setHasEndDate(value);
-              if (value && !endDate) {
-                setEndDate(new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000)); // 7 days later
-              }
-            }}
-            trackColor={{ false: '#D1D5DB', true: '#86EFAC' }}
-            thumbColor={hasEndDate ? '#22C55E' : '#F3F4F6'}
-          />
-        </View>
-
-        {/* End Date */}
-        {hasEndDate && (
+    <>
+      <SecondaryTopBar />
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Medication Name */}
           <View style={styles.section}>
-            <Text style={styles.label}>End Date</Text>
-            <TouchableOpacity style={styles.dateButton} onPress={() => setShowEndDatePicker(true)}>
-              <Text style={styles.dateText}>{endDate?.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</Text>
+            <Text style={styles.label}>Medication Name*</Text>
+            <TextInput
+              style={styles.input}
+              value={medicationName}
+              onChangeText={setMedicationName}
+              placeholder="e.g., Amoxicillin"
+              placeholderTextColor={Colors.inactive}
+            />
+          </View>
+
+          {/* Dosage */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Dosage*</Text>
+            <View style={styles.dosageContainer}>
+              <TextInput
+                style={styles.dosageInput}
+                value={dosageAmount}
+                onChangeText={setDosageAmount}
+                placeholder="250"
+                placeholderTextColor={Colors.inactive}
+                keyboardType="numeric"
+                />
+              <TouchableOpacity 
+                style={styles.unitDropdown}
+                onPress={() => setShowUnitDropdown(!showUnitDropdown)}
+              >
+                <Text style={styles.unitText}>{dosageUnit}</Text>
+                <Ionicons name="chevron-down" size={16} color={Colors.inactive} />
+              </TouchableOpacity>
+            </View>
+            
+            {showUnitDropdown && (
+              <View style={styles.dropdownMenu}>
+                {dosageUnits.map((unit) => (
+                  <TouchableOpacity
+                    key={unit}
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setDosageUnit(unit);
+                      setShowUnitDropdown(false);
+                    }}
+                  >
+                    <Text style={styles.dropdownItemText}>{unit}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* Frequency */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Frequency*</Text>
+            <TextInput
+              style={styles.input}
+              value={frequency}
+              onChangeText={setFrequency}
+              placeholder="e.g., Three times daily, Every 8 hours"
+              placeholderTextColor={Colors.inactive}
+            />
+          </View>
+
+          {/* Route */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Route</Text>
+            <TouchableOpacity 
+              style={styles.input}
+              onPress={() => setShowRouteDropdown(!showRouteDropdown)}
+            >
+              <View style={styles.dropdownTrigger}>
+                <Text style={styles.dropdownValue}>{route.charAt(0).toUpperCase() + route.slice(1)}</Text>
+                <Ionicons name="chevron-down" size={16} color={Colors.inactive} />
+              </View>
+            </TouchableOpacity>
+            
+            {showRouteDropdown && (
+              <View style={styles.dropdownMenu}>
+                {routes.map((r) => (
+                  <TouchableOpacity
+                    key={r}
+                    style={styles.dropdownItem}
+                    onPress={() => {
+                      setRoute(r);
+                      setShowRouteDropdown(false);
+                    }}
+                  >
+                    <Text style={styles.dropdownItemText}>{r.charAt(0).toUpperCase() + r.slice(1)}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+          </View>
+
+          {/* Start Date */}
+          <View style={styles.section}>
+            <Text style={styles.label}>Start Date*</Text>
+            <TouchableOpacity style={styles.dateButton} onPress={() => setShowStartDatePicker(true)}>
+              <Text style={styles.dateText}>{startDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</Text>
               <Ionicons name="calendar-outline" size={20} color={Colors.inactive} />
             </TouchableOpacity>
-            {showEndDatePicker && endDate && (
+            {showStartDatePicker && (
               <DateTimePicker
-                value={endDate}
+                value={startDate}
                 mode="date"
                 display="default"
-                minimumDate={startDate}
                 onChange={(event, date) => {
-                  setShowEndDatePicker(Platform.OS === 'ios');
-                  if (date) setEndDate(date);
+                  setShowStartDatePicker(Platform.OS === 'ios');
+                  if (date) setStartDate(date);
                 }}
               />
             )}
           </View>
-        )}
 
-        {/* Purpose */}
-        <View style={styles.section}>
-          <Text style={styles.labelOptional}>Purpose (Optional)</Text>
-          <TextInput
-            style={styles.input}
-            value={purpose}
-            onChangeText={setPurpose}
-            placeholder="e.g., Treat ear infection"
-            placeholderTextColor={Colors.inactive}
-          />
-        </View>
+          {/* End Date Toggle */}
+          <View style={styles.toggleContainer}>
+            <Text style={styles.label}>Set end date?</Text>
+            <Switch
+              value={hasEndDate}
+              onValueChange={(value) => {
+                setHasEndDate(value);
+                if (value && !endDate) {
+                  setEndDate(new Date(startDate.getTime() + 7 * 24 * 60 * 60 * 1000)); // 7 days later
+                }
+              }}
+              trackColor={{ false: '#D1D5DB', true: '#86EFAC' }}
+              thumbColor={hasEndDate ? '#22C55E' : '#F3F4F6'}
+            />
+          </View>
 
-        {/* Notes */}
-        <View style={styles.section}>
-          <Text style={styles.labelOptional}>Notes (Optional)</Text>
-          <TextInput
-            style={styles.textArea}
-            value={notes}
-            onChangeText={setNotes}
-            placeholder="e.g., Take with food, avoid dairy"
-            placeholderTextColor={Colors.inactive}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-          />
-        </View>
-
-        {/* Prescription Details */}
-        <Text style={styles.sectionHeader}>Prescription Details (Optional)</Text>
-
-        <View style={styles.section}>
-          <Text style={styles.labelOptional}>Doctor Name</Text>
-          <TextInput
-            style={styles.input}
-            value={doctorName}
-            onChangeText={setDoctorName}
-            placeholder="Dr. Smith"
-            placeholderTextColor={Colors.inactive}
-          />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.labelOptional}>Clinic/Hospital</Text>
-          <TextInput
-            style={styles.input}
-            value={clinicName}
-            onChangeText={setClinicName}
-            placeholder="City Hospital"
-            placeholderTextColor={Colors.inactive}
-          />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.labelOptional}>Contact Number</Text>
-          <TextInput
-            style={styles.input}
-            value={contactNumber}
-            onChangeText={setContactNumber}
-            placeholder="+1 234 567 8900"
-            placeholderTextColor={Colors.inactive}
-            keyboardType="phone-pad"
-          />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.labelOptional}>Prescription Number</Text>
-          <TextInput
-            style={styles.input}
-            value={prescriptionNumber}
-            onChangeText={setPrescriptionNumber}
-            placeholder="RX123456"
-            placeholderTextColor={Colors.inactive}
-          />
-        </View>
-
-        {/* Reminder Settings */}
-        <Text style={styles.sectionHeader}>Reminders</Text>
-
-        <View style={styles.toggleContainer}>
-          <Text style={styles.label}>Enable reminders</Text>
-          <Switch
-            value={reminderEnabled}
-            onValueChange={setReminderEnabled}
-            trackColor={{ false: '#D1D5DB', true: '#86EFAC' }}
-            thumbColor={reminderEnabled ? '#22C55E' : '#F3F4F6'}
-          />
-        </View>
-
-        {reminderEnabled && (
-          <View style={styles.section}>
-            <Text style={styles.label}>Reminder Times</Text>
-            {reminderTimes.map((time, index) => (
-              <View key={index} style={styles.reminderTimeRow}>
-                <TouchableOpacity 
-                  style={styles.timeButton}
-                  onPress={() => {
-                    setCurrentTimeIndex(index);
-                    setShowTimePicker(true);
-                  }}
-                >
-                  <Ionicons name="time-outline" size={20} color={Colors.primary.DEFAULT} />
-                  <Text style={styles.timeText}>{time}</Text>
-                </TouchableOpacity>
-                {reminderTimes.length > 1 && (
-                  <TouchableOpacity onPress={() => removeReminderTime(index)}>
-                    <Ionicons name="close-circle" size={24} color="#EF4444" />
-                  </TouchableOpacity>
-                )}
-              </View>
-            ))}
-            {reminderTimes.length < 5 && (
-              <TouchableOpacity style={styles.addTimeButton} onPress={addReminderTime}>
-                <Ionicons name="add-circle-outline" size={20} color={Colors.primary.DEFAULT} />
-                <Text style={styles.addTimeText}>Add Time</Text>
+          {/* End Date */}
+          {hasEndDate && (
+            <View style={styles.section}>
+              <Text style={styles.label}>End Date</Text>
+              <TouchableOpacity style={styles.dateButton} onPress={() => setShowEndDatePicker(true)}>
+                <Text style={styles.dateText}>{endDate?.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</Text>
+                <Ionicons name="calendar-outline" size={20} color={Colors.inactive} />
               </TouchableOpacity>
-            )}
-            {showTimePicker && (
-              <DateTimePicker
-                value={(() => {
-                  const [hours, minutes] = reminderTimes[currentTimeIndex].split(':');
-                  const date = new Date();
-                  date.setHours(parseInt(hours), parseInt(minutes));
-                  return date;
-                })()}
-                mode="time"
-                is24Hour={false}
-                display="default"
-                onChange={handleTimeChange}
-              />
-            )}
+              {showEndDatePicker && endDate && (
+                <DateTimePicker
+                  value={endDate}
+                  mode="date"
+                  display="default"
+                  minimumDate={startDate}
+                  onChange={(event, date) => {
+                    setShowEndDatePicker(Platform.OS === 'ios');
+                    if (date) setEndDate(date);
+                  }}
+                />
+              )}
+            </View>
+          )}
+
+          {/* Purpose */}
+          <View style={styles.section}>
+            <Text style={styles.labelOptional}>Purpose (Optional)</Text>
+            <TextInput
+              style={styles.input}
+              value={purpose}
+              onChangeText={setPurpose}
+              placeholder="e.g., Treat ear infection"
+              placeholderTextColor={Colors.inactive}
+            />
+          </View>
+
+          {/* Notes */}
+          <View style={styles.section}>
+            <Text style={styles.labelOptional}>Notes (Optional)</Text>
+            <TextInput
+              style={styles.textArea}
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="e.g., Take with food, avoid dairy"
+              placeholderTextColor={Colors.inactive}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
+          </View>
+
+          {/* Prescription Details */}
+          <Text style={styles.sectionHeader}>Prescription Details (Optional)</Text>
+
+          <View style={styles.section}>
+            <Text style={styles.labelOptional}>Doctor Name</Text>
+            <TextInput
+              style={styles.input}
+              value={doctorName}
+              onChangeText={setDoctorName}
+              placeholder="Dr. Smith"
+              placeholderTextColor={Colors.inactive}
+            />
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.labelOptional}>Clinic/Hospital</Text>
+            <TextInput
+              style={styles.input}
+              value={clinicName}
+              onChangeText={setClinicName}
+              placeholder="City Hospital"
+              placeholderTextColor={Colors.inactive}
+            />
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.labelOptional}>Contact Number</Text>
+            <TextInput
+              style={styles.input}
+              value={contactNumber}
+              onChangeText={setContactNumber}
+              placeholder="+1 234 567 8900"
+              placeholderTextColor={Colors.inactive}
+              keyboardType="phone-pad"
+            />
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.labelOptional}>Prescription Number</Text>
+            <TextInput
+              style={styles.input}
+              value={prescriptionNumber}
+              onChangeText={setPrescriptionNumber}
+              placeholder="RX123456"
+              placeholderTextColor={Colors.inactive}
+            />
+          </View>
+
+          {/* Reminder Settings */}
+          <Text style={styles.sectionHeader}>Reminders</Text>
+
+          <View style={styles.toggleContainer}>
+            <Text style={styles.label}>Enable reminders</Text>
+            <Switch
+              value={reminderEnabled}
+              onValueChange={setReminderEnabled}
+              trackColor={{ false: '#D1D5DB', true: '#86EFAC' }}
+              thumbColor={reminderEnabled ? '#22C55E' : '#F3F4F6'}
+            />
+          </View>
+
+          {reminderEnabled && (
+            <View style={styles.section}>
+              <Text style={styles.label}>Reminder Times</Text>
+              {reminderTimes.map((time, index) => (
+                <View key={index} style={styles.reminderTimeRow}>
+                  <TouchableOpacity 
+                    style={styles.timeButton}
+                    onPress={() => {
+                      setCurrentTimeIndex(index);
+                      setShowTimePicker(true);
+                    }}
+                  >
+                    <Ionicons name="time-outline" size={20} color={Colors.primary.DEFAULT} />
+                    <Text style={styles.timeText}>{time}</Text>
+                  </TouchableOpacity>
+                  {reminderTimes.length > 1 && (
+                    <TouchableOpacity onPress={() => removeReminderTime(index)}>
+                      <Ionicons name="close-circle" size={24} color="#EF4444" />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              ))}
+              {reminderTimes.length < 5 && (
+                <TouchableOpacity style={styles.addTimeButton} onPress={addReminderTime}>
+                  <Ionicons name="add-circle-outline" size={20} color={Colors.primary.DEFAULT} />
+                  <Text style={styles.addTimeText}>Add Time</Text>
+                </TouchableOpacity>
+              )}
+              {showTimePicker && (
+                <DateTimePicker
+                  value={(() => {
+                    const [hours, minutes] = reminderTimes[currentTimeIndex].split(':');
+                    const date = new Date();
+                    date.setHours(parseInt(hours), parseInt(minutes));
+                    return date;
+                  })()}
+                  mode="time"
+                  is24Hour={false}
+                  display="default"
+                  onChange={handleTimeChange}
+                />
+              )}
+            </View>
+          )}
+
+          <View style={{ height: 40 }} />
+          
+          {/* Action Buttons */}
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={[styles.cancelButton, loading && styles.disabledButton]}
+              onPress={handleCancel}
+              disabled={loading}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.saveButton, loading && styles.disabledButton]}
+              onPress={handleSave}
+              disabled={loading}
+            >
+              <Text style={styles.saveButtonText}>{editMode ? 'Update' : 'Save'}</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+        
+        {/* Full-screen loader overlay */}
+        {loading && (
+          <View style={styles.loaderOverlay}>
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color={Colors.primary.DEFAULT} />
+              <Text style={styles.loaderText}>
+                {editMode ? 'Updating medication...' : 'Saving medication...'}
+              </Text>
+            </View>
           </View>
         )}
-
-        <View style={{ height: 40 }} />
-      </ScrollView>
-    </SafeAreaView>
+      </SafeAreaView>
+    </>
   );
 };
 
@@ -707,5 +732,69 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: Colors.primary.DEFAULT,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 8,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  cancelButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.dark,
+  },
+  saveButton: {
+    flex: 1,
+    backgroundColor: '#7C3AED',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  saveButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  loaderOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loaderContainer: {
+    backgroundColor: Colors.white,
+    padding: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  loaderText: {
+    marginTop: 12,
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.dark,
   },
 });

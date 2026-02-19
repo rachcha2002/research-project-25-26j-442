@@ -21,7 +21,7 @@ export default function TabLayout() {
           username={user?.name}
           childName={selectedBaby?.name}
           profileImage={user?.profilePicture}
-          onProfilePress={() => router.push('/profile/profile')}
+          onProfilePress={() => router.push('/profile')}
           onNotificationPress={() => console.log('Notification pressed')}
           onChildNamePress={() => router.push('/profile/baby-profiles')}
         />

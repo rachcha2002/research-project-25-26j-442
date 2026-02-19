@@ -153,7 +153,9 @@ export interface Medication {
   prescribedBy?: {
     doctorName: string;
     clinicName?: string;
+    contactNumber?: string;
   };
+  prescriptionNumber?: string;
   purpose?: string;
   reminderEnabled?: boolean;
   reminderTimes?: string[];
@@ -188,6 +190,7 @@ export interface Vaccination {
   updatedAt?: string;
 }
 
+
 export interface AIInsight {
   _id?: string;
   babyId: string;
@@ -209,11 +212,50 @@ export interface ModelPerformance {
   version: string;
 }
 
+export interface VaccineType {
+  _id?: string;
+  name: string;
+  description?: string;
+  recommendedDoses: number;
+  ageRecommendations?: string;
+  isActive: boolean;
+  displayOrder: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SymptomEntry {
+  name: string;
+  severity: 'mild' | 'moderate' | 'severe';
+  isCustom: boolean;
+}
+
+export interface DailySymptom {
+  _id?: string;
+  babyId: string;
+  symptoms: SymptomEntry[];
+  recordedAt: string;
+  notes?: string;
+  temperature?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface RiskAssessment {
   riskLevel: 'low' | 'moderate' | 'high';
   riskFactors: string[];
   recommendations: string[];
   confidenceScore: number;
+}
+
+export interface SleepLog {
+  _id?: string;
+  babyId: string;
+  date: string;
+  hours: number;
+  quality: 'good' | 'fair' | 'poor';
+  notes?: string;
+  createdAt?: string;
 }
 
 // Health Record type matching backend model
@@ -801,129 +843,6 @@ export const addSymptom = async (symptomData: Partial<Symptom>): Promise<Symptom
   }
 };
 
-/**
- * Get symptoms for a baby
- */
-export const getSymptoms = async (
-  babyId: string,
-  options?: { startDate?: string; endDate?: string }
-): Promise<Symptom[]> => {
-  try {
-    const headers = await createHeaders();
-    const params = new URLSearchParams();
-    if (options?.startDate) params.append('startDate', options.startDate);
-    if (options?.endDate) params.append('endDate', options.endDate);
-
-    const queryString = params.toString();
-    const url = `${API_BASE_URL}/symptoms/baby/${babyId}${queryString ? `?${queryString}` : ''}`;
-
-    const response = await fetch(url, {
-      method: 'GET',
-      headers,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error getting symptoms:', error);
-    throw error;
-  }
-};
-
-/**
- * Get a symptom by ID
- */
-export const getSymptomById = async (symptomId: string): Promise<Symptom> => {
-  try {
-    const headers = await createHeaders();
-    const response = await fetch(`${API_BASE_URL}/symptoms/${symptomId}`, {
-      method: 'GET',
-      headers,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error getting symptom:', error);
-    throw error;
-  }
-};
-
-/**
- * Update a symptom
- */
-export const updateSymptom = async (symptomId: string, symptomData: Partial<Symptom>): Promise<Symptom> => {
-  try {
-    const headers = await createHeaders();
-    const response = await fetch(`${API_BASE_URL}/symptoms/${symptomId}`, {
-      method: 'PUT',
-      headers,
-      body: JSON.stringify(symptomData),
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error updating symptom:', error);
-    throw error;
-  }
-};
-
-/**
- * Delete a symptom
- */
-export const deleteSymptom = async (symptomId: string): Promise<void> => {
-  try {
-    const headers = await createHeaders();
-    const response = await fetch(`${API_BASE_URL}/symptoms/${symptomId}`, {
-      method: 'DELETE',
-      headers,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-  } catch (error) {
-    console.error('Error deleting symptom:', error);
-    throw error;
-  }
-};
-
-/**
- * Get symptoms by condition
- */
-export const getSymptomsByCondition = async (conditionId: string): Promise<Symptom[]> => {
-  try {
-    const headers = await createHeaders();
-    const response = await fetch(`${API_BASE_URL}/symptoms/condition/${conditionId}`, {
-      method: 'GET',
-      headers,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('Error getting symptoms by condition:', error);
-    throw error;
-  }
-};
-
 // ==================== Medications ====================
 
 /**
@@ -1411,6 +1330,205 @@ export const getAllBabies = async (): Promise<never> => {
   throw new Error('Baby management has moved to User Service. Use BabyContext.babies instead.');
 };
 
+// ==================== Vaccine Types Management ====================
+
+/**
+ * Get all active vaccine types
+ */
+export const getVaccineTypes = async (): Promise<VaccineType[]> => {
+  try {
+    const headers = await createHeaders();
+    const response = await fetch(`${API_BASE_URL}/vaccine-types`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error getting vaccine types:', error);
+    throw error;
+  }
+};
+
+/**
+ * Seed vaccine types database with common vaccines
+ */
+export const seedVaccineTypes = async (): Promise<any> => {
+  try {
+    const headers = await createHeaders();
+    const response = await fetch(`${API_BASE_URL}/vaccine-types/seed`, {
+      method: 'POST',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error seeding vaccine types:', error);
+    throw error;
+  }
+};
+
+/**
+ * Symptom Management Functions
+ */
+
+/**
+ * Get all symptoms for a baby
+ */
+export const getSymptoms = async (babyId: string, startDate?: string, endDate?: string): Promise<DailySymptom[]> => {
+  try {
+    const headers = await createHeaders();
+    let url = `${API_BASE_URL}/symptoms/baby/${babyId}`;
+    
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error getting symptoms:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get recent symptoms (last 7 days)
+ */
+export const getRecentSymptoms = async (babyId: string): Promise<DailySymptom[]> => {
+  try {
+    const headers = await createHeaders();
+    const response = await fetch(`${API_BASE_URL}/symptoms/baby/${babyId}/recent`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error getting recent symptoms:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get single symptom record
+ */
+export const getSymptomById = async (id: string): Promise<DailySymptom> => {
+  try {
+    const headers = await createHeaders();
+    const response = await fetch(`${API_BASE_URL}/symptoms/${id}`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error getting symptom:', error);
+    throw error;
+  }
+};
+
+/**
+ * Log new symptoms
+ */
+export const logSymptoms = async (symptomData: Partial<DailySymptom>): Promise<DailySymptom> => {
+  try {
+    const headers = await createHeaders();
+    const response = await fetch(`${API_BASE_URL}/symptoms`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(symptomData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error logging symptoms:', error);
+    throw error;
+  }
+};
+
+/**
+ * Update symptom record
+ */
+export const updateSymptomRecord = async (id: string, symptomData: Partial<DailySymptom>): Promise<DailySymptom> => {
+  try {
+    const headers = await createHeaders();
+    const response = await fetch(`${API_BASE_URL}/symptoms/${id}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(symptomData),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error updating symptom:', error);
+    throw error;
+  }
+};
+
+/**
+ * Delete symptom record
+ */
+export const deleteSymptomRecord = async (id: string): Promise<void> => {
+  try {
+    const headers = await createHeaders();
+    const response = await fetch(`${API_BASE_URL}/symptoms/${id}`, {
+      method: 'DELETE',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+  } catch (error) {
+    console.error('Error deleting symptom:', error);
+    throw error;
+  }
+};
+
 // ==================== Utility Functions ====================
 
 /**
@@ -1424,5 +1542,133 @@ export const checkServiceHealth = async (): Promise<boolean> => {
   } catch (error) {
     console.error('Service health check failed:', error);
     return false;
+  }
+};
+
+// ==================== WHO Growth Standards ====================
+
+export interface WHOPercentileData {
+  labels: string[];
+  childData: number[];
+  who5thData: number[];
+  who50thData: number[];
+  who95thData: number[];
+}
+
+/**
+ * Get WHO growth percentiles for chart display
+ */
+export const getWHOPercentiles = async (
+  gender: 'male' | 'female',
+  birthDate: string,
+  measurements: Array<{ date: string; height: number; weight: number; headCircumference?: number }>,
+  metric: 'height' | 'weight' | 'bmi'
+): Promise<WHOPercentileData> => {
+  try {
+    const headers = await createHeaders();
+    const response = await fetch(`${API_BASE_URL}/growth-standards/percentiles`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        gender,
+        birthDate,
+        measurements,
+        metric,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.data;
+  } catch (error) {
+    console.error('Error fetching WHO percentiles:', error);
+    throw error;
+  }
+};
+
+// ==================== Sleep Tracking ====================
+
+/**
+ * Get sleep logs for a baby
+ */
+export const getSleepLogs = async (
+  babyId: string,
+  start?: string, // YYYY-MM-DD
+  end?: string    // YYYY-MM-DD
+): Promise<SleepLog[]> => {
+  try {
+    const headers = await createHeaders();
+    let url = `${API_BASE_URL}/sleep/${babyId}`;
+    
+    const params = new URLSearchParams();
+    if (start) params.append('start', start);
+    if (end) params.append('end', end);
+    
+    if (params.toString()) {
+      url += `?${params.toString()}`;
+    }
+    
+    const response = await fetch(url, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error(`Error fetching sleep logs: ${response.statusText}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error in getSleepLogs:', error);
+    throw error;
+  }
+};
+
+/**
+ * Log or Update sleep entry (Upsert)
+ */
+export const logSleep = async (sleepData: Partial<SleepLog>): Promise<SleepLog> => {
+  try {
+    const headers = await createHeaders();
+    const response = await fetch(`${API_BASE_URL}/sleep`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(sleepData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Failed to log sleep');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error in logSleep:', error);
+    throw error;
+  }
+};
+
+// updateSleepLog is removed as POST handles upsert
+
+/**
+ * Delete sleep log
+ */
+export const deleteSleepLog = async (id: string): Promise<void> => {
+  try {
+    const headers = await createHeaders();
+    const response = await fetch(`${API_BASE_URL}/sleep/${id}`, {
+      method: 'DELETE',
+      headers,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to delete sleep log');
+    }
+  } catch (error) {
+    console.error('Error in deleteSleepLog:', error);
+    throw error;
   }
 };
