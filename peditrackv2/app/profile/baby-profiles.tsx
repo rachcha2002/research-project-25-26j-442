@@ -11,6 +11,8 @@ import {
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useBaby } from '../../src/contexts/BabyContext';
+import { SecondaryTopBar } from '../../src/components/SecondaryTopBar/SecondaryTopBar';
+import { Colors } from '@/constants/Colors';
 
 export default function BabyProfilesScreen() {
   const router = useRouter();
@@ -68,22 +70,11 @@ export default function BabyProfilesScreen() {
     <View style={styles.container}>
       <StatusBar style="dark" />
       
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Baby Profiles</Text>
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => router.push('/profile/add-baby')}
-        >
-          <Text style={styles.addIcon}>+</Text>
-        </TouchableOpacity>
-      </View>
+      <SecondaryTopBar
+        title="Baby Profiles"
+        rightIcon="add"
+        onRightPress={() => router.push('/profile/add-baby')}
+      />
 
       <ScrollView>
         {babies.length === 0 ? (
@@ -197,46 +188,7 @@ export default function BabyProfilesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 20,
-    backgroundColor: '#fff',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backIcon: {
-    fontSize: 24,
-    color: '#333',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  addButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#667eea',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  addIcon: {
-    fontSize: 28,
-    color: '#fff',
-    lineHeight: 28,
+    backgroundColor: Colors.background,
   },
   content: {
     padding: 20,
@@ -253,18 +205,18 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: Colors.dark,
     marginBottom: 12,
   },
   emptyText: {
     fontSize: 16,
-    color: '#666',
+    color: Colors.inactive,
     textAlign: 'center',
     marginBottom: 30,
     lineHeight: 24,
   },
   emptyButton: {
-    backgroundColor: '#667eea',
+    backgroundColor: Colors.primary.DEFAULT,
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 12,
@@ -272,10 +224,10 @@ const styles = StyleSheet.create({
   emptyButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#fff',
+    color: Colors.white,
   },
   babyCard: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.white,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
@@ -296,13 +248,13 @@ const styles = StyleSheet.create({
     marginRight: 16,
   },
   avatarPlaceholder: {
-    backgroundColor: '#667eea',
+    backgroundColor: Colors.primary.light,
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
     fontSize: 32,
-    color: '#fff',
+    color: Colors.white,
     fontWeight: 'bold',
   },
   babyInfo: {
@@ -317,7 +269,7 @@ const styles = StyleSheet.create({
   babyName: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
+    color: Colors.dark,
     marginRight: 8,
   },
   defaultBadge: {
@@ -330,7 +282,7 @@ const styles = StyleSheet.create({
   defaultText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#333',
+    color: Colors.dark,
   },
   selectedBadge: {
     backgroundColor: '#6bcf7f',
@@ -341,16 +293,16 @@ const styles = StyleSheet.create({
   selectedText: {
     fontSize: 12,
     fontWeight: 'bold',
-    color: '#fff',
+    color: Colors.white,
   },
   babyAge: {
     fontSize: 16,
-    color: '#667eea',
+    color: Colors.primary.DEFAULT,
     marginBottom: 2,
   },
   babyGender: {
     fontSize: 14,
-    color: '#999',
+    color: Colors.inactive,
   },
   detailRow: {
     flexDirection: 'row',
@@ -359,12 +311,12 @@ const styles = StyleSheet.create({
   detailLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#666',
+    color: Colors.inactive,
     marginRight: 8,
   },
   detailValue: {
     fontSize: 14,
-    color: '#333',
+    color: Colors.dark,
     flex: 1,
   },
   actions: {
@@ -388,12 +340,12 @@ const styles = StyleSheet.create({
   actionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: Colors.dark,
   },
   deleteButton: {
     backgroundColor: '#ffe0e0',
   },
   deleteText: {
-    color: '#ff6b6b',
+    color: Colors.error,
   },
 });

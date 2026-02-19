@@ -15,6 +15,8 @@ import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../../src/contexts/AuthContext';
 import { APP_CONFIG } from '../../src/config/config';
+import { SecondaryTopBar } from '../../src/components/SecondaryTopBar/SecondaryTopBar';
+import { Colors } from '@/constants/Colors';
 
 export default function ChangePasswordScreen() {
   const router = useRouter();
@@ -36,7 +38,7 @@ export default function ChangePasswordScreen() {
 
   const getPasswordStrengthColor = (): string => {
     const strength = getPasswordStrength();
-    if (strength === 'Weak') return '#ff6b6b';
+    if (strength === 'Weak') return Colors.error;
     if (strength === 'Medium') return '#ffd93d';
     return '#6bcf7f';
   };
@@ -73,23 +75,17 @@ export default function ChangePasswordScreen() {
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
+      <SecondaryTopBar
+        title="Change Password"
+        showBackButton={true}
+        onBackPress={() => router.back()}
+      />
       
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <ScrollView keyboardShouldPersistTaps="handled">
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
-              <Text style={styles.backIcon}>←</Text>
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Change Password</Text>
-            <View style={styles.placeholder} />
-          </View>
 
           <View style={styles.content}>
             <View style={styles.inputContainer}>
@@ -177,7 +173,7 @@ export default function ChangePasswordScreen() {
               disabled={isLoading}
             >
               {isLoading ? (
-                <ActivityIndicator color="#fff" />
+                <ActivityIndicator color={Colors.white} />
               ) : (
                 <Text style={styles.changeButtonText}>Change Password</Text>
               )}
@@ -185,6 +181,13 @@ export default function ChangePasswordScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Full Screen Loader - Optional since button has loader, but requested */}
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={Colors.primary.DEFAULT} />
+        </View>
+      )}
     </View>
   );
 }
@@ -192,39 +195,10 @@ export default function ChangePasswordScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
   keyboardView: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 20,
-    backgroundColor: '#fff',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backIcon: {
-    fontSize: 24,
-    color: '#333',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  placeholder: {
-    width: 40,
   },
   content: {
     padding: 20,
@@ -233,17 +207,17 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: Colors.dark,
     marginBottom: 8,
   },
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: Colors.white,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#E5E7EB',
     borderRadius: 12,
   },
   passwordInput: {
@@ -251,7 +225,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#333',
+    color: Colors.dark,
   },
   eyeButton: {
     padding: 12,
@@ -275,15 +249,22 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   changeButton: {
-    backgroundColor: '#667eea',
+    backgroundColor: Colors.primary.DEFAULT,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
     marginTop: 20,
   },
   changeButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
   },
 });

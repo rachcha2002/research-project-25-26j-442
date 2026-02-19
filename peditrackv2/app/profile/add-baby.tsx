@@ -17,6 +17,8 @@ import { StatusBar } from 'expo-status-bar';
 import { useBaby } from '../../src/contexts/BabyContext';
 import * as ImagePicker from 'expo-image-picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { SecondaryTopBar } from '../../src/components/SecondaryTopBar/SecondaryTopBar';
+import { Colors } from '@/constants/Colors';
 
 export default function AddBabyScreen() {
   const router = useRouter();
@@ -92,23 +94,17 @@ export default function AddBabyScreen() {
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
+      <SecondaryTopBar
+        title="Add Baby Profile"
+        showBackButton={true}
+        onBackPress={() => router.back()}
+      />
       
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <ScrollView keyboardShouldPersistTaps="handled">
-          {/* Header */}
-          <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => router.back()}
-            >
-              <Text style={styles.backIcon}>←</Text>
-            </TouchableOpacity>
-            <Text style={styles.headerTitle}>Add Baby Profile</Text>
-            <View style={styles.placeholder} />
-          </View>
 
           <View style={styles.content}>
             {/* Photo */}
@@ -236,20 +232,33 @@ export default function AddBabyScreen() {
               />
             </View>
 
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={handleSave}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => router.back()}
+                disabled={isLoading}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.saveButton}
+                onPress={handleSave}
+                disabled={isLoading}
+              >
                 <Text style={styles.saveButtonText}>Create Profile</Text>
-              )}
-            </TouchableOpacity>
+              </TouchableOpacity>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Full Screen Loader */}
+      {isLoading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color={Colors.primary.DEFAULT} />
+        </View>
+      )}
     </View>
   );
 }
@@ -257,39 +266,10 @@ export default function AddBabyScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Colors.background,
   },
   keyboardView: {
     flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 20,
-    backgroundColor: '#fff',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backIcon: {
-    fontSize: 24,
-    color: '#333',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  placeholder: {
-    width: 40,
   },
   content: {
     padding: 20,
@@ -297,6 +277,7 @@ const styles = StyleSheet.create({
   photoSection: {
     alignItems: 'center',
     marginBottom: 30,
+    marginTop: 20,
   },
   photo: {
     width: 120,
@@ -304,11 +285,11 @@ const styles = StyleSheet.create({
     borderRadius: 60,
   },
   photoPlaceholder: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: Colors.white,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#e0e0e0',
+    borderColor: '#E5E7EB',
     borderStyle: 'dashed',
   },
   photoIcon: {
@@ -317,43 +298,43 @@ const styles = StyleSheet.create({
   },
   photoText: {
     fontSize: 14,
-    color: '#999',
+    color: Colors.inactive,
     fontWeight: '600',
   },
   inputContainer: {
     marginBottom: 20,
   },
   label: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
-    color: '#333',
+    color: Colors.dark,
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.white,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#E5E7EB',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#333',
+    color: Colors.dark,
   },
   textArea: {
     minHeight: 80,
     textAlignVertical: 'top',
   },
   dateButton: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.white,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#E5E7EB',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
   dateText: {
     fontSize: 16,
-    color: '#333',
+    color: Colors.dark,
   },
   genderContainer: {
     flexDirection: 'row',
@@ -361,35 +342,62 @@ const styles = StyleSheet.create({
   },
   genderButton: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.white,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
+    borderColor: '#E5E7EB',
     borderRadius: 12,
     paddingVertical: 12,
     alignItems: 'center',
   },
   genderButtonActive: {
-    backgroundColor: '#667eea',
-    borderColor: '#667eea',
+    backgroundColor: Colors.primary.DEFAULT,
+    borderColor: Colors.primary.DEFAULT,
   },
   genderText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#666',
+    color: Colors.inactive,
   },
   genderTextActive: {
-    color: '#fff',
+    color: Colors.white,
   },
-  saveButton: {
-    backgroundColor: '#667eea',
+  buttonContainer: {
+    flexDirection: 'row',
+    gap: 16,
+    marginTop: 20,
+    marginBottom: 30,
+  },
+  cancelButton: {
+    flex: 1,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 20,
+    borderWidth: 1,
+    borderColor: Colors.primary.DEFAULT,
+    backgroundColor: 'transparent',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.primary.DEFAULT,
+  },
+  saveButton: {
+    flex: 1,
+    backgroundColor: Colors.primary.DEFAULT,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
   },
   saveButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
   },
 });

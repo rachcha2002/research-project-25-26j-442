@@ -11,6 +11,9 @@ interface SecondaryTopBarProps {
   onNotificationPress?: () => void;
   onProfilePress?: () => void;
   profileImage?: string;
+  title?: string;
+  rightIcon?: keyof typeof Ionicons.glyphMap;
+  onRightPress?: () => void;
 }
 
 export const SecondaryTopBar: React.FC<SecondaryTopBarProps> = ({
@@ -19,6 +22,9 @@ export const SecondaryTopBar: React.FC<SecondaryTopBarProps> = ({
   onNotificationPress,
   onProfilePress,
   profileImage,
+  title,
+  rightIcon,
+  onRightPress,
 }) => {
   const router = useRouter();
 
@@ -45,46 +51,64 @@ export const SecondaryTopBar: React.FC<SecondaryTopBarProps> = ({
           </TouchableOpacity>
         )}
 
-        {/* Center Section - Logo and Brand */}
+        {/* Center Section - Logo and Brand OR Title */}
         <View style={styles.centerSection}>
-          <View style={styles.logoContainer}>
-            <Text style={styles.logoEmoji}>👣</Text>
-          </View>
-          <View style={styles.brandContainer}>
-            <Text style={styles.appName}>PediTrack</Text>
-            <Text style={styles.tagline}>Baby Health Care Tracking App</Text>
-          </View>
+          {title ? (
+            <Text style={styles.titleText}>{title}</Text>
+          ) : (
+            <>
+              <View style={styles.logoContainer}>
+                <Text style={styles.logoEmoji}>👣</Text>
+              </View>
+              <View style={styles.brandContainer}>
+                <Text style={styles.appName}>PediTrack</Text>
+                <Text style={styles.tagline}>Baby Health Care Tracking App</Text>
+              </View>
+            </>
+          )}
         </View>
 
-        {/* Right Section - Notification and Profile */}
+        {/* Right Section - Notification and Profile OR Action Icon */}
         <View style={styles.rightSection}>
-          <TouchableOpacity
-            onPress={onNotificationPress}
-            style={styles.iconButton}
-            accessibilityLabel="Notifications"
-            accessibilityRole="button"
-          >
-            <Ionicons name="notifications-outline" size={24} color={Colors.dark} />
-          </TouchableOpacity>
+          {rightIcon ? (
+            <TouchableOpacity
+              onPress={onRightPress}
+              style={styles.iconButton}
+              accessibilityRole="button"
+            >
+              <Ionicons name={rightIcon} size={24} color={Colors.primary.DEFAULT} />
+            </TouchableOpacity>
+          ) : (
+            <>
+              <TouchableOpacity
+                onPress={onNotificationPress}
+                style={styles.iconButton}
+                accessibilityLabel="Notifications"
+                accessibilityRole="button"
+              >
+                <Ionicons name="notifications-outline" size={24} color={Colors.dark} />
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={onProfilePress}
-            style={styles.profileButton}
-            accessibilityLabel="Profile"
-            accessibilityRole="button"
-          >
-            {profileImage ? (
-              <Image
-                source={{ uri: profileImage }}
-                style={styles.profileImage}
-                resizeMode="cover"
-              />
-            ) : (
-              <View style={styles.profilePlaceholder}>
-                <Ionicons name="person" size={20} color={Colors.white} />
-              </View>
-            )}
-          </TouchableOpacity>
+              <TouchableOpacity
+                onPress={onProfilePress}
+                style={styles.profileButton}
+                accessibilityLabel="Profile"
+                accessibilityRole="button"
+              >
+                {profileImage ? (
+                  <Image
+                    source={{ uri: profileImage }}
+                    style={styles.profileImage}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <View style={styles.profilePlaceholder}>
+                    <Ionicons name="person" size={20} color={Colors.white} />
+                  </View>
+                )}
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </View>
     </SafeAreaView>
@@ -174,5 +198,10 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary.DEFAULT,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  titleText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: Colors.dark,
   },
 });
