@@ -30,6 +30,7 @@ app.use('/api/symptoms', require('./routes/symptoms'));
 app.use('/api/ai-insights', require('./routes/aiInsights'));
 app.use('/api/growth-standards', require('./routes/growthStandards'));
 app.use('/api/sleep', require('./routes/sleep'));
+app.use('/api/health-conditions', require('./routes/healthConditions'));
 
 // 404 handler
 app.use((req, res) => {
