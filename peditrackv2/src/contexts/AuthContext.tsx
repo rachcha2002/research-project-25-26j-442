@@ -172,6 +172,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response: AuthResponse = await userService.googleAuth(googleIdToken);
       setUser(response.user);
       await userService.saveUserData(response.user);
+      // Mark onboarding as completed for Google sign-in users
+      await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Google sign-in failed';
       setError(message);
@@ -187,10 +189,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setError(null);
       
       await userService.logout();
+      // Keep this flag so the user always goes to /auth/login, never onboarding
+      await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
       setUser(null);
     } catch (error) {
       console.error('Logout error:', error);
       // Clear user state even if logout request fails
+      await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
       setUser(null);
     } finally {
       setIsLoading(false);

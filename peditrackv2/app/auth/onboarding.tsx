@@ -36,20 +36,12 @@ export default function OnboardingScreen() {
         end={{ x: 1, y: 1 }}
       >
         <View style={styles.content}>
-          {/* TEST: Visible indicator */}
-          <View style={{ backgroundColor: 'white', padding: 20, margin: 20, borderRadius: 10 }}>
-            <Text style={{ color: 'black', fontSize: 24, fontWeight: 'bold', textAlign: 'center' }}>
-              ✅ APP IS WORKING!
-            </Text>
-            <Text style={{ color: 'black', fontSize: 16, textAlign: 'center', marginTop: 10 }}>
-              If you see this, the app loaded successfully
-            </Text>
-          </View>
+         
 
           {/* Logo/Icon Area */}
           <View style={styles.logoContainer}>
             <View style={styles.logoCircle}>
-              <Text style={styles.logoText}>👶</Text>
+              <Text style={styles.logoText}>👣</Text>
             </View>
             <Text style={styles.appName}>PediTrack</Text>
             <Text style={styles.tagline}>Your Baby's Health Companion</Text>

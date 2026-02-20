@@ -428,6 +428,34 @@ class UserService {
 
   // ==================== File Upload ====================
 
+  // Helper: fetch with automatic token refresh on 401 (mirrors the Axios interceptor)
+  private async fetchWithAuth(url: string, options: RequestInit): Promise<Response> {
+    let token = await this.getAccessToken();
+    const makeRequest = (t: string | null) =>
+      fetch(url, {
+        ...options,
+        headers: {
+          ...(options.headers || {}),
+          ...(t ? { Authorization: `Bearer ${t}` } : {}),
+        },
+      });
+
+    let response = await makeRequest(token);
+
+    if (response.status === 401) {
+      try {
+        // Token expired – refresh and retry once
+        token = await this.refreshAccessToken();
+        response = await makeRequest(token);
+      } catch (refreshError) {
+        await this.clearTokens();
+        throw new Error('Token expired');
+      }
+    }
+
+    return response;
+  }
+
   async uploadProfilePicture(imageUri: string): Promise<{ url: string }> {
     try {
       const token = await this.getAccessToken();
@@ -443,15 +471,14 @@ class UserService {
         name: fileName,
       });
 
-      const response = await fetch(`${this.api.defaults.baseURL}/upload/profile-picture`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json',
-          // Content-Type header MUST be omitted for FormData to set boundary correctly
-        },
-        body: formData,
-      });
+      const response = await this.fetchWithAuth(
+        `${this.api.defaults.baseURL}/upload/profile-picture`,
+        {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -481,15 +508,14 @@ class UserService {
         name: fileName,
       });
 
-      const response = await fetch(`${this.api.defaults.baseURL}/upload/baby-photo/${babyId}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json',
-          // Content-Type header MUST be omitted for FormData to set boundary correctly
-        },
-        body: formData,
-      });
+      const response = await this.fetchWithAuth(
+        `${this.api.defaults.baseURL}/upload/baby-photo/${babyId}`,
+        {
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: formData,
+        }
+      );
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
