@@ -132,7 +132,7 @@ export const HomeScreen: React.FC = () => {
           />
           <View style={styles.heroOverlay}>
             <Text style={styles.heroText}>
-              Plan every step your childs' care
+              Plan every step your child's care
             </Text>
           </View>
         </View>
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
   },
   message: {
     fontSize: 16,
-    color: Colors.gray,
+    color: Colors.gray.DEFAULT,
     marginBottom: 20,
     textAlign: 'center',
   },
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   },
   heroImage: {
     width: '100%',
-    height: 192,
+    height: 160,
   },
   heroOverlay: {
     position: 'absolute',
@@ -386,9 +386,6 @@ const styles = StyleSheet.create({
   },
   highlightText: {
     color: Colors.primary.DEFAULT,
-  },
-  orangeText: {
-    color: '#F97316',
   },
   quickActionsContainer: {
     marginHorizontal: 16,
