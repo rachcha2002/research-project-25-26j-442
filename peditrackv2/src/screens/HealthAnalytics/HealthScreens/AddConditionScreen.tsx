@@ -380,15 +380,23 @@ export const AddConditionScreen: React.FC = () => {
               onPress={handleSave}
               disabled={loading}
             >
-              {loading ? (
-                <ActivityIndicator size="small" color={Colors.white} />
-              ) : (
-                <Text style={styles.saveButtonText}>{isEditMode ? 'Update Condition' : 'Save Condition'}</Text>
-              )}
+              <Text style={styles.saveButtonText}>{isEditMode ? 'Update' : 'Save'}</Text>
             </TouchableOpacity>
           </View>
           </>) /* End of !loadingData wrapper */}
         </ScrollView>
+        
+        {/* Full-screen loader overlay */}
+        {loading && (
+          <View style={styles.loaderOverlay}>
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color={Colors.primary.DEFAULT} />
+              <Text style={styles.loaderText}>
+                {isEditMode ? 'Updating condition...' : 'Saving condition...'}
+              </Text>
+            </View>
+          </View>
+        )}
       </SafeAreaView>
     </>
   );
@@ -609,7 +617,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 1,
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#7C3AED',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -631,5 +639,33 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 15,
     color: Colors.inactive,
+  },
+  loaderOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loaderContainer: {
+    backgroundColor: Colors.white,
+    padding: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  loaderText: {
+    marginTop: 12,
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.dark,
   },
 });

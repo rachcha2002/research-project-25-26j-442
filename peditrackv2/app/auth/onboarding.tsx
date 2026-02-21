@@ -10,11 +10,20 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 
 export default function OnboardingScreen() {
   const router = useRouter();
+
+  const completeOnboarding = async () => {
+    try {
+      await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
+    } catch (error) {
+      console.error('Error saving onboarding status:', error);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -27,20 +36,12 @@ export default function OnboardingScreen() {
         end={{ x: 1, y: 1 }}
       >
         <View style={styles.content}>
-          {/* TEST: Visible indicator */}
-          <View style={{ backgroundColor: 'white', padding: 20, margin: 20, borderRadius: 10 }}>
-            <Text style={{ color: 'black', fontSize: 24, fontWeight: 'bold', textAlign: 'center' }}>
-              ✅ APP IS WORKING!
-            </Text>
-            <Text style={{ color: 'black', fontSize: 16, textAlign: 'center', marginTop: 10 }}>
-              If you see this, the app loaded successfully
-            </Text>
-          </View>
+         
 
           {/* Logo/Icon Area */}
           <View style={styles.logoContainer}>
             <View style={styles.logoCircle}>
-              <Text style={styles.logoText}>👶</Text>
+              <Text style={styles.logoText}>👣</Text>
             </View>
             <Text style={styles.appName}>PediTrack</Text>
             <Text style={styles.tagline}>Your Baby's Health Companion</Text>
@@ -70,7 +71,10 @@ export default function OnboardingScreen() {
           <View style={styles.buttonContainer}>
             <TouchableOpacity
               style={styles.primaryButton}
-              onPress={() => router.push('/auth/register')}
+              onPress={async () => {
+                await completeOnboarding();
+                router.push('/auth/register');
+              }}
               activeOpacity={0.9}
             >
               <Text style={styles.primaryButtonText}>Get Started</Text>
@@ -78,7 +82,10 @@ export default function OnboardingScreen() {
 
             <TouchableOpacity
               style={styles.secondaryButton}
-              onPress={() => router.push('/auth/login')}
+              onPress={async () => {
+                await completeOnboarding();
+                router.push('/auth/login');
+              }}
               activeOpacity={0.8}
             >
               <Text style={styles.secondaryButtonText}>

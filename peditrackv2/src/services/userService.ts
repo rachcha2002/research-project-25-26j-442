@@ -75,9 +75,17 @@ class UserService {
     // Request interceptor to add auth token
     this.api.interceptors.request.use(
       async (config) => {
-        const token = await this.getAccessToken();
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
+        // Skip adding auth headers for public endpoints
+        const isPublicEndpoint = 
+          config.url?.includes('/auth/login') ||
+          config.url?.includes('/auth/register') ||
+          config.url?.includes('/auth/refresh');
+        
+        if (!isPublicEndpoint) {
+          const token = await this.getAccessToken();
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
         }
         return config;
       },
@@ -90,8 +98,14 @@ class UserService {
       async (error: AxiosError) => {
         const originalRequest: any = error.config;
 
-        // If error is 401 and we haven't tried to refresh yet
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        // Skip token refresh for public endpoints
+        const isPublicEndpoint = 
+          originalRequest?.url?.includes('/auth/login') ||
+          originalRequest?.url?.includes('/auth/register') ||
+          originalRequest?.url?.includes('/auth/refresh');
+
+        // If error is 401 and we haven't tried to refresh yet, and it's not a public endpoint
+        if (error.response?.status === 401 && !originalRequest._retry && !isPublicEndpoint) {
           if (this.isRefreshing) {
             // Wait for the refresh to complete
             return new Promise((resolve) => {
@@ -106,7 +120,13 @@ class UserService {
           this.isRefreshing = true;
 
           try {
-            const newToken = await this.refreshAccessToken();
+            // Add timeout to prevent infinite hanging
+            const refreshPromise = this.refreshAccessToken();
+            const timeoutPromise = new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('Token refresh timeout')), 10000)
+            );
+
+            const newToken = await Promise.race([refreshPromise, timeoutPromise]);
             this.isRefreshing = false;
             this.onRefreshed(newToken);
             this.refreshSubscribers = [];
@@ -114,6 +134,7 @@ class UserService {
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
             return this.api(originalRequest);
           } catch (refreshError) {
+            console.error('[UserService] Token refresh failed:', refreshError);
             this.isRefreshing = false;
             this.refreshSubscribers = [];
             // Clear tokens and redirect to login
@@ -407,64 +428,105 @@ class UserService {
 
   // ==================== File Upload ====================
 
+  // Helper: fetch with automatic token refresh on 401 (mirrors the Axios interceptor)
+  private async fetchWithAuth(url: string, options: RequestInit): Promise<Response> {
+    let token = await this.getAccessToken();
+    const makeRequest = (t: string | null) =>
+      fetch(url, {
+        ...options,
+        headers: {
+          ...(options.headers || {}),
+          ...(t ? { Authorization: `Bearer ${t}` } : {}),
+        },
+      });
+
+    let response = await makeRequest(token);
+
+    if (response.status === 401) {
+      try {
+        // Token expired – refresh and retry once
+        token = await this.refreshAccessToken();
+        response = await makeRequest(token);
+      } catch (refreshError) {
+        await this.clearTokens();
+        throw new Error('Token expired');
+      }
+    }
+
+    return response;
+  }
+
   async uploadProfilePicture(imageUri: string): Promise<{ url: string }> {
     try {
+      const token = await this.getAccessToken();
       const formData = new FormData();
       
-      // Extract file extension from URI
       const fileExtension = imageUri.split('.').pop() || 'jpg';
       const fileName = `profile.${fileExtension}`;
       
       // @ts-ignore - React Native FormData accepts uri
-      formData.append('photo', {
+      formData.append('image', {
         uri: imageUri,
-        type: `image/${fileExtension}`,
+        type: `image/${fileExtension === 'jpg' ? 'jpeg' : fileExtension}`,
         name: fileName,
       });
 
-      const response = await this.api.post<{ success: boolean; url: string }>(
-        '/upload/profile-picture',
-        formData,
+      const response = await this.fetchWithAuth(
+        `${this.api.defaults.baseURL}/upload/profile-picture`,
         {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: formData,
         }
       );
 
-      return { url: response.data.url };
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || 'Failed to upload image');
+      }
+
+      const data = await response.json();
+      return { url: data.url };
     } catch (error) {
-      throw this.handleError(error);
+      console.error('Upload Error:', error);
+      throw error;
     }
   }
 
   async uploadBabyPhoto(babyId: string, imageUri: string): Promise<{ url: string }> {
     try {
+      const token = await this.getAccessToken();
       const formData = new FormData();
       
       const fileExtension = imageUri.split('.').pop() || 'jpg';
       const fileName = `baby.${fileExtension}`;
       
       // @ts-ignore - React Native FormData accepts uri
-      formData.append('photo', {
+      formData.append('image', {
         uri: imageUri,
-        type: `image/${fileExtension}`,
+        type: `image/${fileExtension === 'jpg' ? 'jpeg' : fileExtension}`,
         name: fileName,
       });
 
-      const response = await this.api.post<{ success: boolean; url: string }>(
-        `/upload/baby-photo/${babyId}`,
-        formData,
+      const response = await this.fetchWithAuth(
+        `${this.api.defaults.baseURL}/upload/baby-photo/${babyId}`,
         {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+          method: 'POST',
+          headers: { Accept: 'application/json' },
+          body: formData,
         }
       );
 
-      return { url: response.data.url };
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || 'Failed to upload image');
+      }
+
+      const data = await response.json();
+      return { url: data.url };
     } catch (error) {
-      throw this.handleError(error);
+       console.error('Upload Error:', error);
+       throw error;
     }
   }
 

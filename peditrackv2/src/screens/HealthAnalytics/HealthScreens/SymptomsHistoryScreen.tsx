@@ -1,37 +1,34 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
-import { getHealthRecords, HealthRecord } from '@/services/healthAnalyticsService';
+import { getSymptoms, DailySymptom, deleteSymptomRecord } from '@/services/healthAnalyticsService';
 import { useBaby } from '@/contexts/BabyContext';
 
 type DateRange = 'month' | '3months' | '6months' | 'custom';
 
-interface SymptomRecord {
-  id: string;
-  date: string;
-  symptoms: string[];
-  temperature?: {
-    value: number;
-    unit: string;
-  };
-  severity?: 'mild' | 'moderate' | 'severe';
-  condition?: string;
-  notes?: string;
-}
+  interface SymptomRecord {
+    id: string;
+    date: string;
+    severity?: 'mild' | 'moderate' | 'severe';
+    symptoms: string[];
+    temperature?: { value: number; unit: string };
+    condition?: string;
+    notes?: string;
+  }
 
-export const SymptomsHistoryScreen: React.FC = () => {
+  export const SymptomsHistoryScreen: React.FC = () => {
   const router = useRouter();
   const { selectedBaby } = useBaby();
   const [selectedRange, setSelectedRange] = useState<DateRange>('month');
-  const [symptomRecords, setSymptomRecords] = useState<SymptomRecord[]>([]);
+  const [symptomRecords, setSymptomRecords] = useState<SymptomRecord[]>([]); // Updated type
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedRecord, setSelectedRecord] = useState<SymptomRecord | null>(null);
+  const [selectedRecord, setSelectedRecord] = useState<SymptomRecord | null>(null); // Updated type
   const [modalVisible, setModalVisible] = useState(false);
 
   // Calculate date range based on selection
@@ -56,26 +53,12 @@ export const SymptomsHistoryScreen: React.FC = () => {
     return { startDate, endDate };
   };
 
-  // Map HealthRecord to SymptomRecord
-  const mapHealthRecordToSymptomRecord = (record: HealthRecord): SymptomRecord | null => {
-    // Only include records with symptoms
-    if (!record.symptoms || record.symptoms.length === 0) {
-      return null;
-    }
-
-    return {
-      id: record._id || '',
-      date: new Date(record.recordDate).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      }),
-      symptoms: record.symptoms,
-      temperature: record.temperature,
-      severity: record.severity,
-      condition: record.diagnosis,
-      notes: record.notes || record.doctorNotes,
-    };
+  // Helper to determine overall severity from a list of symptoms
+  const getOverallSeverity = (symptoms: { severity: 'mild' | 'moderate' | 'severe' }[]): 'mild' | 'moderate' | 'severe' | undefined => {
+    if (!symptoms || symptoms.length === 0) return undefined;
+    if (symptoms.some(s => s.severity === 'severe')) return 'severe';
+    if (symptoms.some(s => s.severity === 'moderate')) return 'moderate';
+    return 'mild';
   };
 
   // Fetch symptoms data
@@ -87,19 +70,27 @@ export const SymptomsHistoryScreen: React.FC = () => {
 
     try {
       setError(null);
-      const records = await getHealthRecords(selectedBaby._id);
-      
-      // Filter records by date range and map to symptom records
       const { startDate, endDate } = getDateRange(selectedRange);
-      const filteredRecords = records.filter((record) => {
-        const recordDate = new Date(record.recordDate);
-        return recordDate >= startDate && recordDate <= endDate;
+      
+      const records = await getSymptoms(
+        selectedBaby._id,
+        startDate.toISOString(),
+        endDate.toISOString()
+      );
+      
+      // Map API data to UI model
+      const mappedRecords: SymptomRecord[] = records.map(record => {
+        const date = new Date(record.recordedAt);
+        return {
+          id: record._id || Math.random().toString(),
+          date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          severity: getOverallSeverity(record.symptoms),
+          symptoms: record.symptoms.map(s => s.name),
+          temperature: record.temperature ? { value: record.temperature, unit: 'C' } : undefined, // Assuming Celsius from API
+          condition: undefined, // API doesn't seem to link condition directly yet, or it's not in DailySymptom
+          notes: record.notes,
+        };
       });
-
-      const mappedRecords = filteredRecords
-        .map(mapHealthRecordToSymptomRecord)
-        .filter((record): record is SymptomRecord => record !== null)
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
       setSymptomRecords(mappedRecords);
     } catch (err) {
@@ -129,6 +120,42 @@ export const SymptomsHistoryScreen: React.FC = () => {
   const closeModal = () => {
     setModalVisible(false);
     setTimeout(() => setSelectedRecord(null), 300);
+  };
+
+  const handleDelete = () => {
+    if (!selectedRecord) return;
+
+    Alert.alert(
+      'Delete Symptom Record',
+      'Are you sure you want to delete this record? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setLoading(true);
+              await deleteSymptomRecord(selectedRecord.id);
+              closeModal();
+              fetchSymptoms();
+              Alert.alert('Success', 'Record deleted successfully');
+            } catch (error) {
+              console.error('Error deleting symptom:', error);
+              Alert.alert('Error', 'Failed to delete record');
+              setLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleEdit = () => {
+    if (!selectedRecord) return;
+    const recordId = selectedRecord.id;
+    closeModal();
+    router.push(`/health-analytics/symptoms/edit/${recordId}`);
   };
 
   const getSeverityColor = (severity?: 'mild' | 'moderate' | 'severe') => {
@@ -306,6 +333,14 @@ export const SymptomsHistoryScreen: React.FC = () => {
           )}
         </ScrollView>
 
+        {/* FAB for Adding Symptoms */}
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() => router.push('/health-analytics/symptoms/log')}
+        >
+          <Ionicons name="add" size={32} color={Colors.white} />
+        </TouchableOpacity>
+
         {/* Detail Modal */}
         <Modal
           animationType="slide"
@@ -389,6 +424,18 @@ export const SymptomsHistoryScreen: React.FC = () => {
                       </View>
                     )}
                   </ScrollView>
+
+                  {/* Action Buttons */}
+                  <View style={styles.modalActions}>
+                    <TouchableOpacity style={styles.editButton} onPress={handleEdit}>
+                      <Ionicons name="create-outline" size={20} color={Colors.white} />
+                      <Text style={styles.editButtonText}>Edit</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+                      <Ionicons name="trash-outline" size={20} color="#EF4444" />
+                      <Text style={styles.deleteButtonText}>Delete</Text>
+                    </TouchableOpacity>
+                  </View>
                 </>
               )}
             </View>
@@ -715,5 +762,58 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     padding: 16,
     borderRadius: 12,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: Colors.primary.DEFAULT,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 20,
+  },
+  editButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.primary.DEFAULT,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  editButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+  deleteButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#FEF2F2',
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#FEE2E2',
+  },
+  deleteButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#EF4444',
   },
 });

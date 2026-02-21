@@ -4,7 +4,7 @@ import React from 'react';
 export default function ProfileLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="profile" options={{ headerShown: false }} />
+      <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="edit-profile" options={{ headerShown: false }} />
       <Stack.Screen name="change-password" options={{ headerShown: false }} />
       <Stack.Screen name="baby-profiles" options={{ headerShown: false }} />

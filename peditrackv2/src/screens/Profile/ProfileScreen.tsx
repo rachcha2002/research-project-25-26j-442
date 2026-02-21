@@ -10,9 +10,11 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useAuth } from '../../src/contexts/AuthContext';
-import { useBaby } from '../../src/contexts/BabyContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useBaby } from '../../contexts/BabyContext';
 import * as ImagePicker from 'expo-image-picker';
+import { SecondaryTopBar } from '../../components/SecondaryTopBar/SecondaryTopBar';
+import { Colors } from '@/constants/Colors';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -72,20 +74,13 @@ export default function ProfileScreen() {
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
+      <SecondaryTopBar
+        title="Profile"
+        showBackButton={true}
+        onBackPress={() => router.back()}
+      />
       
       <ScrollView>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => router.back()}
-          >
-            <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Profile</Text>
-          <View style={styles.placeholder} />
-        </View>
-
         {/* Profile Picture */}
         <View style={styles.profileSection}>
           <TouchableOpacity onPress={handleUploadPhoto} disabled={isUploading}>
@@ -155,7 +150,7 @@ export default function ProfileScreen() {
           <MenuItem
             icon="🚪"
             title="Logout"
-            titleColor="#ff6b6b"
+            titleColor={Colors.error}
             onPress={handleLogout}
             showArrow={false}
           />
@@ -188,7 +183,7 @@ const MenuItem: React.FC<MenuItemProps> = ({
         <Text style={styles.icon}>{icon}</Text>
       </View>
       <View style={styles.menuItemText}>
-        <Text style={[styles.menuTitle, titleColor && { color: titleColor }]}>
+        <Text style={[styles.menuTitle, titleColor ? { color: titleColor } : {}]}>
           {title}
         </Text>
         {subtitle && <Text style={styles.menuSubtitle}>{subtitle}</Text>}
@@ -201,39 +196,10 @@ const MenuItem: React.FC<MenuItemProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 20,
-    backgroundColor: '#fff',
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  backIcon: {
-    fontSize: 24,
-    color: '#333',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  placeholder: {
-    width: 40,
+    backgroundColor: Colors.background,
   },
   profileSection: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.white,
     alignItems: 'center',
     paddingVertical: 30,
     marginBottom: 20,
@@ -248,13 +214,13 @@ const styles = StyleSheet.create({
     borderRadius: 60,
   },
   avatarPlaceholder: {
-    backgroundColor: '#667eea',
+    backgroundColor: Colors.primary.light,
     justifyContent: 'center',
     alignItems: 'center',
   },
   avatarText: {
     fontSize: 48,
-    color: '#fff',
+    color: Colors.white,
     fontWeight: 'bold',
   },
   cameraIcon: {
@@ -264,11 +230,11 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#667eea',
+    backgroundColor: Colors.primary.DEFAULT,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 3,
-    borderColor: '#fff',
+    borderColor: Colors.white,
   },
   camera: {
     fontSize: 16,
@@ -276,16 +242,16 @@ const styles = StyleSheet.create({
   name: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: Colors.dark,
     marginBottom: 4,
   },
   email: {
     fontSize: 16,
-    color: '#666',
+    color: Colors.inactive,
   },
   statsContainer: {
     flexDirection: 'row',
-    backgroundColor: '#fff',
+    backgroundColor: Colors.white,
     paddingVertical: 20,
     marginBottom: 20,
   },
@@ -296,19 +262,19 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#667eea',
+    color: Colors.primary.DEFAULT,
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 14,
-    color: '#666',
+    color: Colors.inactive,
   },
   statDivider: {
     width: 1,
-    backgroundColor: '#e0e0e0',
+    backgroundColor: '#E5E7EB',
   },
   menuContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.white,
     paddingHorizontal: 20,
     paddingVertical: 10,
   },
@@ -318,7 +284,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#F3F4F6',
   },
   menuItemLeft: {
     flexDirection: 'row',
@@ -329,7 +295,7 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#F3F4F6',
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -343,15 +309,15 @@ const styles = StyleSheet.create({
   menuTitle: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: Colors.dark,
     marginBottom: 2,
   },
   menuSubtitle: {
     fontSize: 14,
-    color: '#999',
+    color: Colors.inactive,
   },
   arrow: {
     fontSize: 28,
-    color: '#ccc',
+    color: '#D1D5DB',
   },
 });
