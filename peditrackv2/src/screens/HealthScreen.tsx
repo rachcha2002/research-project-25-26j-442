@@ -49,6 +49,10 @@ export const HealthScreen: React.FC = () => {
     router.push('/health-analytics/ai-insights');
   };
 
+  const handleSleepNutritionPress = () => {
+    router.push('/health-analytics/sleep/' as any);
+  };
+
   // Helper to format date
   const formatDate = (dateString: string) => {
     if (!dateString) return '';
@@ -194,6 +198,27 @@ export const HealthScreen: React.FC = () => {
               <Text style={styles.navCardTitle}>AI Insights</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Sleep & Nutrition — full-width card */}
+          <TouchableOpacity
+            style={styles.sleepNutCard}
+            onPress={handleSleepNutritionPress}
+            activeOpacity={0.7}
+          >
+            <View style={styles.sleepNutLeft}>
+              <View style={styles.sleepNutIconRow}>
+                <View style={[styles.sleepNutIcon, { backgroundColor: '#EEF2FF' }]}>
+                  <Ionicons name="moon" size={26} color="#6366F1" />
+                </View>
+                <View style={[styles.sleepNutIcon, { backgroundColor: '#F0FDF4' }]}>
+                  <Text style={{ fontSize: 22 }}>🥗</Text>
+                </View>
+              </View>
+              <Text style={styles.sleepNutTitle}>Sleep & Nutrition</Text>
+              <Text style={styles.sleepNutSub}>Log daily sleep and food intake</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={22} color={Colors.inactive} />
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -326,6 +351,44 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: 16,
     marginBottom: 16,
+  },
+  sleepNutCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  sleepNutLeft: {
+    flex: 1,
+  },
+  sleepNutIconRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  sleepNutIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sleepNutTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.dark,
+    marginBottom: 4,
+  },
+  sleepNutSub: {
+    fontSize: 13,
+    color: Colors.inactive,
   },
   navCard: {
     flex: 1,

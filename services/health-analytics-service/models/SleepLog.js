@@ -2,8 +2,7 @@ const mongoose = require('mongoose');
 
 const SleepLogSchema = new mongoose.Schema({
   babyId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Baby',
+    type: String,
     required: true
   },
   date: {
