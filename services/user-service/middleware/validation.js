@@ -139,6 +139,18 @@ const validateCreateBaby = [
     .optional()
     .isLength({ max: 1000 })
     .withMessage('Medical notes cannot exceed 1000 characters'),
+  body('birthWeight')
+    .optional({ nullable: true })
+    .isFloat({ min: 0.3, max: 8 })
+    .withMessage('Birth weight must be between 0.3 and 8 kg'),
+  body('isPremature')
+    .optional({ nullable: true })
+    .isBoolean()
+    .withMessage('isPremature must be true or false'),
+  body('gestationalWeeks')
+    .optional({ nullable: true })
+    .isInt({ min: 20, max: 44 })
+    .withMessage('Gestational weeks must be between 20 and 44'),
   handleValidationErrors
 ];
 
@@ -182,6 +194,18 @@ const validateUpdateBaby = [
     .optional()
     .isLength({ max: 1000 })
     .withMessage('Medical notes cannot exceed 1000 characters'),
+  body('birthWeight')
+    .optional({ nullable: true })
+    .isFloat({ min: 0.3, max: 8 })
+    .withMessage('Birth weight must be between 0.3 and 8 kg'),
+  body('isPremature')
+    .optional({ nullable: true })
+    .isBoolean()
+    .withMessage('isPremature must be true or false'),
+  body('gestationalWeeks')
+    .optional({ nullable: true })
+    .isInt({ min: 20, max: 44 })
+    .withMessage('Gestational weeks must be between 20 and 44'),
   handleValidationErrors
 ];
 

@@ -4,10 +4,31 @@ const Measurement = require('../models/Measurement');
 const { calculateGrowthVelocity, estimatePercentile, generatePredictions } = require('../utils/calculations');
 const Baby = require('../models/Baby');
 
+/**
+ * Calculate age in months between two dates with decimal precision
+ * e.g. baby aged 6 months and 15 days → 6.5 months
+ */
+const calcAgeInMonths = (dateOfBirth, measurementDate) => {
+  const dob = new Date(dateOfBirth);
+  const mDate = new Date(measurementDate);
+  const months =
+    (mDate.getFullYear() - dob.getFullYear()) * 12 +
+    (mDate.getMonth() - dob.getMonth()) +
+    (mDate.getDate() - dob.getDate()) / 30.44;
+  return Math.max(0, parseFloat(months.toFixed(2)));
+};
+
 // Add new measurement
 router.post('/', async (req, res, next) => {
   try {
-    const measurement = new Measurement(req.body);
+    const { dateOfBirth, ...measurementData } = req.body; // strip DOB — don't persist it
+
+    // Auto-calculate ageInMonths if dateOfBirth was provided
+    if (dateOfBirth && measurementData.measurementDate) {
+      measurementData.ageInMonths = calcAgeInMonths(dateOfBirth, measurementData.measurementDate);
+    }
+
+    const measurement = new Measurement(measurementData);
     await measurement.save();
     res.status(201).json(measurement);
   } catch (error) {
@@ -101,9 +122,23 @@ router.get('/:id', async (req, res, next) => {
 // Update measurement
 router.put('/:id', async (req, res, next) => {
   try {
+    const { dateOfBirth, ...updateData } = req.body; // strip DOB — don't persist it
+
+    // Recalculate ageInMonths if dateOfBirth and a date are available
+    const dateToUse = updateData.measurementDate;
+    if (dateOfBirth && dateToUse) {
+      updateData.ageInMonths = calcAgeInMonths(dateOfBirth, dateToUse);
+    } else if (dateOfBirth) {
+      // If no new measurementDate in the update, fetch the existing one
+      const existing = await Measurement.findById(req.params.id).select('measurementDate');
+      if (existing?.measurementDate) {
+        updateData.ageInMonths = calcAgeInMonths(dateOfBirth, existing.measurementDate);
+      }
+    }
+
     const measurement = await Measurement.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      updateData,
       { new: true, runValidators: true }
     );
     

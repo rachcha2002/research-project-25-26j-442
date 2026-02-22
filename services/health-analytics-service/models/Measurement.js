@@ -54,6 +54,12 @@ const measurementSchema = new mongoose.Schema({
     type: Number,
   },
 
+  // Age in months at time of measurement (auto-calculated from baby DOB on save)
+  ageInMonths: {
+    type: Number,
+    index: true, // ML pipeline will query/group by this frequently
+  },
+
   // Percentile data
   percentiles: {
     height: Number,

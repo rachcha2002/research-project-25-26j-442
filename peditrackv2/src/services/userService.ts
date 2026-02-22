@@ -31,6 +31,10 @@ export interface BabyProfile {
   photo?: string;
   isDefault?: boolean;
   age?: number;
+  // Birth & prematurity data (Survey Q5a, Q5b)
+  birthWeight?: number;
+  isPremature?: boolean | null;
+  gestationalWeeks?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -384,6 +388,9 @@ class UserService {
     bloodType?: string;
     allergies?: string[];
     photo?: string;
+    birthWeight?: number;
+    isPremature?: boolean;
+    gestationalWeeks?: number;
   }): Promise<BabyProfile> {
     try {
       const response = await this.api.post<{ success: boolean; baby: BabyProfile }>(
@@ -405,6 +412,9 @@ class UserService {
       bloodType?: string;
       allergies?: string[];
       photo?: string;
+      birthWeight?: number;
+      isPremature?: boolean;
+      gestationalWeeks?: number;
     }
   ): Promise<BabyProfile> {
     try {

@@ -44,6 +44,25 @@ const babyProfileSchema = new mongoose.Schema({
     type: String,
     maxlength: [1000, 'Medical notes cannot exceed 1000 characters']
   },
+
+  // Birth & prematurity data (Survey Q5a, Q5b)
+  birthWeight: {
+    type: Number, // in kg
+    min: 0.3,
+    max: 8,
+    default: null,
+  },
+  isPremature: {
+    type: Boolean,
+    default: null, // null = not answered, false = full term, true = premature
+  },
+  gestationalWeeks: {
+    type: Number, // weeks at birth, e.g. 34
+    min: 20,
+    max: 44,
+    default: null,
+  },
+
   isDefault: {
     type: Boolean,
     default: false

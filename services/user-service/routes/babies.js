@@ -12,7 +12,8 @@ const { validateCreateBaby, validateUpdateBaby, validateObjectId } = require('..
  */
 router.post('/', auth, validateCreateBaby, async (req, res) => {
   try {
-    const { name, dateOfBirth, gender, photo, bloodType, allergies, medicalNotes } = req.body;
+    const { name, dateOfBirth, gender, photo, bloodType, allergies, medicalNotes,
+            birthWeight, isPremature, gestationalWeeks } = req.body;
 
     // Check if this is the user's first baby
     const existingBabiesCount = await BabyProfile.countDocuments({ userId: req.userId });
@@ -28,6 +29,10 @@ router.post('/', auth, validateCreateBaby, async (req, res) => {
       bloodType,
       allergies,
       medicalNotes,
+      // Birth & prematurity data (Survey Q5a, Q5b)
+      birthWeight: birthWeight !== undefined ? birthWeight : null,
+      isPremature: isPremature !== undefined ? isPremature : null,
+      gestationalWeeks: gestationalWeeks !== undefined ? gestationalWeeks : null,
       isDefault: isFirstBaby // Set as default if it's the first baby
     });
 
@@ -101,7 +106,8 @@ router.get('/:id', auth, validateObjectId, async (req, res) => {
  */
 router.put('/:id', auth, validateObjectId, validateUpdateBaby, async (req, res) => {
   try {
-    const { name, dateOfBirth, gender, photo, bloodType, allergies, medicalNotes } = req.body;
+    const { name, dateOfBirth, gender, photo, bloodType, allergies, medicalNotes,
+            birthWeight, isPremature, gestationalWeeks } = req.body;
 
     const updateData = {};
     if (name !== undefined) updateData.name = name;
@@ -111,6 +117,10 @@ router.put('/:id', auth, validateObjectId, validateUpdateBaby, async (req, res) 
     if (bloodType !== undefined) updateData.bloodType = bloodType;
     if (allergies !== undefined) updateData.allergies = allergies;
     if (medicalNotes !== undefined) updateData.medicalNotes = medicalNotes;
+    // Birth & prematurity data (Survey Q5a, Q5b)
+    if (birthWeight !== undefined) updateData.birthWeight = birthWeight;
+    if (isPremature !== undefined) updateData.isPremature = isPremature;
+    if (gestationalWeeks !== undefined) updateData.gestationalWeeks = gestationalWeeks;
 
     const babyProfile = await BabyProfile.findOneAndUpdate(
       { _id: req.params.id, userId: req.userId },
