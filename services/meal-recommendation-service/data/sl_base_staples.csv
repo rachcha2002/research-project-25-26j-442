@@ -1,0 +1,66 @@
+Item Name,Ideal_Meal_Time,State/Texture,Cost,Veg/Non-Veg,Allergies,Pairing_Tag,Serving Size (Child),Calories (kcal),Carbs (g),Protein (g),Fat (g),Fiber (g),Health_Benefit
+White Rice (Samba),Lunch;Dinner,Soft Grainy,Med,Veg,None,Curries;Dhal;Meat,0.5 cup (100g),130,28,2.5,0.2,0.5,Easy Digestion
+Red Rice (Kekulu),Lunch;Dinner,Soft Grainy,Low,Veg,None,Curries;Dhal;Greens,0.5 cup (100g),140,29,3.0,0.5,2.0,High Fiber; Iron
+Keeri Samba Rice,Lunch;Dinner,Soft Fluffy,High,Veg,None,Rich Curries;Meat,0.5 cup (100g),135,28,2.5,0.3,0.5,High Energy
+Kalu Heenati (Red Rice),Lunch;Dinner,Chewy Grainy,High,Veg,None,Mild Curries;Vegetables,0.5 cup (100g),145,30,3.5,1.0,2.5,Immunity Boost
+Suwandel Rice,Lunch;Dinner,Soft Fragrant,High,Veg,None,Mild Curries;Meat,0.5 cup (100g),135,28,2.8,0.5,0.8,Appetite Stimulant
+Basmati Rice,Lunch;Dinner,Loose Grainy,High,Veg,None,Yellow Rice;Meat Curries,0.5 cup (100g),125,28,2.5,0.3,0.6,Low Glycemic
+Milk Rice (Kiribath),Breakfast,Sticky Creamy,Med,Veg,Dairy,Lunu Miris (Mild);Banana,2 squares (80g),180,25,3.0,7.0,0.5,High Calorie (Weight Gain)
+Green Gram Milk Rice,Breakfast,Sticky Chunky,Med,Veg,Dairy,Banana;Jaggery,2 squares (80g),210,30,6.0,7.5,2.0,High Protein Energy
+Yellow Rice (Kaha Bath),Lunch;Dinner,Soft Flavored,Med,Veg,None,Meat;Potato Curry,0.5 cup (100g),150,28,2.5,3.0,0.6,Appealing Color/Flavor
+Ghee Rice,Lunch;Dinner,Soft Oily,High,Veg,Dairy,Meat Curries;Peas,0.5 cup (100g),185,28,2.5,7.0,0.5,High Fat (Weight Gain)
+Veg Fried Rice (Home),Lunch;Dinner,Loose Grainy,Med,Veg,Soy,Soya Meat;Chicken,0.5 cup (100g),160,25,3.0,5.0,1.5,Hidden Veggies
+White String Hoppers,Breakfast;Dinner,Soft Stringy,Low,Veg,None,Kiri Hodi;Potato;Meat,4 pieces,120,26,2.0,0.2,0.8,Fun Texture
+Red String Hoppers,Breakfast;Dinner,Soft Stringy,Low,Veg,None,Dhal;Kiri Hodi;Coconut,4 pieces,130,27,2.5,0.4,2.5,Fiber for Constipation
+Kurakkan String Hoppers,Breakfast;Dinner,Chewy Stringy,Med,Veg,None,Kiri Hodi;Mild Fish,4 pieces,125,25,3.0,0.5,3.0,Calcium for Bones
+Plain Hopper (Appa),Breakfast;Dinner,Crispy Edges/Soft Center,Low,Veg,None,Lunu Miris;Banana;Kiri Hodi,1 piece,80,16,2.0,0.5,0.5,Interactive Eating
+Milk Hopper (Kiri Appa),Breakfast;Dinner,Crispy/Creamy,Med,Veg,Dairy,Plain;Jaggery,1 piece,110,18,2.0,3.0,0.5,Weight Gain
+White Rice Pittu,Breakfast;Dinner,Dry Crumbly,Med,Veg,None,Coconut Milk;Tripe/Meat,0.5 cup (80g),150,30,3.0,2.0,1.5,Dense Energy
+Red Rice Pittu,Breakfast;Dinner,Dry Crumbly,Med,Veg,None,Coconut Milk;Fish,0.5 cup (80g),160,32,3.5,2.5,3.0,Sustained Energy
+Kurakkan Pittu,Breakfast;Dinner,Dry Crumbly,Med,Veg,None,Coconut Milk;Banana,0.5 cup (80g),155,29,4.0,2.0,3.5,Bone Health; Iron
+Pol Roti (Coconut),Breakfast;Dinner,Chewy Dense,Low,Veg,Gluten,Dhal;Mild Sambol,0.5 small roti,130,15,3.0,6.0,2.0,High Satiety
+Wheat Roti (Godamba),Breakfast;Dinner,Soft Chewy,Low,Veg,Gluten,Meat Curry;Dhal,1 small roti,120,20,3.5,3.0,1.0,Easy to Wrap
+Paratha (Frozen/Pan),Breakfast;Dinner,Flaky Soft,Med,Veg,Gluten,Meat Curry;Peas,0.5 paratha,160,18,3.0,8.0,1.5,High Calorie
+Sliced Bread (White),Breakfast;Snack,Soft Spongey,Low,Veg,Gluten,Butter;Jam;Dhal,1 slice (30g),80,15,2.5,1.0,0.8,Quick Energy
+Roast Paan,Breakfast;Dinner,Crispy Crust/Soft,Low,Veg,Gluten,Dhal;Coconut Sambol,1 slice (35g),95,18,3.0,1.0,1.0,Crunchy Texture
+Whole Wheat Bread,Breakfast;Snack,Soft Grainy,Med,Veg,Gluten,Butter;Cheese;Dhal,1 slice (30g),75,13,3.5,1.0,2.0,Digestion
+Tea Bun (Banish),Tea Time;Snack,Soft Sweet,Low,Veg,Gluten;Dairy,Butter;Milk Tea,1 small bun,150,25,3.0,4.0,1.0,Snack Base
+Rice Noodles,Breakfast;Dinner,Soft Stringy,Med,Veg,None,Mild Curry;Stir-fry,0.5 cup cooked,100,22,2.0,0.2,0.5,Gluten-Free Alternative
+Wheat Noodles,Breakfast;Dinner,Soft Stringy,Low,Veg,Gluten,Veg Stir-fry;Egg,0.5 cup cooked,110,20,4.0,0.5,1.5,Kid Favorite
+Macaroni Pasta,Lunch;Dinner,Soft Tubes,Med,Veg,Gluten,Cheese;Tomato Sauce,0.5 cup cooked,110,21,4.0,0.5,1.5,Interactive Shapes
+Chickpea Pasta,Lunch;Dinner,Soft Tubes,High,Veg,None,Tomato Sauce;Cheese,0.5 cup cooked,130,18,8.0,1.5,4.0,High Protein Base
+Boiled Manioc (Cassava),Breakfast;Tea Time,Dense Starchy,Low,Veg,None,Scraped Coconut;Sambol,0.5 cup (80g),130,30,1.0,0.2,1.5,High Calorie Energy
+Boiled Sweet Potato,Breakfast;Tea Time,Soft Sweet,Low,Veg,None,Plain;Scraped Coconut,0.5 cup (80g),70,16,1.2,0.1,2.5,Vitamin A; Fiber
+Boiled Potato,Breakfast;Snack,Soft Mashable,Med,Veg,None,Butter;Cheese;Fish,0.5 cup (80g),70,15,1.5,0.1,1.5,Versatile Base
+Boiled Innala (Chinese Potato),Breakfast;Tea Time,Firm Starchy,Med,Veg,None,Mild Spices;Coconut,0.5 cup (80g),80,18,1.5,0.1,2.0,Gut Health
+Boiled Kiri Ala (Taro),Breakfast;Tea Time,Soft Creamy,Med,Veg,None,Coconut Milk,0.5 cup (80g),90,20,1.5,0.2,2.5,Energy
+Boiled Breadfruit (Del),Breakfast;Tea Time,Dense Starchy,Low,Veg,None,Coconut;Sugar,0.5 cup (80g),85,20,1.0,0.2,4.0,Filling Fiber
+Boiled Jackfruit (Kos),Breakfast;Lunch,Chewy Firm,Low,Veg,None,Coconut;Sambol,0.5 cup (80g),80,19,1.5,0.3,3.0,Gut Motility
+Lunu Kenda (Rice Congee),Breakfast;Snack,Watery Soft,Low,Veg,None,Garlic;Ginger,1 cup,90,20,2.0,0.2,0.5,Hydration; Sick Days
+Red Rice Congee,Breakfast;Snack,Watery Grainy,Low,Veg,None,Gotu Kola;Jaggery,1 cup,95,21,2.0,0.3,1.5,Recovery
+Kurakkan Kanda,Breakfast,Thick Liquid,Med,Veg,None,Jaggery,1 cup,120,25,3.0,0.5,2.5,Bone Density
+Oats Porridge,Breakfast,Thick Creamy,Med,Veg,Gluten;Dairy,Fruits;Honey,0.5 cup cooked,110,18,4.0,2.5,3.0,Heart/Gut Health
+Sago (Sabu) Porridge,Breakfast;Snack,Jelly-like,Low,Veg,Dairy,Jaggery;Cashew,0.5 cup cooked,130,28,1.0,1.5,0.2,Cooling Body
+Rulang (Semolina) Upma,Breakfast,Soft Crumbly,Med,Veg,Gluten,Sugar;Banana,0.5 cup,140,22,4.0,4.0,1.0,Quick Carbs
+Corn on the Cob (Boiled),Snack;Tea Time,Crunchy/Chewy,Low,Veg,None,Butter;Salt,0.5 cob,85,18,3.0,1.0,2.0,Fun to eat
+Boiled Chickpeas (Kadala),Breakfast;Tea Time,Firm Chewy,Low,Veg,None,Coconut bits,0.5 cup,135,22,7.0,2.0,6.0,Protein/Fiber Base
+Boiled Green Gram (Mung),Breakfast;Tea Time,Soft Grainy,Low,Veg,None,Coconut;Jaggery,0.5 cup,105,19,7.0,0.4,4.0,Plant Protein
+Boiled Cowpea,Breakfast;Tea Time,Firm Chewy,Low,Veg,None,Coconut;Lunu Miris,0.5 cup,100,18,6.0,0.5,4.5,Iron & Energy
+Kothu Roti (Plain Veg),Dinner,Chewy Mixed,Low,Veg,Gluten,Mild Gravy,0.5 cup,180,22,4.0,8.0,2.0,High Calorie
+Manioc Pittu,Breakfast;Dinner,Crumbly Dense,Low,Veg,None,Coconut Milk,0.5 cup,140,30,1.5,1.0,2.0,Gluten-Free Energy
+Diya Bath,Breakfast,Watery Soft,Low,Veg,Dairy,Curd;Red Onion,1 cup,110,20,3.0,1.5,0.5,Probiotic Base
+Halapa (Wrapper base),Tea Time;Snack,Sticky Chewy,Med,Veg,None,Sweet Fillings,1 small,130,25,2.5,1.5,3.0,Iron; Calcium
+Lavariya (String Hopper Base),Tea Time;Snack,Soft Sweet,Med,Veg,None,Pani Pol (Sweet Coconut),1 piece,140,28,2.0,2.0,1.5,Sweet Base
+Aggala (Roasted Rice Balls),Tea Time;Snack,Firm Dry,Low,Veg,None,Tea;Milk,2 small balls,160,32,3.0,2.0,1.0,Energy Snack
+Mashed Potato & Carrot,Lunch;Dinner,Smooth Mash,Med,Veg,Dairy,Chicken;Fish,0.5 cup,110,18,2.0,3.5,2.5,Vitamin A
+Rice Flour Pancake (Appam),Breakfast,Soft Spongy,Low,Veg,None,Banana;Honey,1 small,90,18,1.5,1.0,0.5,Light Breakfast
+Whole Wheat Chapati,Breakfast;Dinner,Chewy Flat,Med,Veg,Gluten,Dhal;Paneer,1 small,100,18,3.0,1.5,2.0,Complex Carbs
+Toasted Bread Strips,Snack,Crispy Hard,Low,Veg,Gluten,Soup;Dhal,2 strips,70,13,2.0,1.0,0.8,Teething/Crunchy
+Vermicelli (Sewiya) Upma,Breakfast,Soft Stringy,Med,Veg,Gluten,Sugar;Milk,0.5 cup cooked,130,24,3.0,2.5,1.0,Fast Energy
+Wandu Appa,Tea Time;Snack,Spongy Sweet,Med,Veg,None,Plain,1 piece,120,25,2.0,1.0,1.5,Steamed Snack
+Pancake (Sri Lankan style),Tea Time;Snack,Soft Thin,Low,Veg,Gluten;Egg,Pani Pol;Sugar,1 roll,140,20,4.0,5.0,1.0,Kid Favorite
+Steamed Rice Balls (Guli),Lunch;Dinner,Sticky Firm,Low,Veg,None,Mild Curries,3 small balls,130,28,2.5,0.2,0.5,Finger Food Base
+Yellow Noodles (Egg),Lunch;Dinner,Soft Stringy,Med,Non-Veg,Gluten;Egg,Stir-fry Veg,0.5 cup cooked,120,18,5.0,2.0,1.5,Protein Base
+Savoury Oats (Oat Upma),Breakfast,Thick Grainy,Med,Veg,Gluten,Carrots;Peas,0.5 cup cooked,115,17,4.0,3.0,3.0,Hearty Breakfast
+Coconut Rice (Pol Bath),Lunch;Dinner,Fluffy Oily,Med,Veg,None,Chicken;Sambol,0.5 cup,160,25,2.5,5.5,1.5,High Fat
+Savory French Toast (Base),Breakfast;Snack,Soft Spongy,Low,Non-Veg,Gluten;Egg,Ketchup,1 slice,130,14,6.0,5.0,1.0,Quick Protein Base

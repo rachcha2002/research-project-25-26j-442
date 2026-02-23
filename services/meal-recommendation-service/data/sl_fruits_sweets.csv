@@ -1,0 +1,62 @@
+Item Name,Ideal_Meal_Time,Sugar_Level,Vitamin_Focus,Choking_Risk,Cost,Veg/Non-Veg,Allergies,Serving Size (Child),Calories (kcal),Carbs (g),Fiber (g),Potassium (mg),Health_Benefit
+Ambul Banana,Breakfast;Snack,Natural,B6;C,Low,Low,Veg,None,1 small,90,23,2.6,360,Easy Digestion; Potassium
+Anamalu Banana,Breakfast;Snack,Natural,Potassium,Low,Low,Veg,None,1 small,105,27,3.1,420,Energy Boost
+Kolikuttu Banana,Breakfast;Snack,Natural,B6,Low,High,Veg,None,1 small,110,28,2.5,400,Brain Development
+Seeni Banana,Breakfast;Snack,Natural,C,Low,Low,Veg,None,2 small,100,25,3.0,380,Traditional Growth
+Ripe Papaya Cubes,Lunch;Snack,Natural,A;C,Low,Low,Veg,None,0.5 cup,60,15,2.5,280,Natural Laxative (Constipation)
+Ripe Mango (Slices),Snack,Natural,A;C,Low,High,Veg,None,0.5 cup,75,19,2.0,250,Vision & Immunity
+Watermelon Wedges,Snack;Tea Time,Natural,A;C,Low,Low,Veg,None,1 wedge,45,11,0.6,170,Hydration (Fever/Heat)
+Woodapple Pulp (Plain),Snack,Natural,C,Low,Low,Veg,None,0.25 cup,70,18,5.5,150,Immunity; Gut Health
+Woodapple with Jaggery,Snack,High,C;Iron,Low,Low,Veg,None,0.25 cup,110,25,5.5,180,Energy & Iron
+Avocado Mash (Plain),Snack,Natural,E;K,Low,Med,Veg,None,0.25 cup,120,6,6.5,450,Weight Gain (Healthy Fats)
+Avocado with Honey,Snack,High,E,Low,Med,Veg,None,0.25 cup,150,15,6.5,460,High Calorie Density
+Guava (Seedless),Snack,Natural,C,Med,Low,Veg,None,0.5 cup,50,11,7.0,220,Highest Vitamin C
+Pineapple Tidbits,Snack,Natural,C,Low,Med,Veg,None,0.25 cup,40,10,1.2,110,Digestive Enzymes
+Passion Fruit Juice,Snack,Natural,A;C,Low,Low,Veg,None,0.5 cup,60,14,0.5,190,Cooling/Relaxing
+Soursop (Anoda) Pulp,Snack,Natural,C;B,Low,Med,Veg,None,0.25 cup,65,16,3.0,250,Sleep & Immunity
+Custard Apple (Weli Anoda),Snack,Natural,C;B6,High (Seeds),Med,Veg,None,0.25 cup,85,22,3.5,220,High Energy Fruit
+Jackfruit (Ripe Waraka),Snack,High,A,Low,Low,Veg,None,2 segments,90,23,2.0,300,Sweet Fiber
+Durian (Small Taste),Snack,High,B;C,Low,High,Veg,None,1 small piece,110,20,2.5,350,Energy & Weight Gain
+Rambutan (Pitted),Snack,Natural,C,High (Seed),Med,Veg,None,3 pieces,50,13,0.8,50,Vitamin C
+Mangosteen segments,Snack,Natural,Antioxidants,High (Seed),High,Veg,None,3 pieces,45,12,1.5,40,Anti-inflammatory
+Beli (Bael) Fruit,Snack,Natural,C;B,Low,Low,Veg,None,2 tbsp,60,15,4.0,200,Traditional Gut Healer
+Nelli (Amla) Juice,Snack,Natural,C,Low,Low,Veg,None,2 tbsp,15,4,1.0,60,Immune Shield
+Jambu (Wax Apple),Snack,Natural,C,Low,Low,Veg,None,2 fruits,30,8,1.2,120,Low Calorie Hydration
+Lovi-Lovi,Snack,Natural,C,Low,Low,Veg,None,3 fruits,25,6,1.0,80,Vitamin C
+Veralu (Ceylon Olive),Snack,Natural,Antioxidants,High (Seed),Low,Veg,None,2 fruits,40,9,2.5,110,Healthy Skin
+Pomegranate Seeds,Snack,Natural,K;C,High (Choking),High,Veg,None,2 tbsp,40,9,2.0,110,Blood Health (Iron absorb)
+Sapodilla,Snack,High,C;A,Low,Med,Veg,None,1 fruit,80,20,5.0,190,High Calorie Fiber
+Dragon Fruit (Red),Snack,Natural,C;Magnesium,Low,High,Veg,None,0.5 cup,60,13,2.5,230,Bone Health
+Red Grapes (Halved),Snack;Lunchbox,Natural,C;K,High (Choking),High,Veg,None,5 grapes,35,9,0.5,90,Antioxidants
+Apple Slices (Peeled),Snack;Lunchbox,Natural,C;Fiber,Low,High,Veg,None,0.5 apple,55,14,2.5,100,Teeth Health
+Watalappam (Small Cup),Snack;Dinner,High,Protein;Iron,Low,Med,Non-Veg,Egg;Nuts,1 small cup,180,18,0.5,150,Weight Gain (Iron Rich)
+Curd & Treacle,Snack;Dinner,High,Calcium,Low,Med,Veg,Dairy,0.25 cup,140,20,0.0,120,Probiotic Energy
+Caramel Pudding,Dinner,High,Calcium,Low,Med,Non-Veg,Egg;Dairy,1 small cup,150,22,0.0,110,High Calorie
+Kiri Pani (Milk/Honey),Snack,High,Energy,Low,Low,Veg,Dairy,0.5 cup,120,25,0.0,140,Traditional Energy
+Bibikkan (Small piece),Tea Time,High,Fiber;Fat,Low,High,Veg,Nuts;Gluten,1 small square,210,28,4.0,200,Calorie Dense
+Thala Guli (Sesame Ball),Snack,Natural,Calcium;Zinc,Low,Low,Veg,Nuts,1 ball,110,12,3.0,160,Strong Bones
+Jaggery Piece,Tea Time,High,Iron,High (Hard),Low,Veg,None,1 small bit,45,11,0.0,15,Natural Iron
+Kiri Toffee,Tea Time,High,Energy,High (Sticky),Low,Veg,Dairy,1 small piece,80,12,0.0,40,Quick Weight Gain
+Coconut Ice Cream,Snack,High,Fats,Low,Med,Veg,Dairy,1 scoop,140,15,0.0,80,Calorie Boost
+Fruit Salad (Mixed),Snack,Natural,Multi-Vit,Low,Med,Veg,None,0.5 cup,70,17,2.5,200,General Health
+Stewed Apple Mash,Breakfast;Snack,Natural,Fiber,Low,High,Veg,None,0.25 cup,50,13,2.0,90,Gentle Digestion
+Orange Segments (Peeled),Breakfast;Snack,Natural,C,Low,High,Veg,None,0.5 orange,45,11,2.0,180,Immunity
+Pear Slices (Soft),Snack,Natural,Fiber,Low,High,Veg,None,0.5 pear,50,13,3.0,110,Constipation Relief
+Halapa (Sweet Center),Tea Time,High,Iron;Fiber,Low,Low,Veg,None,1 piece,130,28,3.5,150,Healthy Traditional Sweet
+Lavariya,Tea Time,High,Energy,Low,Med,Veg,None,1 piece,160,32,2.0,140,Sweet Filling
+Milk Rice with Jaggery,Breakfast,High,Iron;Cal,Low,Med,Veg,Dairy,2 squares,220,35,1.5,180,Traditional Growth
+Pani Walalu,Tea Time,High,Energy,High (Sticky),Med,Veg,Gluten,1 small,150,30,1.0,50,Energy Spike
+Marshmallows (Soft),Snack,High,None,High (Choking),Low,Non-Veg,None,2 pieces,50,12,0.0,5,Low Nutrition (Treat)
+Raisins (Sultanas),Snack;Lunchbox,Natural,Iron,High (Choking),Med,Veg,None,1 tbsp,45,11,1.0,110,Anemia Prevention
+Dates (Pitted),Snack;Lunchbox,Natural,Iron;Fiber,Low,Med,Veg,None,1 date,65,16,1.5,160,Energy & Constipation
+Baked Apple with Cinnamon,Dinner,Natural,Fiber,Low,High,Veg,None,0.5 apple,70,16,2.5,110,Soothing Snack
+Woodapple Cream,Snack,High,C;Fat,Low,Low,Veg,Dairy,0.25 cup,120,18,4.0,160,Weight Gain
+Sago Pudding (Sweet),Dinner,High,None,Low,Low,Veg,Dairy,0.5 cup,140,28,0.2,100,Body Cooling
+Fruit Jelly (Home-made),Snack,High,C,Low,Low,Veg,None,1 square,60,15,0.0,20,Fun Texture
+Coconut Milk Pancake,Tea Time,High,Fat,Low,Low,Veg,Gluten,1 roll,130,20,1.0,80,Growth Support
+Pumpkin Halwa (Sweet),Dinner,High,A,Low,Low,Veg,Dairy,2 tbsp,110,18,1.5,140,Vision Boost
+Fruit Yogurt,Snack;Lunchbox,High,C;Calcium,Low,Med,Veg,Dairy,1 cup,110,18,0.5,180,Probiotic Growth
+Sweetened Corn Kernels,Tea Time,High,A;Fiber,Low,Med,Veg,None,0.25 cup,95,20,2.5,120,Eye Health
+Banana Bread Slice,Tea Time,High,Energy,Low,Med,Veg,Gluten;Egg,1 slice,150,25,1.5,140,Calorie Dense
+Woodapple Toffee,Snack,High,C,High (Hard),Low,Veg,None,1 small piece,60,14,1.0,30,Vitamin C Treat
+Mango Lassi (Mild),Snack,High,A;Probiotics,Low,High,Veg,Dairy,100ml,120,18,1.0,200,Weight Gain Drink
