@@ -254,47 +254,6 @@ export const HealthDetailsScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Sleep Tracker Section */}
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Sleep Tracker</Text>
-              <TouchableOpacity onPress={() => router.push('/health-analytics/sleep/' as any)}>
-                <Text style={styles.viewAllText}>Open Tracker</Text>
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.sleepCard}>
-                <View style={styles.sleepHeader}>
-                    <View style={styles.sleepTitle}>
-                        <Ionicons name="moon" size={20} color={Colors.primary.DEFAULT} style={{ marginRight: 8 }} />
-                        <Text style={{ fontSize: 16, fontWeight: '600', color: Colors.dark }}>Last Night's Sleep</Text>
-                    </View>
-                </View>
-                
-                <View style={styles.sleepContent}>
-                    <View style={styles.sleepInfo}>
-                        <Text style={styles.sleepLabel}>Tap to log sleep</Text>
-                        <Text style={styles.sleepValue}>Log Sleep</Text>
-                    </View>
-                    
-                    <View style={styles.sleepActions}>
-                         <TouchableOpacity 
-                            style={styles.sleepActionButton}
-                            onPress={() => router.push('/health-analytics/sleep/' as any)}
-                         >
-                            <Ionicons name="add" size={24} color={Colors.primary.DEFAULT} />
-                         </TouchableOpacity>
-                         
-                         <TouchableOpacity 
-                            style={styles.sleepActionButton}
-                            onPress={() => router.push('/health-analytics/sleep/' as any)}
-                         >
-                            <Ionicons name="calendar" size={24} color={Colors.primary.DEFAULT} />
-                         </TouchableOpacity>
-                    </View>
-                </View>
-            </View>
-          </View>
 
           {/* Log Today's Symptoms */}
           <View style={styles.section}>

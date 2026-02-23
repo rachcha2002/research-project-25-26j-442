@@ -59,6 +59,10 @@ export interface Measurement {
   weight: MeasurementValue;
   headCircumference?: MeasurementValue;
   bmi?: number;
+  /** Auto-calculated by the backend from dateOfBirth + measurementDate */
+  ageInMonths?: number;
+  /** Passed to backend to compute ageInMonths — not stored in the database */
+  dateOfBirth?: string;
   location?: string;
   notes?: string;
   entryMode?: 'manual' | 'photo';
@@ -253,9 +257,45 @@ export interface SleepLog {
   babyId: string;
   date: string;
   hours: number;
-  quality: 'good' | 'fair' | 'poor';
+  /** Survey Q20 — 5 granular sleep quality categories */
+  quality:
+    | 'sleepsWell'
+    | 'wakes1-2times'
+    | 'wakesFrequently'
+    | 'difficultyFallingAsleep'
+    | 'restless';
   notes?: string;
   createdAt?: string;
+}
+
+// ── Feeding Log (Survey Q14–Q18) ─────────────────────────────────────────────
+export interface FeedingLog {
+  _id?: string;
+  babyId: string;
+  date: string;
+  /** Q14a: Rice cups per day */
+  ricePortions?: '0' | '0.5' | '1' | '1.5' | '2' | '2.5' | '3' | '3plus';
+  /** Q14b: Other carbohydrates */
+  otherCarbs?: 'bread' | 'roti' | 'stringHoppers' | 'combination' | 'rarely';
+  /** Q15a: Fish / Meat / Chicken */
+  proteinMeat?: 'never' | '1small' | '2to3' | '3plus';
+  /** Q15b: Eggs per week */
+  eggsPerWeek?: 'none' | '1to2' | '3to5' | '6to7' | '7plus';
+  /** Q15c: Dhal / Lentils */
+  lentils?: 'daily' | '3to5perWeek' | '1to2perWeek' | 'rarely';
+  /** Q16a: Milk cups per day */
+  milkCups?: 'none' | 'lessThan1' | '1to2' | '2to3' | '3plus';
+  /** Q16b: Other dairy */
+  otherDairy?: 'daily' | 'fewPerWeek' | 'rarely' | 'never';
+  /** Q17a: Fruit servings per day */
+  fruitServings?: 'none' | '1' | '2' | '3plus';
+  /** Q17b: Vegetable servings per day */
+  vegServings?: 'none' | 'with1meal' | 'with2meals' | 'withAllMeals';
+  /** Q18: Supplements (multi-select) */
+  supplements?: Array<'multivitamin' | 'vitaminD' | 'iron' | 'other' | 'none'>;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 // Health Record type matching backend model
@@ -1699,6 +1739,81 @@ export const deleteSleepLog = async (id: string): Promise<void> => {
     }
   } catch (error) {
     console.error('Error in deleteSleepLog:', error);
+    throw error;
+  }
+};
+
+// ==================== Nutrition / Feeding Log (Q14–Q18) ====================
+
+/** Log (create or update) a day's feeding data. Backend upserts by babyId + date. */
+export const logFeeding = async (
+  data: Omit<FeedingLog, '_id' | 'createdAt' | 'updatedAt'>
+): Promise<FeedingLog> => {
+  try {
+    const headers = await createHeaders();
+    const response = await fetch(`${API_BASE_URL}/nutrition/log`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error((err as any).error || `HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  } catch (error) {
+    console.error('Error logging feeding:', error);
+    throw error;
+  }
+};
+
+/** Get all feeding logs for a baby, newest first. */
+export const getFeedingLogs = async (babyId: string): Promise<FeedingLog[]> => {
+  try {
+    const headers = await createHeaders();
+    const response = await fetch(`${API_BASE_URL}/nutrition/log/${babyId}`, {
+      method: 'GET',
+      headers,
+    });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return response.json();
+  } catch (error) {
+    console.error('Error getting feeding logs:', error);
+    throw error;
+  }
+};
+
+/** Get feeding logs for a specific month (for calendar view). month is 1-indexed. */
+export const getFeedingLogsByMonth = async (
+  babyId: string,
+  year: number,
+  month: number
+): Promise<FeedingLog[]> => {
+  try {
+    const headers = await createHeaders();
+    const response = await fetch(
+      `${API_BASE_URL}/nutrition/log/${babyId}/${year}/${month}`,
+      { method: 'GET', headers }
+    );
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return response.json();
+  } catch (error) {
+    console.error('Error getting feeding logs by month:', error);
+    throw error;
+  }
+};
+
+/** Delete a feeding log entry by ID. */
+export const deleteFeedingLog = async (id: string): Promise<void> => {
+  try {
+    const headers = await createHeaders();
+    const response = await fetch(`${API_BASE_URL}/nutrition/log/${id}`, {
+      method: 'DELETE',
+      headers,
+    });
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+  } catch (error) {
+    console.error('Error deleting feeding log:', error);
     throw error;
   }
 };

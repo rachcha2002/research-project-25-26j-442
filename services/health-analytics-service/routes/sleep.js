@@ -31,9 +31,9 @@ router.post('/', async (req, res) => {
   try {
     const { babyId, date, hours, quality, notes } = req.body;
 
-    // Normalize date to start of day to ensure uniqueness per day
+    // Normalize date to UTC midnight to ensure one-per-day uniqueness
     const logDate = new Date(date);
-    logDate.setHours(0, 0, 0, 0);
+    logDate.setUTCHours(0, 0, 0, 0);
 
     const log = await SleepLog.findOneAndUpdate(
       { babyId, date: logDate },

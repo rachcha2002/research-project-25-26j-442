@@ -2,8 +2,7 @@ const mongoose = require('mongoose');
 
 const SleepLogSchema = new mongoose.Schema({
   babyId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Baby',
+    type: String,
     required: true
   },
   date: {
@@ -16,8 +15,15 @@ const SleepLogSchema = new mongoose.Schema({
   },
   quality: {
     type: String,
-    enum: ['good', 'fair', 'poor'],
-    default: 'good'
+    // Survey Q20 — 5 granular sleep quality categories
+    enum: [
+      'sleepsWell',              // Sleeps well through the night
+      'wakes1-2times',           // Wakes 1–2 times per night
+      'wakesFrequently',         // Wakes frequently during the night
+      'difficultyFallingAsleep', // Has difficulty falling asleep
+      'restless',                // Restless / tosses and turns
+    ],
+    default: 'sleepsWell',
   },
   notes: {
     type: String

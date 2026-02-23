@@ -23,6 +23,9 @@ interface BabyContextType {
     bloodType?: string;
     allergies?: string[];
     photo?: string;
+    birthWeight?: number;
+    isPremature?: boolean;
+    gestationalWeeks?: number;
   }) => Promise<BabyProfile>;
   updateBaby: (
     babyId: string,
@@ -33,6 +36,9 @@ interface BabyContextType {
       bloodType?: string;
       allergies?: string[];
       photo?: string;
+      birthWeight?: number;
+      isPremature?: boolean;
+      gestationalWeeks?: number;
     }
   ) => Promise<BabyProfile>;
   deleteBaby: (babyId: string) => Promise<void>;
@@ -149,6 +155,9 @@ export const BabyProvider: React.FC<BabyProviderProps> = ({ children }) => {
     bloodType?: string;
     allergies?: string[];
     photo?: string;
+    birthWeight?: number;
+    isPremature?: boolean;
+    gestationalWeeks?: number;
   }): Promise<BabyProfile> => {
     try {
       setIsLoading(true);
@@ -183,6 +192,9 @@ export const BabyProvider: React.FC<BabyProviderProps> = ({ children }) => {
       bloodType?: string;
       allergies?: string[];
       photo?: string;
+      birthWeight?: number;
+      isPremature?: boolean;
+      gestationalWeeks?: number;
     }
   ): Promise<BabyProfile> => {
     try {
