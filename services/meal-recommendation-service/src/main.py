@@ -4,6 +4,7 @@ from src.utils.database import Database
 from src.models.profile import MealRequest
 from src.services.meal_engine import MealEngine
 from src.utils.llm_client import get_clinical_constraints
+import json
 
 # Initialize Engine globally
 engine = MealEngine()
@@ -23,24 +24,36 @@ def read_root():
 @app.post("/generate-plan")
 async def generate_plan(request: MealRequest):
     # 1. Call Gemini to get medical constraints
-    clinical_advice = get_clinical_constraints(
+    clinical_advice_raw = get_clinical_constraints(
         request.health_data.medicines, 
         request.health_data.conditions
     )
     
-    # 2. Build the meals using Pandas
-    breakfast = engine.generate_meal("Breakfast", request.preferences.allergies)
-    lunch = engine.generate_meal("Lunch", request.preferences.allergies)
+    # Clean the LLM output to ensure it's valid JSON
+    clinical_advice_raw = clinical_advice_raw.replace("```json", "").replace("```", "").strip()
+    try:
+        clinical_advice = json.loads(clinical_advice_raw)
+    except:
+        clinical_advice = {"error": "Failed to parse LLM advice"}
     
-    # 3. Save a record to MongoDB (Behavioral tracking prep)
+    # 2. Build the FULL DAILY PLAN using Pandas
+    full_day_plan = engine.generate_daily_plan(
+        request.preferences.allergies,
+        request.health_data.daily_calorie_target
+    )
+    
+    # 3. Save a record to MongoDB
     collection = Database.get_collection("generated_plans")
     plan_record = {
         "child_id": request.child_id,
-        "clinical_advice_received": clinical_advice,
-        "plan": {"breakfast": breakfast, "lunch": lunch}
+        "clinical_advice": clinical_advice,
+        "daily_plan": full_day_plan
     }
-    await collection.insert_one(plan_record)
     
-    # Remove the MongoDB ObjectId before returning to the user
+    await collection.insert_one(plan_record)
     plan_record.pop("_id", None) 
-    return {"message": "Plan generated and saved!", "data": plan_record}
+    
+    return {
+        "message": "24-Hour Plan generated and saved!", 
+        "data": plan_record
+    }

@@ -6,6 +6,7 @@ class HealthData(BaseModel):
     status: str
     conditions: List[str]
     medicines: List[str]
+    daily_calorie_target: int  # Added this field
 
 class Preferences(BaseModel):
     diet: str
