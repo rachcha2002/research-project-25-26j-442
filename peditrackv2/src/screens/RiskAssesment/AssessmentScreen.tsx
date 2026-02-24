@@ -239,7 +239,6 @@ export const EmergencyAssessmentScreen: React.FC = () => {
   ];
 
   return (
-    <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         <SecondaryTopBar  />
         <Text style={styles.title}>Emergency Assessment</Text>
@@ -555,7 +554,6 @@ export const EmergencyAssessmentScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-      </View>
   );
 };
 
