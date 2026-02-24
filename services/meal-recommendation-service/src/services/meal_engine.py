@@ -17,22 +17,30 @@ class MealEngine:
         )
         return df[mask]
 
+    def _filter_dislikes(self, df, disliked_list):
+        """Removes items the child has explicitly rejected in the past."""
+        if not disliked_list:
+            return df
+        # Keep rows where the 'Item Name' is NOT in the disliked list
+        mask = ~df['Item Name'].isin(disliked_list)
+        return df[mask]
+
     def _filter_by_time(self, df, meal_type):
         return df[df['Ideal_Meal_Time'].str.contains(meal_type, na=False, case=False)]
 
-    def generate_meal(self, meal_type, allergies):
-        safe_bases = self._filter_by_time(self._filter_allergies(self.base_df, allergies), meal_type)
+    def generate_meal(self, meal_type, allergies, dislikes=[]):
+        safe_bases = self._filter_by_time(self._filter_dislikes(self._filter_allergies(self.base_df, allergies), dislikes), meal_type)
         if safe_bases.empty:
             return None
             
         selected_base = safe_bases.sample(1).iloc[0]
-        safe_proteins = self._filter_by_time(self._filter_allergies(self.proteins_df, allergies), meal_type)
+        safe_proteins = self._filter_by_time(self._filter_dislikes(self._filter_allergies(self.proteins_df, allergies), dislikes), meal_type)
         selected_protein = safe_proteins.sample(1).iloc[0] if not safe_proteins.empty else None
-        safe_veggies = self._filter_by_time(self._filter_allergies(self.veggies_df, allergies), meal_type)
+        safe_veggies = self._filter_by_time(self._filter_dislikes(self._filter_allergies(self.veggies_df, allergies), dislikes), meal_type)
         selected_veg = safe_veggies.sample(1).iloc[0] if not safe_veggies.empty else None
-        safe_dairy = self._filter_by_time(self._filter_allergies(self.dairy_df, allergies), meal_type)
+        safe_dairy = self._filter_by_time(self._filter_dislikes(self._filter_allergies(self.dairy_df, allergies), dislikes), meal_type)
         selected_dairy = safe_dairy.sample(1).iloc[0] if not safe_dairy.empty else None
-        safe_fruits = self._filter_by_time(self._filter_allergies(self.fruits_df, allergies), meal_type)
+        safe_fruits = self._filter_by_time(self._filter_dislikes(self._filter_allergies(self.fruits_df, allergies), dislikes), meal_type)
         selected_fruit = safe_fruits.sample(1).iloc[0] if not safe_fruits.empty else None
 
         total_cals = int(selected_base.get('Calories (kcal)', 0))
@@ -57,29 +65,57 @@ class MealEngine:
             "total_calories": total_cals
         }
 
-    def generate_daily_plan(self, allergies, target_calories):
-        """Assembles a full day of meals and compares against the calorie target."""
-        
-        # Define the structure of a Sri Lankan child's day
+    def generate_daily_plan(self, allergies, target_calories, dislikes=None):
+        """Assembles a full day of meals using Stochastic Optimization to hit calorie targets."""
+        if dislikes is None:
+            dislikes = []
+            
         schedule = ["Breakfast", "Snack", "Lunch", "Tea Time", "Dinner"]
-        daily_plan = {}
-        daily_total_calories = 0
-
-        for meal_time in schedule:
-            meal = self.generate_meal(meal_time, allergies)
-            if meal:
-                daily_plan[meal_time] = meal
-                daily_total_calories += meal["total_calories"]
-
-        # Calculate how well the ML did against the target
-        calorie_difference = daily_total_calories - target_calories
+        
+        best_plan = {}
+        best_difference = float('inf') # Start with an infinitely bad score
+        best_total_calories = 0
+        iterations_run = 0
+        
+        # ---------------------------------------------------------
+        # ML Concept: Stochastic Optimization (Loss Minimization)
+        # Generate up to 15 candidate days and pick the best one.
+        # ---------------------------------------------------------
+        for i in range(15):
+            iterations_run = i + 1
+            current_plan = {}
+            current_total = 0
+            
+            for meal_time in schedule:
+                # Generate a single meal
+                meal = self.generate_meal(meal_time, allergies, dislikes)
+                if meal and "error" not in meal:
+                    current_plan[meal_time] = meal
+                    current_total += meal["total_calories"]
+            
+            # Calculate the "Loss" (How far off are we from the target?)
+            loss = abs(current_total - target_calories)
+            
+            # If this candidate is better than our previous best, save it!
+            if loss < best_difference:
+                best_difference = loss
+                best_plan = current_plan
+                best_total_calories = current_total
+                
+            # Early Stopping: If we hit within 40 kcal of the target, it's perfect. Stop computing.
+            if best_difference <= 40:
+                break
+                
+        # Calculate the final signed difference (+ means surplus, - means deficit)
+        final_difference = best_total_calories - target_calories
         
         return {
-            "meals": daily_plan,
+            "meals": best_plan,
             "metrics": {
                 "target_calories": target_calories,
-                "achieved_calories": daily_total_calories,
-                "difference": calorie_difference,
-                "status": "Target Met" if abs(calorie_difference) <= 150 else "Requires Adjustment"
+                "achieved_calories": best_total_calories,
+                "difference": final_difference,
+                "optimization_iterations": iterations_run,
+                "status": "Highly Optimized" if abs(final_difference) <= 75 else "Best Possible Match"
             }
         }

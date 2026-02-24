@@ -16,3 +16,10 @@ class MealRequest(BaseModel):
     child_id: str
     health_data: HealthData
     preferences: Preferences
+
+class MealFeedback(BaseModel):
+    child_id: str
+    meal_type: str
+    action: str
+    rejected_items: List[str] = []
+    reason: str = ""

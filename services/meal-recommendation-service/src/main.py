@@ -5,6 +5,7 @@ from src.models.profile import MealRequest
 from src.services.meal_engine import MealEngine
 from src.utils.llm_client import get_clinical_constraints
 import json
+from src.models.profile import MealFeedback
 
 # Initialize Engine globally
 engine = MealEngine()
@@ -23,9 +24,14 @@ def read_root():
 
 @app.post("/generate-plan")
 async def generate_plan(request: MealRequest):
+
+    profiles_collection = Database.get_collection("nutrition_profiles")
+    profile = await profiles_collection.find_one({"child_id": request.child_id})
+
+    dislikes = profile.get("disliked_ingredients", []) if profile else []
     # 1. Call Gemini to get medical constraints
     clinical_advice_raw = get_clinical_constraints(
-        request.health_data.medicines, 
+        request.health_data.medicines,
         request.health_data.conditions
     )
     
@@ -39,7 +45,8 @@ async def generate_plan(request: MealRequest):
     # 2. Build the FULL DAILY PLAN using Pandas
     full_day_plan = engine.generate_daily_plan(
         request.preferences.allergies,
-        request.health_data.daily_calorie_target
+        request.health_data.daily_calorie_target,
+        dislikes
     )
     
     # 3. Save a record to MongoDB
@@ -56,4 +63,36 @@ async def generate_plan(request: MealRequest):
     return {
         "message": "24-Hour Plan generated and saved!", 
         "data": plan_record
+    }
+
+@app.post("/meal-feedback")
+async def process_feedback(feedback: MealFeedback):
+    profiles_collection = Database.get_collection("nutrition_profiles")
+    
+    # 1. Fetch or initialize the child's profile
+    profile = await profiles_collection.find_one({"child_id": feedback.child_id})
+    if not profile:
+        profile = {"child_id": feedback.child_id, "disliked_ingredients": [], "liked_ingredients": []}
+    
+    # 2. Apply Behavioral Logic (The ML aspect)
+    if feedback.action == "reject":
+        # Add rejected items to the blacklist so they aren't suggested again soon
+        for item in feedback.rejected_items:
+            if item not in profile.get("disliked_ingredients", []):
+                profile.setdefault("disliked_ingredients", []).append(item)
+                
+    elif feedback.action == "accept":
+        # We can track what works well!
+        pass # We will keep it simple for now, but you can expand this to boost weights
+        
+    # 3. Save the updated profile back to MongoDB
+    await profiles_collection.update_one(
+        {"child_id": feedback.child_id},
+        {"$set": profile},
+        upsert=True
+    )
+    
+    return {
+        "message": f"Feedback processed. System learned from {feedback.action}.",
+        "updated_dislikes": profile.get("disliked_ingredients", [])
     }
