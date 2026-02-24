@@ -8,6 +8,7 @@ const TeleconsultationRequestSchema = new mongoose.Schema({
     assessment_id: String, 
   },
   risk_level: { type: String, enum: ['low', 'medium', 'high'], required: true },
+  risk_priority: { type: Number, min: 0, default: 0 },
   risk_score: { type: Number, required: true },
   status: { type: String, enum: ['pending', 'accepted', 'completed'], default: 'pending' },
   requestedAt: { type: Date, default: Date.now },

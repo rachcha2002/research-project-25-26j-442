@@ -163,10 +163,10 @@ export const TeleconsultationScreen: React.FC = () => {
                 try {
                   // Use requestId as identity for now
                   const identity = requestId;
-                  const { token } = await getVideoToken(identity, videoRoom);
+                  const { token, url } = await getVideoToken(identity, videoRoom);
                   router.push({
                     pathname: "/videocall-screen",
-                    params: { token, roomName: videoRoom, identity },
+                    params: { token, roomName: videoRoom, identity, serverUrl: url || '', requestId },
                   });
                 } catch (err) {
                   alert("Failed to join video call. Please try again.");
@@ -188,9 +188,27 @@ export const TeleconsultationScreen: React.FC = () => {
             </TouchableOpacity>
           )}
           {status === 'accepted' && (
-            <TouchableOpacity style={styles.contactBtn} onPress={() => router.push('/videocall-screen')}>
+            <TouchableOpacity
+              style={styles.contactBtn}
+              onPress={async () => {
+                if (!requestId || !videoRoom || joining) return;
+                setJoining(true);
+                try {
+                  const identity = requestId;
+                  const { token, url } = await getVideoToken(identity, videoRoom);
+                  router.push({
+                    pathname: '/videocall-screen',
+                    params: { token, roomName: videoRoom, identity, serverUrl: url || '', requestId },
+                  });
+                } catch (err) {
+                  alert('Failed to connect call. Please try again.');
+                } finally {
+                  setJoining(false);
+                }
+              }}
+            >
               <Ionicons name="call" size={18} color="#fff" />
-              <Text style={styles.contactBtnText}>Contact Doctor</Text>
+              <Text style={styles.contactBtnText}>{joining ? 'Connecting...' : 'Contact Doctor'}</Text>
             </TouchableOpacity>
           )}
         </View>

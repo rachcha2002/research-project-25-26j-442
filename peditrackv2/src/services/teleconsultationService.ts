@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://10.72.187.59:4000/api/teleconsultation';
+const API_BASE_URL = process.env.EXPO_PUBLIC_TELECONSULTATION_API_URL || 'http://10.72.187.59:4001/api/teleconsultation';
 
 export interface TeleconsultationRequestPayload {
   patient: {
@@ -75,7 +75,7 @@ export const getQueuePosition = async (requestId: string): Promise<{ position: n
   }
 };
 
-export const getVideoToken = async (identity: string, room: string): Promise<{ token: string }> => {
+export const getVideoToken = async (identity: string, room: string): Promise<{ token: string; url?: string }> => {
   try {
     const response = await fetch(`${API_BASE_URL}/video-token`, {
       method: 'POST',
@@ -90,6 +90,24 @@ export const getVideoToken = async (identity: string, room: string): Promise<{ t
     return await response.json();
   } catch (error) {
     console.error('Error fetching video token:', error);
+    throw error;
+  }
+};
+
+export const completeTeleconsultationRequest = async (requestId: string): Promise<TeleconsultationRequest> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/${requestId}/complete`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error completing teleconsultation request:', error);
     throw error;
   }
 };
