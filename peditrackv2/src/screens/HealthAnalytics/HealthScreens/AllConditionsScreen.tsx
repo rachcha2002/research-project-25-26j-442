@@ -6,6 +6,7 @@ import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { getHealthRecords, HealthRecord, deleteHealthRecord } from '@/services/healthAnalyticsService';
+import { useBaby } from '@/contexts/BabyContext';
 
 type ConditionType = 'acute' | 'chronic' | 'resolved';
 type Severity = 'mild' | 'moderate' | 'severe';
@@ -24,15 +25,13 @@ interface Condition {
 
 export const AllConditionsScreen: React.FC = () => {
   const router = useRouter();
+  const { selectedBaby } = useBaby();
   const [selectedCondition, setSelectedCondition] = useState<Condition | null>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [conditions, setConditions] = useState<Condition[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // TODO: Get this from route params or context
-  const babyId = '674525cc0a8a8b29b8a2bf9c';
 
   // Map backend HealthRecord to frontend Condition
   const mapHealthRecordToCondition = (record: HealthRecord): Condition => {
@@ -52,9 +51,14 @@ export const AllConditionsScreen: React.FC = () => {
   };
 
   const fetchConditions = async () => {
+    if (!selectedBaby) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setError(null);
-      const records = await getHealthRecords(babyId, 'illness');
+      const records = await getHealthRecords(selectedBaby._id, 'illness');
       const mappedConditions = records.map(mapHealthRecordToCondition);
       setConditions(mappedConditions);
     } catch (err) {
@@ -68,7 +72,7 @@ export const AllConditionsScreen: React.FC = () => {
 
   useEffect(() => {
     fetchConditions();
-  }, []);
+  }, [selectedBaby]);
 
   const handleRefresh = () => {
     setRefreshing(true);

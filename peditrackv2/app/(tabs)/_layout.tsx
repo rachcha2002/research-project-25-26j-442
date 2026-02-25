@@ -1,22 +1,29 @@
-import { Tabs, useSegments } from 'expo-router';
+import { Tabs, useSegments, useRouter } from 'expo-router';
 import React from 'react';
 import { Platform, StyleSheet } from 'react-native';
 import { TabBarIcon } from '@/components/BottomNav';
 import { TopBar } from '@/components/TopBar';
 import { Colors } from '@/constants/Colors';
+import { useAuth } from '../../src/contexts/AuthContext';
+import { useBaby } from '../../src/contexts/BabyContext';
 
 export default function TabLayout() {
   const segments = useSegments();
+  const router = useRouter();
+  const { user } = useAuth();
+  const { selectedBaby } = useBaby();
   const hideUI = (segments as string[]).includes('feeding');
 
   return (
     <>
       {!hideUI && (
         <TopBar 
-          username="Amanda"
-          childName="Thisal"
-          onProfilePress={() => console.log('Profile pressed')}
+          username={user?.name}
+          childName={selectedBaby?.name}
+          profileImage={user?.profilePicture}
+          onProfilePress={() => router.push('/profile')}
           onNotificationPress={() => console.log('Notification pressed')}
+          onChildNamePress={() => router.push('/profile/baby-profiles')}
         />
       )}
       <Tabs

@@ -1,13 +1,37 @@
-import React from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ImageBackground } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
-import { useRouter } from 'expo-router';
-import Svg, { Rect, Defs, Pattern, Image as SvgImage, Use } from 'react-native-svg';
+import { useRouter, useFocusEffect } from 'expo-router';
+import { useBaby } from '../contexts/BabyContext';
+import { getLatestMeasurement, Measurement } from '../services/healthAnalyticsService';
 
 export const HealthScreen: React.FC = () => {
   const router = useRouter();
+  const { selectedBaby } = useBaby();
+  const [latestMeasurement, setLatestMeasurement] = useState<Measurement | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchLatestMeasurement = async () => {
+    if (!selectedBaby) return;
+    
+    try {
+      setIsLoading(true);
+      const data = await getLatestMeasurement(selectedBaby._id);
+      setLatestMeasurement(data);
+    } catch (error) {
+      console.error('Error fetching latest measurement:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchLatestMeasurement();
+    }, [selectedBaby])
+  );
 
   const handleHealthPress = () => {
     router.push('/health-analytics/health-details');
@@ -24,6 +48,23 @@ export const HealthScreen: React.FC = () => {
   const handleAIInsightsPress = () => {
     router.push('/health-analytics/ai-insights');
   };
+
+  const handleSleepNutritionPress = () => {
+    router.push('/health-analytics/sleep/' as any);
+  };
+
+  // Helper to format date
+  const formatDate = (dateString: string) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  // Calculate percentiles (mock for now or fetch from API if available in measurement object)
+  // For this implementation we'll just show the values
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
@@ -46,33 +87,61 @@ export const HealthScreen: React.FC = () => {
         {/* Latest Growth Card */}
         <View style={styles.growthCard}>
           <View style={styles.growthHeader}>
-            <Ionicons name="trending-up" size={20} color={Colors.primary.light} />
-            <Text style={styles.growthHeaderText}>Latest Growth</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Ionicons name="trending-up" size={20} color={Colors.primary.light} />
+              <Text style={styles.growthHeaderText}>Latest Growth</Text>
+            </View>
+            {latestMeasurement && (
+              <Text style={styles.dateText}>{formatDate(latestMeasurement.measurementDate)}</Text>
+            )}
           </View>
           
-          <View style={styles.metricsContainer}>
-            <View style={styles.metricRow}>
-              <Text style={styles.metricLabel}>Height: 95.5 cm</Text>
-              <View style={styles.percentileBadge}>
-                <Text style={styles.percentileText}>48th %</Text>
-              </View>
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={Colors.primary.DEFAULT} />
+              <Text style={styles.loadingText}>Loading data...</Text>
             </View>
-            
-            <View style={styles.metricRow}>
-              <Text style={styles.metricLabel}>Weight: 14.2 kg</Text>
-              <View style={styles.percentileBadge}>
-                <Text style={styles.percentileText}>52nd %</Text>
+          ) : latestMeasurement ? (
+            <>
+              <View style={styles.metricsContainer}>
+                <View style={styles.metricRow}>
+                  <Text style={styles.metricLabel}>
+                    Height: {latestMeasurement.height.value} {latestMeasurement.height.unit}
+                  </Text>
+                  {/* Placeholder for percentile if available from API in future */}
+                  {/* <View style={styles.percentileBadge}>
+                    <Text style={styles.percentileText}>48th %</Text>
+                  </View> */}
+                </View>
+                
+                <View style={styles.metricRow}>
+                  <Text style={styles.metricLabel}>
+                    Weight: {latestMeasurement.weight.value} {latestMeasurement.weight.unit}
+                  </Text>
+                  {/* <View style={styles.percentileBadge}>
+                    <Text style={styles.percentileText}>52nd %</Text>
+                  </View> */}
+                </View>
               </View>
+
+              <View style={styles.statusContainer}>
+                <Ionicons name="checkmark-circle" size={20} color="#10B981" />
+                <Text style={styles.statusText}>Recorded</Text>
+              </View>
+            </>
+          ) : (
+            <View style={styles.emptyStateContainer}>
+              <Text style={styles.emptyStateText}>No growth data recorded yet</Text>
             </View>
-          </View>
+          )}
 
-          <View style={styles.statusContainer}>
-            <Ionicons name="checkmark-circle" size={20} color="#10B981" />
-            <Text style={styles.statusText}>On Track</Text>
-          </View>
-
-          <TouchableOpacity style={styles.viewDetailsButton}>
-            <Text style={styles.viewDetailsText}>View Details</Text>
+          <TouchableOpacity 
+            style={styles.viewDetailsButton}
+            onPress={handleGrowthPress}
+          >
+            <Text style={styles.viewDetailsText}>
+              {latestMeasurement ? 'View Details' : 'Add First Measurement'}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -129,6 +198,27 @@ export const HealthScreen: React.FC = () => {
               <Text style={styles.navCardTitle}>AI Insights</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Sleep & Nutrition — full-width card */}
+          <TouchableOpacity
+            style={styles.sleepNutCard}
+            onPress={handleSleepNutritionPress}
+            activeOpacity={0.7}
+          >
+            <View style={styles.sleepNutLeft}>
+              <View style={styles.sleepNutIconRow}>
+                <View style={[styles.sleepNutIcon, { backgroundColor: '#EEF2FF' }]}>
+                  <Ionicons name="moon" size={26} color="#6366F1" />
+                </View>
+                <View style={[styles.sleepNutIcon, { backgroundColor: '#F0FDF4' }]}>
+                  <Text style={{ fontSize: 22 }}>🥗</Text>
+                </View>
+              </View>
+              <Text style={styles.sleepNutTitle}>Sleep & Nutrition</Text>
+              <Text style={styles.sleepNutSub}>Log daily sleep and food intake</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={22} color={Colors.inactive} />
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -262,6 +352,44 @@ const styles = StyleSheet.create({
     gap: 16,
     marginBottom: 16,
   },
+  sleepNutCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  sleepNutLeft: {
+    flex: 1,
+  },
+  sleepNutIconRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 12,
+  },
+  sleepNutIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sleepNutTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.dark,
+    marginBottom: 4,
+  },
+  sleepNutSub: {
+    fontSize: 13,
+    color: Colors.inactive,
+  },
   navCard: {
     flex: 1,
     backgroundColor: Colors.white,
@@ -308,5 +436,30 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     textAlign: 'center',
+  },
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    marginTop: 8,
+    color: Colors.gray.DEFAULT,
+    fontSize: 14,
+  },
+  emptyStateContainer: {
+    padding: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyStateText: {
+    color: Colors.gray.DEFAULT,
+    fontSize: 14,
+    fontStyle: 'italic',
+  },
+  dateText: {
+    marginLeft: 'auto',
+    fontSize: 12,
+    color: Colors.gray.DEFAULT,
   },
 });

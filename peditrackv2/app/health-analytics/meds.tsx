@@ -1,3 +1,4 @@
-import { MedsScreen } from '@/screens/HealthAnalytics';
+import { MedicationsListScreen } from '@/screens/HealthAnalytics/MedsScreens';
 
-export default MedsScreen;
+export default MedicationsListScreen;
+

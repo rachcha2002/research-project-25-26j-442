@@ -3,8 +3,7 @@ const mongoose = require('mongoose');
 const medicationSchema = new mongoose.Schema({
   // Reference to baby
   babyId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Baby',
+    type: String, // Changed from ObjectId to String to match frontend
     required: true,
     index: true,
   },
