@@ -2,7 +2,7 @@
 // For Physical Device: use your computer's IP address (check with ipconfig)
 // Current Wi-Fi IP: 192.168.1.3
 
-const API_BASE_URL = 'http://10.72.187.59:3001/api';
+const API_BASE_URL = 'https://peditrack-chat-service-production-0d1d.up.railway.app/api';
 
 
 
@@ -43,7 +43,7 @@ export interface ConversationHistory {
 export const sendChatMessage = async (
     message: string,
     conversationId?: string,
-    provider: string = 'openai'
+    provider: string = 'google'
 ): Promise<SendMessageResponse> => {
     try {
         const response = await fetch(`${API_BASE_URL}/chat/message`, {
@@ -132,7 +132,7 @@ export const sendChatMessageWithImage = async (
     message: string,
     imageUri: string,
     conversationId?: string,
-    provider: string = 'openai'
+    provider: string = 'google'
 ): Promise<SendMessageResponse> => {
     try {
         const formData = new FormData();

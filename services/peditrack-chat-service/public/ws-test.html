@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test</title>
+</head>
+<body>
+    <h1>WebSocket Connection Test</h1>
+    <div id="status">Connecting...</div>
+    <button id="testBtn">Send Test Message</button>
+    <div id="log"></div>
+
+    <script>
+        const log = document.getElementById('log');
+        const status = document.getElementById('status');
+        const testBtn = document.getElementById('testBtn');
+
+        function addLog(message) {
+            const p = document.createElement('p');
+            p.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            log.appendChild(p);
+            console.log(message);
+        }
+
+        addLog('Attempting to connect to ws://192.168.1.2:3001/api/voice/live');
+        
+        const ws = new WebSocket('ws://192.168.1.2:3001/api/voice/live');
+
+        ws.onopen = () => {
+            status.textContent = 'Connected!';
+            status.style.color = 'green';
+            addLog('✅ WebSocket connected successfully');
+        };
+
+        ws.onmessage = (event) => {
+            addLog('📨 Received: ' + event.data);
+        };
+
+        ws.onerror = (error) => {
+            status.textContent = 'Error!';
+            status.style.color = 'red';
+            addLog('❌ WebSocket error: ' + error);
+        };
+
+        ws.onclose = () => {
+            status.textContent = 'Disconnected';
+            status.style.color = 'orange';
+            addLog('🔌 WebSocket closed');
+        };
+
+        testBtn.addEventListener('click', () => {
+            if (ws.readyState === WebSocket.OPEN) {
+                const testMessage = JSON.stringify({ type: 'test', message: 'Hello from test page' });
+                ws.send(testMessage);
+                addLog('📤 Sent: ' + testMessage);
+            } else {
+                addLog('❌ WebSocket not connected. State: ' + ws.readyState);
+            }
+        });
+    </script>
+</body>
+</html>
