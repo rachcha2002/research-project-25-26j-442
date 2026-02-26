@@ -33,6 +33,11 @@ export default function AddBabyScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  // Birth & prematurity fields (Survey Q5a, Q5b)
+  const [birthWeight, setBirthWeight] = useState('');
+  const [isPremature, setIsPremature] = useState<'full_term' | 'premature' | 'dont_know' | null>(null);
+  const [gestationalWeeks, setGestationalWeeks] = useState('');
+
   const handlePickPhoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -72,6 +77,13 @@ export default function AddBabyScreen() {
         gender,
         bloodType: bloodType.trim() || undefined,
         allergies: allergiesArray.length > 0 ? allergiesArray : undefined,
+        // Birth & prematurity data (Survey Q5a, Q5b)
+        birthWeight: birthWeight.trim() ? parseFloat(birthWeight.trim()) : undefined,
+        isPremature: isPremature === 'premature' ? true : isPremature === 'full_term' ? false : undefined,
+        gestationalWeeks:
+          isPremature === 'premature' && gestationalWeeks.trim()
+            ? parseInt(gestationalWeeks.trim(), 10)
+            : undefined,
       };
 
       const newBaby = await createBaby(babyData);
@@ -231,6 +243,56 @@ export default function AddBabyScreen() {
                 numberOfLines={3}
               />
             </View>
+
+            {/* ── Birth & Prematurity (Survey Q5a, Q5b) ── */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Birth Weight in kg (Optional)</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="e.g., 3.2"
+                value={birthWeight}
+                onChangeText={setBirthWeight}
+                keyboardType="decimal-pad"
+              />
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>Was your child born prematurely? (Optional)</Text>
+              <View style={styles.genderContainer}>
+                {(['full_term', 'premature', 'dont_know'] as const).map((opt) => (
+                  <TouchableOpacity
+                    key={opt}
+                    style={[
+                      styles.genderButton,
+                      isPremature === opt && styles.genderButtonActive,
+                    ]}
+                    onPress={() => setIsPremature(opt)}
+                  >
+                    <Text
+                      style={[
+                        styles.genderText,
+                        isPremature === opt && styles.genderTextActive,
+                      ]}
+                    >
+                      {opt === 'full_term' ? 'Full Term' : opt === 'premature' ? 'Premature' : "Don't Know"}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {isPremature === 'premature' && (
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Gestational Weeks at Birth</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g., 34"
+                  value={gestationalWeeks}
+                  onChangeText={setGestationalWeeks}
+                  keyboardType="number-pad"
+                />
+              </View>
+            )}
 
             <View style={styles.buttonContainer}>
               <TouchableOpacity

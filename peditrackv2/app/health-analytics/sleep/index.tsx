@@ -1,5 +1,5 @@
-import { SleepTrackerScreen } from '@/screens/HealthAnalytics/SleepScreens/SleepTrackerScreen';
+import { SleepNutritionScreen } from '@/screens/HealthAnalytics/SleepScreens/SleepNutritionScreen';
 
-export default function SleepTrackerRoute() {
-  return <SleepTrackerScreen />;
+export default function SleepNutritionRoute() {
+  return <SleepNutritionScreen />;
 }

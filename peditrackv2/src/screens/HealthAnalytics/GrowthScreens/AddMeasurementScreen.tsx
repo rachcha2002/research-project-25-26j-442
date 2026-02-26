@@ -67,6 +67,7 @@ export const AddMeasurementScreen: React.FC = () => {
     try {
       const measurementPayload = {
         babyId: selectedBaby._id,
+        dateOfBirth: selectedBaby.dateOfBirth, // used by backend to compute ageInMonths, not stored
         measurementDate: measurementDate.toISOString().split('T')[0], // Format: YYYY-MM-DD
         height: {
           value: height,

@@ -4,8 +4,13 @@ const conversationStore = require('../utils/conversationStore');
 const { v4: uuidv4 } = require('uuid');
 
 /**
+ * @deprecated This controller is deprecated. Use Gemini Live WebSocket API instead.
+ * 
  * Voice Controller
- * Handles voice-based chat interactions
+ * Handles voice-based chat interactions using OpenAI Whisper/TTS
+ * 
+ * DEPRECATION NOTICE: This file will be removed in a future version.
+ * Please use the WebSocket endpoint at /api/voice/live for real-time voice conversations.
  */
 class VoiceController {
     /**

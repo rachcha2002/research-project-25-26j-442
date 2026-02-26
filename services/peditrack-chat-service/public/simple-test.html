@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Live Connection Test (Text Only)</title>
+    <style>
+        body { font-family: -apple-system, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; background: #f0f2f5; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; border: none; border-radius: 6px; background: #007bff; color: white; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        #log { margin-top: 20px; padding: 10px; background: #1e1e1e; color: #0f0; font-family: monospace; height: 300px; overflow-y: auto; border-radius: 6px; }
+        .status { margin-bottom: 15px; font-weight: bold; }
+        .controls { margin-top: 15px; display: flex; gap: 10px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Gemini Live Connectivity Test</h2>
+        <div class="status" id="status">Status: Disconnected</div>
+        
+        <div>
+            <button id="connectBtn">1. Connect</button>
+            <button id="sendBtn" disabled>2. Send "Hello"</button>
+        </div>
+
+        <div id="log"></div>
+    </div>
+
+    <script>
+        // Using Railway hosted backend
+        const SERVER_HOST = 'peditrack-chat-service-production-0d1d.up.railway.app';
+        const WS_URL = `wss://${SERVER_HOST}/ws/live`;
+        
+        let ws;
+        const logDiv = document.getElementById('log');
+        const statusDiv = document.getElementById('status');
+        const connectBtn = document.getElementById('connectBtn');
+        const sendBtn = document.getElementById('sendBtn');
+
+        function log(msg) {
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div>[${time}] ${msg}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(msg);
+        }
+
+        connectBtn.onclick = () => {
+            log(`Connecting to ${WS_URL}...`);
+            ws = new WebSocket(WS_URL);
+
+            ws.onopen = () => {
+                log('✅ WebSocket Connected');
+                statusDiv.innerText = 'Status: Connected';
+                statusDiv.style.color = 'green';
+                sendBtn.disabled = false;
+                connectBtn.disabled = true;
+            };
+
+            ws.onmessage = (event) => {
+                const msg = JSON.parse(event.data);
+                log(`📩 Received: ${JSON.stringify(msg)}`);
+
+                if (msg.type === 'text') {
+                    log(`🤖 AI Information: "${msg.text}"`);
+                }
+            };
+
+            ws.onclose = () => {
+                log('❌ Disconnected');
+                statusDiv.innerText = 'Status: Disconnected';
+                statusDiv.style.color = 'red';
+                sendBtn.disabled = true;
+                connectBtn.disabled = false;
+            };
+
+            ws.onerror = (err) => {
+                log('⚠️ Error: Check console for details');
+                console.error(err);
+            };
+        };
+
+        sendBtn.onclick = () => {
+            if (!ws) return;
+            const text = "Hello! Can you hear me?";
+            log(`📤 Sending text: "${text}"`);
+            
+            ws.send(JSON.stringify({
+                type: 'text',
+                text: text
+            }));
+        };
+    </script>
+</body>
+</html>
