@@ -17,9 +17,13 @@ class MealOptimizerEngine:
         all_foods = pd.concat(self.datasets.values(), ignore_index=True)
         self.ml_model = PediatricMLRecommender(all_foods)
 
-    def _apply_safety_filters(self, df: pd.DataFrame, allergies: list, dislikes: list) -> pd.DataFrame:
+    def _apply_safety_filters(self, df: pd.DataFrame, allergies: list, dislikes: list,meal_type: str) -> pd.DataFrame:
         """PHASE 2: Absolute mathematical elimination of allergens and blacklisted items."""
         safe_df = df.copy()
+
+        if not safe_df.empty and 'Ideal_Meal_Time' in safe_df.columns:
+            safe_df = safe_df[safe_df['Ideal_Meal_Time'].str.contains(meal_type, case=False, na=False) | 
+                            safe_df['Ideal_Meal_Time'].str.contains("Any", case=False, na=False)]
         
         # 1. Eliminate Allergies (Assuming your CSV has an 'Allergies' column)
         if not safe_df.empty and allergies:
@@ -52,14 +56,29 @@ class MealOptimizerEngine:
                 
         # MAIN MEAL LOGIC: Base + Protein + Veg
         else:
-            for category in ["base", "protein", "veggie"]:
+            for category in ["base", "protein"]:
                 item, score = self.ml_model.predict_optimal_food(safe_dfs[category], liked_history)
                 if item is not None:
                     plate[category] = item['Item Name']
                     total_meal_cals += item['Calories (kcal)']
                     total_score += score
                     items_count += 1
+            veg_count = 2 if meal_type == "Breakfast" else 3
 
+            available_veggies = safe_dfs["veggie"].copy()
+            for i in range(veg_count):
+                if available_veggies.empty: break
+                
+                veg_item, veg_score = self.ml_model.predict_optimal_food(available_veggies, liked_history)
+                if veg_item is not None:
+                    plate[f'veggie_{i+1}'] = veg_item['Item Name']
+                    total_meal_cals += veg_item['Calories (kcal)']
+                    total_score += veg_score
+                    items_count += 1
+                    # Remove the selected veggie to avoid duplicates
+                    available_veggies = available_veggies[available_veggies['Item Name'] != veg_item['Item Name']]
+                else:
+                    break
         avg_score = (total_score / items_count) if items_count > 0 else 0
         return {"meal_type": meal_type, "plate": plate, "calories": total_meal_cals}, avg_score
 
@@ -76,12 +95,6 @@ class MealOptimizerEngine:
         else:
             schedule = ["Breakfast", "Snack", "Lunch", "Tea Time", "Dinner"]
 
-        # Pre-filter all datasets for safety to save processing time in the loop
-        safe_dfs = {
-            name: self._apply_safety_filters(df, allergies, dislikes)
-            for name, df in self.datasets.items()
-        }
-
         best_plan = {}
         min_loss = float('inf')
         best_similarity_score = 0
@@ -94,6 +107,12 @@ class MealOptimizerEngine:
             day_similarity_sum = 0
             
             for meal_time in schedule:
+
+                # Pre-filter all datasets for safety to save processing time in the loop
+                safe_dfs = {
+                    name: self._apply_safety_filters(df, allergies, dislikes, meal_time)
+                    for name, df in self.datasets.items()
+                }
                 meal_data, meal_score = self._generate_single_meal(meal_time, safe_dfs, likes)
                 if meal_data["plate"]: # Only add if items were found
                     current_day[meal_time] = meal_data
