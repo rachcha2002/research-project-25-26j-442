@@ -7,6 +7,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { addHealthRecord, getHealthRecordById, updateHealthRecord } from '@/services/healthAnalyticsService';
+import { useBaby } from '@/contexts/BabyContext';
 
 type ConditionType = 'acute' | 'chronic' | 'resolved';
 type Severity = 'mild' | 'moderate' | 'severe';
@@ -14,6 +15,7 @@ type Status = 'monitoring' | 'active' | 'resolved' | 'underTreatment';
 
 export const AddConditionScreen: React.FC = () => {
   const router = useRouter();
+  const { selectedBaby } = useBaby();
   const { recordId } = useLocalSearchParams<{ recordId?: string }>();
   const isEditMode = !!recordId;
   
@@ -29,9 +31,6 @@ export const AddConditionScreen: React.FC = () => {
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingData, setLoadingData] = useState(isEditMode);
-  
-  // TODO: Get this from route params or context
-  const [babyId] = useState('674525cc0a8a8b29b8a2bf9c'); // Temporary placeholder
 
   const symptoms = [
     { id: 'sneezing', label: 'Sneezing' },
@@ -96,7 +95,7 @@ export const AddConditionScreen: React.FC = () => {
   const handleSave = async () => {
     console.log('=== SAVE BUTTON PRESSED ===');
     console.log('Condition Name:', conditionName);
-    console.log('Baby ID:', babyId);
+    console.log('Baby ID:', selectedBaby?._id);
     console.log('Status:', status);
     console.log('Severity:', severity);
     
@@ -107,9 +106,9 @@ export const AddConditionScreen: React.FC = () => {
       return;
     }
 
-    if (!babyId) {
-      console.log('Validation failed: No baby ID');
-      Alert.alert('Error', 'Baby ID is required');
+    if (!selectedBaby?._id) {
+      console.log('Validation failed: No baby selected');
+      Alert.alert('Error', 'Please select a baby profile first');
       return;
     }
 
@@ -117,7 +116,7 @@ export const AddConditionScreen: React.FC = () => {
     setLoading(true);
     try {
       const healthRecordData = {
-        babyId,
+        babyId: selectedBaby._id,
         recordDate: diagnosisDate.toISOString().split('T')[0], // Format: YYYY-MM-DD
         recordType: 'illness' as const, // Using 'illness' as default for conditions
         diagnosis: conditionName,
@@ -381,15 +380,23 @@ export const AddConditionScreen: React.FC = () => {
               onPress={handleSave}
               disabled={loading}
             >
-              {loading ? (
-                <ActivityIndicator size="small" color={Colors.white} />
-              ) : (
-                <Text style={styles.saveButtonText}>{isEditMode ? 'Update Condition' : 'Save Condition'}</Text>
-              )}
+              <Text style={styles.saveButtonText}>{isEditMode ? 'Update' : 'Save'}</Text>
             </TouchableOpacity>
           </View>
           </>) /* End of !loadingData wrapper */}
         </ScrollView>
+        
+        {/* Full-screen loader overlay */}
+        {loading && (
+          <View style={styles.loaderOverlay}>
+            <View style={styles.loaderContainer}>
+              <ActivityIndicator size="large" color={Colors.primary.DEFAULT} />
+              <Text style={styles.loaderText}>
+                {isEditMode ? 'Updating condition...' : 'Saving condition...'}
+              </Text>
+            </View>
+          </View>
+        )}
       </SafeAreaView>
     </>
   );
@@ -610,7 +617,7 @@ const styles = StyleSheet.create({
   },
   saveButton: {
     flex: 1,
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#7C3AED',
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -632,5 +639,33 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 15,
     color: Colors.inactive,
+  },
+  loaderOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loaderContainer: {
+    backgroundColor: Colors.white,
+    padding: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  loaderText: {
+    marginTop: 12,
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.dark,
   },
 });

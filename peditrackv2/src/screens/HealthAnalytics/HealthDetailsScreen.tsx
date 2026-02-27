@@ -1,45 +1,120 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { useRouter } from 'expo-router';
-import { getHealthRecords, HealthRecord } from '@/services/healthAnalyticsService';
+import { 
+  getHealthRecords, 
+  HealthRecord, 
+  getActiveMedications, 
+  Medication,
+  getRecentSymptoms,
+  logSymptoms,
+  DailySymptom,
+  SymptomEntry
+} from '@/services/healthAnalyticsService';
+import { useBaby } from '@/contexts/BabyContext';
+import { useFocusEffect } from 'expo-router';
 
 type Symptom = 'fever' | 'cold' | 'cough' | 'vomit' | 'diarrhea' | 'pain' | 'fatigue' | 'noAppetite';
 
 export const HealthDetailsScreen: React.FC = () => {
   const router = useRouter();
-  const [selectedSymptoms, setSelectedSymptoms] = useState<Symptom[]>(['fatigue']);
+  const { selectedBaby } = useBaby();
+  const [selectedSymptoms, setSelectedSymptoms] = useState<Symptom[]>([]); // Default empty
+  
   const [conditions, setConditions] = useState<HealthRecord[]>([]);
   const [loadingConditions, setLoadingConditions] = useState(true);
   
-  // TODO: Get this from route params or context
-  const babyId = '674525cc0a8a8b29b8a2bf9c';
+  const [medications, setMedications] = useState<Medication[]>([]);
+  const [loadingMedications, setLoadingMedications] = useState(true);
 
-  // Fetch active conditions
-  useEffect(() => {
-    const fetchConditions = async () => {
-      try {
-        setLoadingConditions(true);
-        const records = await getHealthRecords(babyId, 'illness');
-        setConditions(records);
-      } catch (error) {
-        console.error('Error fetching conditions:', error);
-      } finally {
-        setLoadingConditions(false);
-      }
-    };
+  const [recentSymptoms, setRecentSymptoms] = useState<DailySymptom[]>([]);
+  const [loadingSymptoms, setLoadingSymptoms] = useState(true);
+  const [loggingSymptom, setLoggingSymptom] = useState(false);
 
-    fetchConditions();
-  }, []);
+  // Fetch active conditions and medications
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchData = async () => {
+        if (!selectedBaby) return;
+        
+        try {
+          setLoadingConditions(true);
+          setLoadingMedications(true);
+          setLoadingSymptoms(true);
+
+          const [conditionsData, medsData, symptomsData] = await Promise.all([
+            getHealthRecords(selectedBaby._id!, 'illness'),
+            getActiveMedications(selectedBaby._id!),
+            getRecentSymptoms(selectedBaby._id!)
+          ]);
+
+          // Filter active conditions
+          const activeConditions = conditionsData.filter(
+            record => record.status && ['active', 'monitoring', 'underTreatment'].includes(record.status)
+          );
+          setConditions(activeConditions);
+          setMedications(medsData);
+          setRecentSymptoms(symptomsData);
+
+        } catch (error) {
+          console.error('Error fetching health data:', error);
+        } finally {
+          setLoadingConditions(false);
+          setLoadingMedications(false);
+          setLoadingSymptoms(false);
+        }
+      };
+
+      fetchData();
+    }, [selectedBaby])
+  );
 
   const toggleSymptom = (symptom: Symptom) => {
     if (selectedSymptoms.includes(symptom)) {
       setSelectedSymptoms(selectedSymptoms.filter(s => s !== symptom));
     } else {
       setSelectedSymptoms([...selectedSymptoms, symptom]);
+    }
+  };
+
+  const handleQuickLog = async () => {
+    if (!selectedBaby) return;
+    if (selectedSymptoms.length === 0) return;
+
+    try {
+      setLoggingSymptom(true);
+      
+      const symptomEntries: SymptomEntry[] = selectedSymptoms.map(s => {
+        // Find label
+        const symptomObj = symptoms.find(sy => sy.id === s);
+        return {
+          name: symptomObj?.label || s,
+          severity: 'mild', // Default to mild for quick log
+          isCustom: false
+        };
+      });
+
+      await logSymptoms({
+        babyId: selectedBaby._id,
+        symptoms: symptomEntries,
+        recordedAt: new Date().toISOString(),
+      });
+
+      // Refresh recent symptoms
+      const newRecent = await getRecentSymptoms(selectedBaby._id);
+      setRecentSymptoms(newRecent);
+      
+      // Clear selection
+      setSelectedSymptoms([]);
+      
+    } catch (error) {
+      console.error('Error logging symptoms:', error);
+    } finally {
+      setLoggingSymptom(false);
     }
   };
 
@@ -88,24 +163,29 @@ export const HealthDetailsScreen: React.FC = () => {
                 <Text style={styles.emptyText}>No active conditions</Text>
               </View>
             ) : (
-              <TouchableOpacity 
-                style={styles.conditionCard}
-                onPress={() => router.push('/health-analytics/health-details/all-conditions' as any)}
-              >
-                <View style={styles.conditionIconContainer}>
-                  <Ionicons name="medical" size={24} color="#EF4444" />
-                </View>
-                <View style={styles.conditionContent}>
-                  <Text style={styles.conditionName}>{conditions[0].diagnosis || 'Condition'}</Text>
-                  <Text style={styles.conditionStatus}>
-                    Severity: {conditions[0].severity ? conditions[0].severity.charAt(0).toUpperCase() + conditions[0].severity.slice(1) : 'Unknown'}
-                  </Text>
-                  <Text style={styles.conditionDate}>
-                    Date: {new Date(conditions[0].recordDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={Colors.inactive} />
-              </TouchableOpacity>
+              <>
+                {conditions.slice(0, 3).map((condition, index) => (
+                  <TouchableOpacity 
+                    key={condition._id || index}
+                    style={[styles.conditionCard, index > 0 && { marginTop: 12 }]}
+                    onPress={() => router.push('/health-analytics/health-details/all-conditions' as any)}
+                  >
+                    <View style={styles.conditionIconContainer}>
+                      <Ionicons name="medical" size={24} color="#EF4444" />
+                    </View>
+                    <View style={styles.conditionContent}>
+                      <Text style={styles.conditionName}>{condition.diagnosis || 'Condition'}</Text>
+                      <Text style={styles.conditionStatus}>
+                        Severity: {condition.severity ? condition.severity.charAt(0).toUpperCase() + condition.severity.slice(1) : 'Unknown'}
+                      </Text>
+                      <Text style={styles.conditionDate}>
+                        Date: {new Date(condition.recordDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
+                      </Text>
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={Colors.inactive} />
+                  </TouchableOpacity>
+                ))}
+              </>
             )}
 
             <TouchableOpacity 
@@ -116,10 +196,69 @@ export const HealthDetailsScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
 
+          {/* Active Medications */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>
+                Active Medications ({loadingMedications ? '...' : medications.length})
+              </Text>
+              <TouchableOpacity onPress={() => router.push('/health-analytics/medications' as any)}>
+                <Text style={styles.viewAllText}>View All →</Text>
+              </TouchableOpacity>
+            </View>
+            
+            {loadingMedications ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={Colors.primary.DEFAULT} />
+                <Text style={styles.loadingText}>Loading medications...</Text>
+              </View>
+            ) : medications.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Ionicons name="medical-outline" size={40} color={Colors.inactive} />
+                <Text style={styles.emptyText}>No active medications</Text>
+              </View>
+            ) : (
+              <>
+                {medications.slice(0, 2).map((medication, index) => (
+                  <TouchableOpacity 
+                    key={medication._id || index}
+                    style={[styles.medicationCard, index > 0 && { marginTop: 12 }]}
+                    onPress={() => router.push('/health-analytics/medications' as any)}
+                  >
+                    <View style={styles.medIconContainer}>
+                      <Ionicons name="medical" size={24} color={Colors.primary.DEFAULT} />
+                    </View>
+                    <View style={styles.medContent}>
+                      <Text style={styles.medName}>{medication.name}</Text>
+                      <Text style={styles.medDosage}>
+                        {medication.dosage.amount}{medication.dosage.unit} - {medication.frequency}
+                      </Text>
+                      {medication.reminderEnabled && (
+                        <View style={styles.reminderBadge}>
+                          <Ionicons name="notifications" size={12} color={Colors.primary.DEFAULT} />
+                          <Text style={styles.reminderText}>Reminders On</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Ionicons name="chevron-forward" size={20} color={Colors.inactive} />
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
+
+            <TouchableOpacity 
+              style={styles.addConditionButton}
+              onPress={() => router.push('/health-analytics/medications/add' as any)}
+            >
+              <Text style={styles.addConditionText}>+ Add Medication</Text>
+            </TouchableOpacity>
+          </View>
+
+
           {/* Log Today's Symptoms */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Log Today's Symptoms</Text>
-            <Text style={styles.sectionSubtitle}>Tap to log quickly</Text>
+            <Text style={styles.sectionSubtitle}>Tap to select, then log</Text>
 
             <View style={styles.symptomsGrid}>
               {symptoms.map((symptom) => (
@@ -136,53 +275,69 @@ export const HealthDetailsScreen: React.FC = () => {
                 </TouchableOpacity>
               ))}
             </View>
+
+            {selectedSymptoms.length > 0 && (
+              <TouchableOpacity 
+                style={[styles.quickLogButton, loggingSymptom && styles.quickLogButtonDisabled]}
+                onPress={handleQuickLog}
+                disabled={loggingSymptom}
+              >
+                {loggingSymptom ? (
+                  <ActivityIndicator size="small" color={Colors.white} />
+                ) : (
+                  <Text style={styles.quickLogButtonText}>Log Selected Symptoms ({selectedSymptoms.length})</Text>
+                )}
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity 
+              style={[styles.addConditionButton, { marginTop: 16 }]}
+              onPress={() => router.push('/health-analytics/symptoms/log' as any)}
+            >
+              <Text style={styles.addConditionText}>+ Add Custom / Details</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Recent (Last 7 Days) */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Recent (Last 7 Days):</Text>
-            
-            <View style={styles.recentList}>
-              <View style={styles.recentItem}>
-                <Text style={styles.recentBullet}>•</Text>
-                <View style={styles.recentContent}>
-                  <Text style={styles.recentText}>Mild fever 38.2°C</Text>
-                  <Text style={styles.recentTime}>3 days ago</Text>
-                </View>
-              </View>
-
-              <View style={styles.recentItem}>
-                <Text style={styles.recentBullet}>•</Text>
-                <View style={styles.recentContent}>
-                  <Text style={styles.recentText}>Cough</Text>
-                  <Text style={styles.recentTime}>5 days ago</Text>
-                </View>
-              </View>
-
-              <TouchableOpacity style={styles.viewAllButton}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Recent (Last 7 Days)</Text>
+              <TouchableOpacity onPress={() => router.push('/health-analytics/health-details/symptoms-history' as any)}>
                 <Text style={styles.viewAllText}>View All History →</Text>
               </TouchableOpacity>
             </View>
-          </View>
-
-          {/* Severe Allergies Alert */}
-          <View style={styles.alertCard}>
-            <View style={styles.alertHeader}>
-              <Ionicons name="alert-circle" size={24} color="#EF4444" />
-              <Text style={styles.alertTitle}>Severe Allergies: 1</Text>
-            </View>
-
-            <View style={styles.allergyItem}>
-              <Text style={styles.allergyBullet}>•</Text>
-              <View style={styles.allergyContent}>
-                <Text style={styles.allergyName}>Peanuts (Severe)</Text>
-                <Text style={styles.allergyRisk}>Risk: Anaphylaxis</Text>
+            
+            {loadingSymptoms ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={Colors.primary.DEFAULT} />
+                <Text style={styles.loadingText}>Loading recent symptoms...</Text>
               </View>
-            </View>
+            ) : recentSymptoms.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No recent symptoms recorded</Text>
+              </View>
+            ) : (
+              <View style={styles.recentList}>
+                {recentSymptoms.slice(0, 3).map((daily, idx) => (
+                  <View key={idx}>
+                    {daily.symptoms.map((sym, i) => (
+                      <View key={`${idx}-${i}`} style={styles.recentItem}>
+                        <Text style={styles.recentBullet}>•</Text>
+                        <View style={styles.recentContent}>
+                          <Text style={styles.recentText}>
+                            {sym.name} {sym.severity ? `(${sym.severity})` : ''}
+                          </Text>
+                          <Text style={styles.recentTime}>
+                             {new Date(daily.recordedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                ))}
 
-            <TouchableOpacity style={styles.emergencyButton}>
-              <Text style={styles.emergencyButtonText}>View Emergency Plan →</Text>
-            </TouchableOpacity>
+              </View>
+            )}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -425,5 +580,129 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: Colors.inactive,
+  },
+  // Medication styles
+  medicationCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.white,
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  medIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.primary.light + '20',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  medContent: {
+    flex: 1,
+  },
+  medName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.dark,
+    marginBottom: 4,
+  },
+  medDosage: {
+    fontSize: 13,
+    color: Colors.inactive,
+    marginBottom: 4,
+  },
+  reminderBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    backgroundColor: Colors.primary.light + '15',
+    alignSelf: 'flex-start',
+  },
+  reminderText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: Colors.primary.DEFAULT,
+  },
+  quickLogButton: {
+    marginTop: 16,
+    backgroundColor: Colors.primary.DEFAULT,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: Colors.primary.DEFAULT,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  quickLogButtonDisabled: {
+    opacity: 0.7,
+  },
+  quickLogButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+  sleepCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  sleepHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  sleepTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.dark,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  sleepContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  sleepInfo: {
+    flex: 1,
+  },
+  sleepLabel: {
+    fontSize: 14,
+    color: Colors.inactive,
+    marginBottom: 4,
+  },
+  sleepValue: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: Colors.primary.DEFAULT,
+  },
+  sleepActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  sleepActionButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#EEF2FF',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

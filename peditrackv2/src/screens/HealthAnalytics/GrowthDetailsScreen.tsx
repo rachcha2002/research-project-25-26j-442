@@ -1,38 +1,55 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { LineChart } from 'react-native-chart-kit';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
-import { getMeasurements, Measurement } from '@/services/healthAnalyticsService';
+import { getMeasurements, Measurement, getWHOPercentiles, WHOPercentileData } from '@/services/healthAnalyticsService';
+import { useBaby } from '@/contexts/BabyContext';
 
 const { width } = Dimensions.get('window');
 
-type MetricTab = 'Height' | 'Weight' | 'BMI' | 'Head';
+type MetricTab = 'Height' | 'Weight' | 'BMI';
 
 export const GrowthDetailsScreen: React.FC = () => {
   const router = useRouter();
+  const { selectedBaby } = useBaby();
   const [selectedTab, setSelectedTab] = useState<MetricTab>('Height');
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [chartData, setChartData] = useState<any>({
+    labels: ['No data'],
+    datasets: [{ data: [0], color: () => '#7C3AED', strokeWidth: 3 }]
+  });
 
-  // TODO: Get this from route params or context
-  const babyId = '674525cc0a8a8b29b8a2bf9c'; // Temporary placeholder
-
-  useEffect(() => {
-    loadMeasurements();
-  }, []);
+  // Reload measurements whenever the screen comes into focus (after adding/editing)
+  useFocusEffect(
+    useCallback(() => {
+      if (selectedBaby) {
+        loadMeasurements();
+      }
+    }, [selectedBaby])
+  );
 
   const loadMeasurements = async () => {
+    if (!selectedBaby) return;
+    
     try {
       setLoading(true);
       setError(null);
-      const data = await getMeasurements(babyId);
+      const data = await getMeasurements(selectedBaby._id);
+      
+      // Sort by date descending (newest first)
+      const sortedData = data.sort((a, b) => {
+        return new Date(b.measurementDate).getTime() - new Date(a.measurementDate).getTime();
+      });
+      
       // Get only the last 5 measurements
-      setMeasurements(data.slice(0, 5));
+      setMeasurements(sortedData.slice(0, 5));
+      console.log('[GrowthDetails] Loaded measurements:', sortedData.length, 'total,', sortedData.slice(0, 5).length, 'displayed');
     } catch (err) {
       console.error('Error loading measurements:', err);
       setError('Failed to load measurements.');
@@ -50,31 +67,127 @@ export const GrowthDetailsScreen: React.FC = () => {
     });
   };
 
-  const chartData = {
-    labels: ['2y', '2.5y', '3y', '3.5y'],
-    datasets: [
-      {
-        data: [85, 88, 92, 95],
-        color: () => '#10B981',
-        strokeWidth: 3,
-      },
-      {
-        data: [80, 84, 88, 92],
-        color: () => '#93C5FD',
-        strokeWidth: 2,
-      },
-      {
-        data: [88, 92, 96, 100],
-        color: () => '#93C5FD',
-        strokeWidth: 2,
-      },
-      {
-        data: [82, 86, 90, 94],
-        color: () => '#60A5FA',
-        strokeWidth: 2,
-      },
-    ],
+  // Fetch WHO percentile data from API whenever measurements or selectedTab changes
+  useEffect(() => {
+    const fetchWHOData = async () => {
+      console.log('Fetching WHO data...', { measurementsCount: measurements.length, baby: selectedBaby });
+      if (measurements.length === 0 || !selectedBaby?.dateOfBirth) {
+        setChartData({
+          labels: ['No data'],
+          datasets: [{ data: [0], color: () => '#7C3AED', strokeWidth: 3 }]
+        });
+        return;
+      }
+
+      try {
+        const gender = (selectedBaby.gender === 'female' ? 'female' : 'male') as 'male' | 'female';
+        
+        // Prepare measurements in the format expected by API 
+        // Sort by date ascending (oldest first) so chart goes left-to-right
+        const measurementData = [...measurements]
+          .sort((a, b) => new Date(a.measurementDate).getTime() - new Date(b.measurementDate).getTime())
+          .map(m => ({
+            date: m.measurementDate,
+            height: m.height.value,
+            weight: m.weight.value,
+            headCircumference: m.headCircumference?.value,
+          }));
+
+        // Map selectedTab to API metric format
+        const metricMap: { [key in MetricTab]: 'height' | 'weight' | 'bmi' } = {
+          'Height': 'height',
+          'Weight': 'weight',
+          'BMI': 'bmi',
+        };
+
+        console.log('Calling API with:', { gender, metric: metricMap[selectedTab] });
+        const whoData = await getWHOPercentiles(
+          gender,
+          selectedBaby.dateOfBirth,
+          measurementData,
+          metricMap[selectedTab]
+        );
+        console.log('WHO API Response:', whoData);
+
+        // Format data for chart
+        setChartData({
+          labels: whoData.labels,
+          datasets: [
+            // WHO 95th percentile (top)
+            {
+              data: whoData.who95thData,
+              color: () => '#93C5FD',
+              strokeWidth: 2,
+              withDots: false,
+            },
+            // WHO 50th percentile (middle)
+            {
+              data: whoData.who50thData,
+              color: () => '#60A5FA',
+              strokeWidth: 2,
+              withDots: false,
+            },
+            // WHO 5th percentile (bottom)
+            {
+              data: whoData.who5thData,
+              color: () => '#93C5FD',
+              strokeWidth: 2,
+              withDots: false,
+            },
+            // Child's actual data (highlighted)
+            {
+              data: whoData.childData,
+              color: () => '#7C3AED', // Primary purple color
+              strokeWidth: 3,
+            },
+          ],
+        });
+      } catch (err) {
+        console.error('Error fetching WHO percentiles:', err);
+        // Fallback to showing just child's data if API fails
+        const sortedMeasurements = [...measurements].reverse();
+        const labels = sortedMeasurements.map(m => {
+          const date = new Date(m.measurementDate);
+          return `${date.getMonth() + 1}/${date.getDate()}`;
+        });
+        
+        let data: number[] = [];
+        switch (selectedTab) {
+          case 'Height':
+            data = sortedMeasurements.map(m => m.height.value);
+            break;
+          case 'Weight':
+            data = sortedMeasurements.map(m => m.weight.value);
+            break;
+          case 'BMI':
+            data = sortedMeasurements.map(m => {
+              const heightInMeters = m.height.value / 100;
+              return Number((m.weight.value / (heightInMeters * heightInMeters)).toFixed(1));
+            });
+            break;
+        }
+
+        console.log('Setting fallback data:', { labels, dataLength: data.length });
+        setChartData({
+          labels,
+          datasets: [{
+            data,
+            color: () => '#7C3AED',
+            strokeWidth: 3,
+          }],
+        });
+      }
+    };
+
+    fetchWHOData();
+  }, [measurements, selectedTab, selectedBaby]);
+
+  // Fetch WHO percentile data from API
+  const getChartData = () => {
+    return chartData;
   };
+
+
 
 
   return (
@@ -91,29 +204,50 @@ export const GrowthDetailsScreen: React.FC = () => {
 
           {/* Growth Chart Card */}
           <View style={styles.chartCard}>
-            <LineChart
-              data={chartData}
-              width={width - 60}
-              height={220}
-              chartConfig={{
-                backgroundColor: Colors.white,
-                backgroundGradientFrom: Colors.white,
-                backgroundGradientTo: Colors.white,
-                decimalPlaces: 0,
-                color: (opacity = 1) => `rgba(99, 102, 241, ${opacity})`,
-                labelColor: () => Colors.inactive,
-                style: {
-                  borderRadius: 16,
-                },
-                propsForDots: {
-                  r: '5',
-                  strokeWidth: '2',
-                  stroke: Colors.white,
-                },
-              }}
-              bezier
-              style={styles.chart}
-            />
+            {chartData.datasets && chartData.datasets.length > 0 && chartData.datasets[0].data?.length > 0 ? (
+              <LineChart
+                data={chartData}
+                // Width = Screen width - (Screen padding * 2) - (Card padding * 2)
+                // Screen padding = 20px, Card padding = 20px -> Total reduction = 80px
+                width={width - 80}
+                height={220}
+                chartConfig={{
+                  backgroundColor: Colors.white,
+                  backgroundGradientFrom: Colors.white,
+                  backgroundGradientTo: Colors.white,
+                  decimalPlaces: 0,
+                  color: (opacity = 1) => `rgba(99, 102, 241, ${opacity})`,
+                  labelColor: () => Colors.inactive,
+                  style: {
+                    borderRadius: 16,
+                  },
+                  propsForDots: {
+                    r: '4',
+                    strokeWidth: '2',
+                    stroke: Colors.white,
+                  },
+                  propsForBackgroundLines: {
+                    strokeDasharray: '', // Solid lines
+                    stroke: '#E5E7EB',
+                    strokeWidth: 0.5,
+                  },
+                }}
+                bezier
+                style={{
+                  ...styles.chart,
+                  paddingRight: 30, // Add padding for last label
+                }}
+                withInnerLines={true}
+                withOuterLines={false}
+                withVerticalLines={false}
+              />
+            ) : (
+              <View style={styles.emptyChartContainer}>
+                <Text style={styles.emptyChartText}>
+                  {measurements.length === 0 ? 'No measurements yet' : 'Loading chart...'}
+                </Text>
+              </View>
+            )}
             
             {/* Chart Legend */}
             <View style={styles.legend}>
@@ -130,33 +264,33 @@ export const GrowthDetailsScreen: React.FC = () => {
                 <Text style={styles.legendText}>WHO 5th</Text>
               </View>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
+                <View style={[styles.legendDot, { backgroundColor: '#7C3AED' }]} />
                 <Text style={styles.legendText}>Your Child</Text>
               </View>
             </View>
+          </View>
 
-            {/* Metric Tabs */}
-            <View style={styles.tabContainer}>
-              {(['Height', 'Weight', 'BMI', 'Head'] as MetricTab[]).map((tab) => (
-                <TouchableOpacity
-                  key={tab}
+          {/* Metric Tabs */}
+          <View style={styles.tabContainer}>
+            {(['Height', 'Weight', 'BMI'] as MetricTab[]).map((tab) => (
+              <TouchableOpacity
+                key={tab}
+                style={[
+                  styles.tab,
+                  selectedTab === tab && styles.activeTab,
+                ]}
+                onPress={() => setSelectedTab(tab)}
+              >
+                <Text
                   style={[
-                    styles.tab,
-                    selectedTab === tab && styles.activeTab,
+                    styles.tabText,
+                    selectedTab === tab && styles.activeTabText,
                   ]}
-                  onPress={() => setSelectedTab(tab)}
                 >
-                  <Text
-                    style={[
-                      styles.tabText,
-                      selectedTab === tab && styles.activeTabText,
-                    ]}
-                  >
-                    {tab}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
+                  {tab}
+                </Text>
+              </TouchableOpacity>
+            ))}
           </View>
 
           {/* Recent Measurements */}
@@ -507,5 +641,17 @@ const styles = StyleSheet.create({
   emptySubtext: {
     fontSize: 13,
     color: Colors.inactive,
+  },
+  emptyChartContainer: {
+    height: 220,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: Colors.background,
+    borderRadius: 12,
+  },
+  emptyChartText: {
+    fontSize: 16,
+    color: Colors.inactive,
+    textAlign: 'center',
   },
 });

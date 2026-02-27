@@ -6,25 +6,30 @@ import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { getMeasurements, Measurement } from '@/services/healthAnalyticsService';
+import { useBaby } from '@/contexts/BabyContext';
 
 export const MeasurementHistoryScreen: React.FC = () => {
   const router = useRouter();
+  const { selectedBaby } = useBaby();
   const [measurements, setMeasurements] = useState<Measurement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // TODO: Get this from route params or context
-  const babyId = '674525cc0a8a8b29b8a2bf9c'; // Temporary placeholder
-
   useEffect(() => {
-    loadMeasurements();
-  }, []);
+    if (selectedBaby) {
+      loadMeasurements();
+    } else {
+      setLoading(false);
+    }
+  }, [selectedBaby]);
 
   const loadMeasurements = async () => {
+    if (!selectedBaby) return;
+
     try {
       setLoading(true);
       setError(null);
-      const data = await getMeasurements(babyId);
+      const data = await getMeasurements(selectedBaby._id);
       setMeasurements(data);
     } catch (err) {
       console.error('Error loading measurements:', err);

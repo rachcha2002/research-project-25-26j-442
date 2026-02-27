@@ -61,6 +61,22 @@ const babySchema = new mongoose.Schema({
     type: String,
   },
 
+  // Birth & prematurity data (Survey Q5a, Q5b)
+  birthWeight: {
+    type: Number, // in kg
+    min: 0.3,
+    max: 8,
+  },
+  isPremature: {
+    type: Boolean,
+    default: null, // null = not answered, false = full term, true = premature
+  },
+  gestationalWeeks: {
+    type: Number, // e.g. 34 for 34 weeks
+    min: 20,
+    max: 44,
+  },
+
   // Status
   isActive: {
     type: Boolean,

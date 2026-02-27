@@ -7,7 +7,13 @@ const openai = new OpenAI({
 });
 
 /**
+ * @deprecated This service is deprecated. Use geminiLive.service.js for real-time voice conversations.
+ * 
  * Voice Service for handling speech-to-text and text-to-speech
+ * Uses OpenAI Whisper (STT) and OpenAI TTS
+ * 
+ * DEPRECATION NOTICE: This file will be removed in a future version.
+ * Please migrate to Gemini Live API for better performance and lower latency.
  */
 class VoiceService {
     /**
