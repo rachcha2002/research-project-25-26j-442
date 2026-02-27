@@ -17,9 +17,19 @@ class MealOptimizerEngine:
         all_foods = pd.concat(self.datasets.values(), ignore_index=True)
         self.ml_model = PediatricMLRecommender(all_foods)
 
-    def _apply_safety_filters(self, df: pd.DataFrame, allergies: list, dislikes: list,meal_type: str) -> pd.DataFrame:
+    def _apply_safety_filters(self, df: pd.DataFrame, allergies: list, dislikes: list,meal_type: str, budget_level: str) -> pd.DataFrame:
         """PHASE 2: Absolute mathematical elimination of allergens and blacklisted items."""
         safe_df = df.copy()
+
+        if not safe_df.empty and 'Cost' in safe_df.columns:
+            if budget_level == "Low":
+                allowed_costs = ["Low"]
+            elif budget_level == "Medium":
+                allowed_costs = ["Low", "Medium"]
+            else:
+                allowed_costs = ["Low", "Medium", "High"]
+            
+        safe_df = safe_df[safe_df['Cost'].isin(allowed_costs)]
 
         if not safe_df.empty and 'Ideal_Meal_Time' in safe_df.columns:
             safe_df = safe_df[safe_df['Ideal_Meal_Time'].str.contains(meal_type, case=False, na=False) | 
@@ -110,7 +120,7 @@ class MealOptimizerEngine:
 
                 # Pre-filter all datasets for safety to save processing time in the loop
                 safe_dfs = {
-                    name: self._apply_safety_filters(df, allergies, dislikes, meal_time)
+                    name: self._apply_safety_filters(df, allergies, dislikes, meal_time,request.preferences.budget_level)
                     for name, df in self.datasets.items()
                 }
                 meal_data, meal_score = self._generate_single_meal(meal_time, safe_dfs, likes)
