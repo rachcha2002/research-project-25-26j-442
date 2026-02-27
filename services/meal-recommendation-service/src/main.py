@@ -1,13 +1,25 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-
+import numpy as np
+from src.services.health_calculator import PediatricHealthCalculator
 from src.utils.database import Database
 from src.models.schemas import MealGenerationRequest, MealFeedback, BehavioralSeeds
 from src.services.meal_engine import MealOptimizerEngine
 
 # Global engine instance so it only loads the CSVs once at startup
 engine = None
+
+def _to_native_types(value):
+    if isinstance(value, np.generic):
+        return value.item()
+    if isinstance(value, dict):
+        return {k: _to_native_types(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_to_native_types(v) for v in value]
+    if isinstance(value, tuple):
+        return tuple(_to_native_types(v) for v in value)
+    return value
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -36,6 +48,16 @@ async def generate_plan(request: MealGenerationRequest):
     """
     Core Research Endpoint: Generates a mathematically optimized daily plan.
     """
+    calculated_target = PediatricHealthCalculator.calculate_eer(
+        age_months=request.health_data.age_months,
+        weight_kg=request.health_data.weight_kg,
+        height_cm=request.health_data.height_cm,
+        gender=request.health_data.gender, # Ensure 'gender' is in your HealthData schema!
+        activity_level=request.health_data.activity_level
+    )
+
+    request.health_data.daily_calorie_target = calculated_target
+
     profiles_col = Database.get_collection("child_profiles")
     
     # 1. Fetch ML Memory from Database
@@ -53,6 +75,8 @@ async def generate_plan(request: MealGenerationRequest):
         optimized_result = engine.generate_optimized_plan(request)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Optimization failed: {str(e)}")
+
+    optimized_result = _to_native_types(optimized_result)
 
     # 3. Log the generated plan for your research evaluation
     history_col = Database.get_collection("generated_plans_history")

@@ -31,7 +31,7 @@ class MealOptimizerEngine:
         if not safe_df.empty and dislikes:
             safe_df = safe_df[~safe_df['Item Name'].isin(dislikes)]
             
-        return safe_df
+        return safe_df.reset_index(drop=True)
 
     def _generate_single_meal(self, meal_type: str, safe_dfs: dict, liked_history: list):
         """Builds a single plate using the ML model."""

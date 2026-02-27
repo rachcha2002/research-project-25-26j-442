@@ -10,6 +10,7 @@ class HealthData(BaseModel):
     activity_level: str  # "Light", "Moderate", or "Active"
     medical_conditions: List[str] = []
     medications: List[str] = []
+    daily_calorie_target: Optional[int] = None # Calculated based on health data if not provided
 
 class DietaryPreferences(BaseModel):
     diet_type: str = "Standard" # e.g., Veg, Non-Veg

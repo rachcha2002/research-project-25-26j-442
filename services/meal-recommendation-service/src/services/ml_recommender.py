@@ -39,7 +39,7 @@ class PediatricMLRecommender:
 
         # Exploration (15% chance OR if the child has zero history)
         if np.random.rand() < epsilon or not liked_history:
-            random_choice = safe_candidates_df.sample(1).iloc
+            random_choice = safe_candidates_df.sample(1).iloc[0]
             return random_choice, 0.0 # Score is 0 because it was a random exploration
 
         # Exploitation (85% chance): Build the Profile Vector
@@ -47,7 +47,7 @@ class PediatricMLRecommender:
         
         # Fallback if history items aren't in the current DB
         if not liked_indices:
-            return safe_candidates_df.sample(1).iloc, 0.0
+            return safe_candidates_df.sample(1).iloc[0], 0.0
             
         # Calculate the "Center of Gravity" of their tastes
         user_vector = np.mean(self.feature_matrix[liked_indices], axis=0)
@@ -55,6 +55,8 @@ class PediatricMLRecommender:
         # Filter the matrix to only include the current safe candidates
         safe_names = safe_candidates_df['Item Name'].tolist()
         safe_indices = [self.item_to_idx[name] for name in safe_names if name in self.item_to_idx]
+        if not safe_indices:
+            return safe_candidates_df.sample(1).iloc[0], 0.0
         candidate_matrix = self.feature_matrix[safe_indices]
         
         # Calculate Cosine Similarity
@@ -62,6 +64,6 @@ class PediatricMLRecommender:
         
         # Pick the mathematical winner
         best_match_idx = np.argmax(similarity_scores)
-        best_score = float(similarity_scores[best_match_idx])
+        best_score = float(similarity_scores[0, best_match_idx])
         
         return safe_candidates_df.iloc[best_match_idx], best_score
