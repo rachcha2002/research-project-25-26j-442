@@ -1,121 +1,121 @@
 import pandas as pd
-import random
+from src.models.schemas import MealGenerationRequest
+from src.services.ml_recommender import PediatricMLRecommender
 
-class MealEngine:
+class MealOptimizerEngine:
     def __init__(self):
-        self.base_df = pd.read_csv("data/sl_base_staples.csv")
-        self.proteins_df = pd.read_csv("data/sl_proteins_curries.csv")
-        self.veggies_df = pd.read_csv("data/sl_vegetables_greens.csv")
-        self.dairy_df = pd.read_csv("data/sl_dairy_crunch.csv")
-        self.fruits_df = pd.read_csv("data/sl_fruits_sweets.csv")
+        """Loads datasets into memory and initializes the ML Recommender."""
+        self.datasets = {
+            "base": pd.read_csv("data/sl_base_staples.csv"),
+            "protein": pd.read_csv("data/sl_proteins_curries.csv"),
+            "veggie": pd.read_csv("data/sl_vegetables_greens.csv"),
+            "dairy": pd.read_csv("data/sl_dairy_crunch.csv"),
+            "fruit": pd.read_csv("data/sl_fruits_sweets.csv")
+        }
+        
+        # Combine all datasets to train the ML Feature Matrix
+        all_foods = pd.concat(self.datasets.values(), ignore_index=True)
+        self.ml_model = PediatricMLRecommender(all_foods)
 
-    def _filter_allergies(self, df, allergy_list):
-        if not allergy_list:
-            return df
-        mask = df['Allergies'].apply(
-            lambda x: not any(allergy.lower() in str(x).lower() for allergy in allergy_list)
-        )
-        return df[mask]
-
-    def _filter_dislikes(self, df, disliked_list):
-        """Removes items the child has explicitly rejected in the past."""
-        if not disliked_list:
-            return df
-        # Keep rows where the 'Item Name' is NOT in the disliked list
-        mask = ~df['Item Name'].isin(disliked_list)
-        return df[mask]
-
-    def _filter_by_time(self, df, meal_type):
-        return df[df['Ideal_Meal_Time'].str.contains(meal_type, na=False, case=False)]
-
-    def generate_meal(self, meal_type, allergies, dislikes=[]):
-        safe_bases = self._filter_by_time(self._filter_dislikes(self._filter_allergies(self.base_df, allergies), dislikes), meal_type)
-        if safe_bases.empty:
-            return None
+    def _apply_safety_filters(self, df: pd.DataFrame, allergies: list, dislikes: list) -> pd.DataFrame:
+        """PHASE 2: Absolute mathematical elimination of allergens and blacklisted items."""
+        safe_df = df.copy()
+        
+        # 1. Eliminate Allergies (Assuming your CSV has an 'Allergies' column)
+        if not safe_df.empty and allergies:
+            # Create a regex pattern to find any matching allergy in the column
+            pattern = '|'.join(allergies)
+            safe_df = safe_df[~safe_df['Allergies'].str.contains(pattern, case=False, na=False)]
             
-        selected_base = safe_bases.sample(1).iloc[0]
-        safe_proteins = self._filter_by_time(self._filter_dislikes(self._filter_allergies(self.proteins_df, allergies), dislikes), meal_type)
-        selected_protein = safe_proteins.sample(1).iloc[0] if not safe_proteins.empty else None
-        safe_veggies = self._filter_by_time(self._filter_dislikes(self._filter_allergies(self.veggies_df, allergies), dislikes), meal_type)
-        selected_veg = safe_veggies.sample(1).iloc[0] if not safe_veggies.empty else None
-        safe_dairy = self._filter_by_time(self._filter_dislikes(self._filter_allergies(self.dairy_df, allergies), dislikes), meal_type)
-        selected_dairy = safe_dairy.sample(1).iloc[0] if not safe_dairy.empty else None
-        safe_fruits = self._filter_by_time(self._filter_dislikes(self._filter_allergies(self.fruits_df, allergies), dislikes), meal_type)
-        selected_fruit = safe_fruits.sample(1).iloc[0] if not safe_fruits.empty else None
+        # 2. Eliminate Behavioral Dislikes (Blacklist)
+        if not safe_df.empty and dislikes:
+            safe_df = safe_df[~safe_df['Item Name'].isin(dislikes)]
+            
+        return safe_df
 
-        total_cals = int(selected_base.get('Calories (kcal)', 0))
-        components = {"base": selected_base['Item Name']}
+    def _generate_single_meal(self, meal_type: str, safe_dfs: dict, liked_history: list):
+        """Builds a single plate using the ML model."""
+        plate = {}
+        total_meal_cals = 0
+        total_score = 0
+        items_count = 0
 
-        if selected_protein is not None:
-            total_cals += int(selected_protein.get('Calories (kcal)', 0))
-            components["protein"] = selected_protein['Item Name']
-        if selected_veg is not None:
-            total_cals += int(selected_veg.get('Calories (kcal)', 0))
-            components["vegetable"] = selected_veg['Item Name']
-        if selected_dairy is not None:
-            total_cals += int(selected_dairy.get('Calories (kcal)', 0))
-            components["dairy_or_crunch"] = selected_dairy['Item Name']
-        if selected_fruit is not None:
-            total_cals += int(selected_fruit.get('Calories (kcal)', 0))
-            components["fruit_or_sweet"] = selected_fruit['Item Name']
+        # SNACK LOGIC: Only Dairy or Fruits
+        if meal_type in ["Snack", "Tea Time"]:
+            combined_snacks = pd.concat([safe_dfs["dairy"], safe_dfs["fruit"]], ignore_index=True)
+            item, score = self.ml_model.predict_optimal_food(combined_snacks, liked_history)
+            if item is not None:
+                plate["snack_item"] = item['Item Name']
+                total_meal_cals += item['Calories (kcal)']
+                total_score += score
+                items_count += 1
+                
+        # MAIN MEAL LOGIC: Base + Protein + Veg
+        else:
+            for category in ["base", "protein", "veggie"]:
+                item, score = self.ml_model.predict_optimal_food(safe_dfs[category], liked_history)
+                if item is not None:
+                    plate[category] = item['Item Name']
+                    total_meal_cals += item['Calories (kcal)']
+                    total_score += score
+                    items_count += 1
 
-        return {
-            "meal_type": meal_type,
-            "plate": components,
-            "total_calories": total_cals
+        avg_score = (total_score / items_count) if items_count > 0 else 0
+        return {"meal_type": meal_type, "plate": plate, "calories": total_meal_cals}, avg_score
+
+    def generate_optimized_plan(self, request: MealGenerationRequest):
+        """PHASE 3: Stochastic Optimization Loop for Caloric Balancing."""
+        target_cal = request.health_data.daily_calorie_target
+        allergies = request.preferences.allergies
+        dislikes = request.behavioral_state.disliked_ingredients
+        likes = request.behavioral_state.liked_ingredients
+        
+        # Determine Schedule
+        if request.lifestyle.meals_per_day == 3:
+            schedule = ["Breakfast", "Lunch", "Dinner"]
+        else:
+            schedule = ["Breakfast", "Snack", "Lunch", "Tea Time", "Dinner"]
+
+        # Pre-filter all datasets for safety to save processing time in the loop
+        safe_dfs = {
+            name: self._apply_safety_filters(df, allergies, dislikes)
+            for name, df in self.datasets.items()
         }
 
-    def generate_daily_plan(self, allergies, target_calories, dislikes=None):
-        """Assembles a full day of meals using Stochastic Optimization to hit calorie targets."""
-        if dislikes is None:
-            dislikes = []
-            
-        schedule = ["Breakfast", "Snack", "Lunch", "Tea Time", "Dinner"]
-        
         best_plan = {}
-        best_difference = float('inf') # Start with an infinitely bad score
-        best_total_calories = 0
-        iterations_run = 0
-        
-        # ---------------------------------------------------------
-        # ML Concept: Stochastic Optimization (Loss Minimization)
-        # Generate up to 15 candidate days and pick the best one.
-        # ---------------------------------------------------------
-        for i in range(15):
-            iterations_run = i + 1
-            current_plan = {}
-            current_total = 0
+        min_loss = float('inf')
+        best_similarity_score = 0
+        final_calories = 0
+
+        # STOCHASTIC LOOP: Run 15 iterations to find the best caloric match
+        for _ in range(15):
+            current_day = {}
+            current_day_cals = 0
+            day_similarity_sum = 0
             
             for meal_time in schedule:
-                # Generate a single meal
-                meal = self.generate_meal(meal_time, allergies, dislikes)
-                if meal and "error" not in meal:
-                    current_plan[meal_time] = meal
-                    current_total += meal["total_calories"]
+                meal_data, meal_score = self._generate_single_meal(meal_time, safe_dfs, likes)
+                if meal_data["plate"]: # Only add if items were found
+                    current_day[meal_time] = meal_data
+                    current_day_cals += meal_data["calories"]
+                    day_similarity_sum += meal_score
+                    
+            # Calculate Loss (Absolute variance from target)
+            loss = abs(current_day_cals - target_cal)
             
-            # Calculate the "Loss" (How far off are we from the target?)
-            loss = abs(current_total - target_calories)
-            
-            # If this candidate is better than our previous best, save it!
-            if loss < best_difference:
-                best_difference = loss
-                best_plan = current_plan
-                best_total_calories = current_total
-                
-            # Early Stopping: If we hit within 40 kcal of the target, it's perfect. Stop computing.
-            if best_difference <= 40:
-                break
-                
-        # Calculate the final signed difference (+ means surplus, - means deficit)
-        final_difference = best_total_calories - target_calories
-        
+            if loss < min_loss:
+                min_loss = loss
+                best_plan = current_day
+                final_calories = current_day_cals
+                best_similarity_score = day_similarity_sum / len(schedule)
+
+        # Output payload formatted for your Research Evaluation Chapter
         return {
-            "meals": best_plan,
-            "metrics": {
-                "target_calories": target_calories,
-                "achieved_calories": best_total_calories,
-                "difference": final_difference,
-                "optimization_iterations": iterations_run,
-                "status": "Highly Optimized" if abs(final_difference) <= 75 else "Best Possible Match"
+            "daily_plan": best_plan,
+            "research_metrics": {
+                "target_calories": target_cal,
+                "achieved_calories": round(final_calories, 2),
+                "optimization_loss_kcal": round(min_loss, 2),
+                "behavioral_alignment_score": f"{round(best_similarity_score * 100, 2)}%"
             }
         }
