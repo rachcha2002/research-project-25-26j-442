@@ -2,8 +2,6 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
-import { MealCard } from '../SubComponents/MealCard';
-import { DailyNutritionIntakeCard } from '../SubComponents/DailyNutritionIntakeCard';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
 
@@ -114,53 +112,6 @@ export const FeedingMainComponent: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.mealRowWrapper}>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.mealRowContent}
-          >
-            {mealsWithDate.map((meal) => {
-              // Treat dinner as incomplete by time, but allow manual completion override
-              const isPastByTime = meal.id !== 'dinner' && meal.dateTime < now;
-              const isPast =
-                (manuallyCompletedId && meal.id === manuallyCompletedId) || isPastByTime;
-              const isActive = meal.id === activeMealId;
-
-              return (
-                <MealCard
-                  key={meal.id}
-                  label={meal.label}
-                  timeLabel={meal.timeLabel}
-                  suggestion={meal.suggestion}
-                  isPast={isPast}
-                  isActive={isActive}
-                  onPress={() => {
-                    setActiveMealId(meal.id);
-                    router.push({
-                      pathname: '/meal-details',
-                      params: {
-                        id: meal.id,
-                        label: meal.label,
-                        timeLabel: meal.timeLabel,
-                        suggestion: meal.suggestion,
-                        isPast: String(isPast),
-                      },
-                    });
-                  }}
-                />
-              );
-            })}
-          </ScrollView>
-        </View>
-
-        <View style={styles.nutritionCardWrapper}>
-          <DailyNutritionIntakeCard
-            completedMeals={completedMealsCount}
-            totalMeals={mealsWithDate.length}
-            completedMealIds={completedMealIds}
-          />
-        </View>
 
         <View style={styles.actionsRow}>
           <TouchableOpacity
@@ -174,19 +125,6 @@ export const FeedingMainComponent: React.FC = () => {
               <Ionicons name="add-circle" size={24} color={Colors.primary.light} />
             </View>
             <Text style={styles.actionTitle}>Nutrition Checker</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            activeOpacity={0.8}
-            onPress={() => {
-              router.push('/past-data');
-            }}
-          >
-            <View style={[styles.actionIconContainer, { backgroundColor: '#E0E7FF' }]}>
-              <Ionicons name="time" size={24} color={Colors.primary.light} />
-            </View>
-            <Text style={styles.actionTitle}>Past data</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
