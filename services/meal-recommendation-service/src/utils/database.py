@@ -28,3 +28,9 @@ class Database:
     def get_collection(cls, name: str):
         """Helper to get a collection quickly"""
         return cls.db[name]
+
+    @classmethod
+    async def ensure_collection(cls, name: str):
+        existing_collections = await cls.db.list_collection_names()
+        if name not in existing_collections:
+            await cls.db.create_collection(name)

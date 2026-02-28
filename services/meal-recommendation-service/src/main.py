@@ -6,6 +6,7 @@ from src.services.health_calculator import PediatricHealthCalculator
 from src.utils.database import Database
 from src.models.schemas import MealGenerationRequest, MealFeedback, BehavioralSeeds
 from src.services.meal_engine import MealOptimizerEngine
+from src.controllers.meal_preferences_controller import MealPreferencesController
 
 # Global engine instance so it only loads the CSVs once at startup
 engine = None
@@ -25,6 +26,8 @@ def _to_native_types(value):
 async def lifespan(app: FastAPI):
     # Startup: Connect to DB and spin up the ML engine
     Database.connect_db()
+    await Database.ensure_collection("meal_preferences")
+    meal_prefs_col = Database.get_collection("meal_preferences")
     global engine
     engine = MealOptimizerEngine()
     print("ML Engine Initialized and Ready.")
@@ -33,6 +36,7 @@ async def lifespan(app: FastAPI):
     Database.close_db()
 
 app = FastAPI(title="Pediatric ML Nutrition API", lifespan=lifespan)
+app.include_router(MealPreferencesController.router)
 
 # MANDATORY FOR REACT NATIVE: CORS Middleware
 app.add_middleware(

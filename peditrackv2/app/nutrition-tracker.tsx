@@ -9,7 +9,6 @@ import {
   Image,
   Alert,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar';
 import * as ImagePicker from 'expo-image-picker';
