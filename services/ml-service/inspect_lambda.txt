@@ -1,0 +1,24 @@
+{'class_name': 'Lambda',
+ 'config': {'arguments': {},
+            'dtype': {'class_name': 'DTypePolicy',
+                      'config': {'name': 'float32'},
+                      'module': 'keras',
+                      'registered_name': None},
+            'function': {'class_name': '__lambda__',
+                         'config': {'closure': None,
+                                    'code': '4wEAAAAAAAAAAAAAAAQAAAATAAAA8zAAAACXAHQAAAAAAAAAAABqAwAAAAAAAAAAAAAAAAAAAAAA\n'
+                                            'AHwAZAGsAqsCAAAAAAAAUwApA07pAQAAACkB2gRheGlzKQLaAnRm2gpyZWR1Y2Vfc3VtKQHaAXhz\n'
+                                            'AQAAACD6IC90bXAvaXB5dGhvbi1pbnB1dC0zNzI1Mzc4MjM4LnB52gg8bGFtYmRhPvomYnVpbGRf\n'
+                                            'YWRhcHRpdmVfbW9kZWwuPGxvY2Fscz4uPGxhbWJkYT5XAAAAcxEAAACAAKwyrz2pPbgRwBGoPdQr\n'
+                                            'Q/MAAAAA\n',
+                                    'defaults': None}},
+            'name': 'attention_sum',
+            'trainable': True},
+ 'inbound_nodes': [{'args': [{'class_name': '__keras_tensor__',
+                              'config': {'dtype': 'float32',
+                                         'keras_history': ['attention_multiply',
+                                                           0,
+                                                           0],
+                                         'shape': [None, 3, 256]}}],
+                    'kwargs': {'mask': None}}],
+ 'name': 'attention_sum'}
