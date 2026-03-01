@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, Alert, Image, Modal } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, Platform, Alert, Image, Modal, Keyboard, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Audio } from 'expo-av';
@@ -31,6 +31,7 @@ export default function ChatScreen() {
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [conversationHistory, setConversationHistory] = useState<Conversation[]>([]);
     const scrollViewRef = useRef<ScrollView>(null);
+    const keyboardPadding = useRef(new Animated.Value(0)).current;
 
     // Load conversation history on mount
     useEffect(() => {
@@ -46,6 +47,60 @@ export default function ChatScreen() {
     useEffect(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
     }, [messages]);
+
+    // Keyboard listeners to push input bar up
+    useEffect(() => {
+        const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+        const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+        const keyboardShowListener = Keyboard.addListener(showEvent, (e) => {
+            Animated.timing(keyboardPadding, {
+                toValue: e.endCoordinates.height,
+                duration: Platform.OS === 'ios' ? 250 : 150,
+                useNativeDriver: false,
+            }).start();
+            setTimeout(() => scrollViewRef.current?.scrollToEnd({ animated: true }), 100);
+        });
+
+        const keyboardHideListener = Keyboard.addListener(hideEvent, () => {
+            Animated.timing(keyboardPadding, {
+                toValue: 0,
+                duration: Platform.OS === 'ios' ? 250 : 150,
+                useNativeDriver: false,
+            }).start();
+        });
+
+        return () => {
+            keyboardShowListener.remove();
+            keyboardHideListener.remove();
+        };
+    }, []);
+
+    // Auto-save conversation after each AI response
+    useEffect(() => {
+        if (!isTyping && messages.length >= 2) {
+            const autoSave = async () => {
+                try {
+                    const convId = conversationId || `conv_${Date.now()}`;
+                    if (!conversationId) {
+                        setConversationId(convId);
+                    }
+                    const conversation: Conversation = {
+                        id: convId,
+                        messages: messages,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        preview: chatStorageService.generatePreview(messages),
+                    };
+                    await chatStorageService.saveConversation(conversation);
+                    console.log('💾 Auto-saved conversation');
+                } catch (error) {
+                    console.error('❌ Auto-save failed:', error);
+                }
+            };
+            autoSave();
+        }
+    }, [messages, isTyping]);
 
     const requestPermissions = async () => {
         try {
@@ -63,6 +118,24 @@ export default function ChatScreen() {
         } catch (error) {
             console.error('Error requesting permissions:', error);
         }
+    };
+
+    const stripMarkdown = (text: string): string => {
+        return text
+            .replace(/\*\*\*(.*?)\*\*\*/g, '$1')   // bold+italic ***text***
+            .replace(/\*\*(.*?)\*\*/g, '$1')         // bold **text**
+            .replace(/\*(.*?)\*/g, '$1')             // italic *text*
+            .replace(/__(.*?)__/g, '$1')             // bold __text__
+            .replace(/_(.*?)_/g, '$1')               // italic _text_
+            .replace(/~~(.*?)~~/g, '$1')             // strikethrough
+            .replace(/`{3}[\s\S]*?`{3}/g, '')        // code blocks ```...```
+            .replace(/`([^`]+)`/g, '$1')             // inline code `text`
+            .replace(/^#{1,6}\s+/gm, '')             // headings # ## ###
+            .replace(/^\s*[-*+]\s+/gm, '• ')         // bullet lists
+            .replace(/^\s*\d+\.\s+/gm, '')           // numbered lists
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') // links [text](url)
+            .replace(/\n{3,}/g, '\n\n')              // excess newlines
+            .trim();
     };
 
     const formatTimestamp = (date: Date): string => {
@@ -129,7 +202,7 @@ export default function ChatScreen() {
                 // Add AI response to UI
                 const aiMessage: Message = {
                     id: Date.now().toString(),
-                    text: response.message,
+                    text: stripMarkdown(response.message),
                     sender: 'assistant',
                     timestamp: formatTimestamp(new Date(response.metadata.timestamp)),
                 };
@@ -226,7 +299,7 @@ export default function ChatScreen() {
                     // Add AI response
                     const aiMessage: Message = {
                         id: response.data.messageId,
-                        text: response.data.responseText,
+                        text: stripMarkdown(response.data.responseText),
                         sender: 'assistant',
                         timestamp: formatTimestamp(new Date()),
                     };
@@ -415,10 +488,8 @@ export default function ChatScreen() {
             />
 
             <SafeAreaView style={styles.safeArea} edges={['bottom']}>
-                <KeyboardAvoidingView
-                    style={styles.keyboardView}
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+                <Animated.View
+                    style={[styles.keyboardView, { paddingBottom: keyboardPadding }]}
                 >
                     {/* Messages Area */}
                     <ScrollView
@@ -427,6 +498,70 @@ export default function ChatScreen() {
                         contentContainerStyle={styles.messagesContent}
                         showsVerticalScrollIndicator={false}
                     >
+                        {/* Welcome Cards - Empty State */}
+                        {messages.length === 0 && (
+                            <View style={styles.emptyStateContainer}>
+                                <View style={styles.emptyStateIconWrapper}>
+                                    <Ionicons name="chatbubble-ellipses" size={40} color="#6366F1" />
+                                </View>
+                                <Text style={styles.emptyStateTitle}>How can I help you today?</Text>
+                                <Text style={styles.emptyStateSubtitle}>
+                                    I'm your PediTrack AI assistant. Tap a card below to get started!
+                                </Text>
+
+                                <TouchableOpacity
+                                    style={styles.capabilityCard}
+                                    activeOpacity={0.7}
+                                    onPress={() => setInputText('What are common symptoms I should watch for in my child?')}
+                                >
+                                    <View style={[styles.capabilityIconBg, { backgroundColor: '#EEF2FF' }]}>
+                                        <Text style={styles.capabilityEmoji}>🩺</Text>
+                                    </View>
+                                    <View style={styles.capabilityTextContainer}>
+                                        <Text style={styles.capabilityTitle}>Health Questions</Text>
+                                        <Text style={styles.capabilityDesc}>
+                                            Ask about your child's symptoms, growth, or development milestones
+                                        </Text>
+                                    </View>
+                                    <Ionicons name="chevron-forward" size={18} color="#A5B4FC" />
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={styles.capabilityCard}
+                                    activeOpacity={0.7}
+                                    onPress={() => setInputText('I want to share a photo for health guidance')}
+                                >
+                                    <View style={[styles.capabilityIconBg, { backgroundColor: '#FEF3C7' }]}>
+                                        <Text style={styles.capabilityEmoji}>📸</Text>
+                                    </View>
+                                    <View style={styles.capabilityTextContainer}>
+                                        <Text style={styles.capabilityTitle}>Image Analysis</Text>
+                                        <Text style={styles.capabilityDesc}>
+                                            Share photos for visual health assessments and guidance
+                                        </Text>
+                                    </View>
+                                    <Ionicons name="chevron-forward" size={18} color="#A5B4FC" />
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={styles.capabilityCard}
+                                    activeOpacity={0.7}
+                                    onPress={() => setInputText('Give me tips on nutrition and sleep for my child')}
+                                >
+                                    <View style={[styles.capabilityIconBg, { backgroundColor: '#ECFDF5' }]}>
+                                        <Text style={styles.capabilityEmoji}>💡</Text>
+                                    </View>
+                                    <View style={styles.capabilityTextContainer}>
+                                        <Text style={styles.capabilityTitle}>Parenting Tips</Text>
+                                        <Text style={styles.capabilityDesc}>
+                                            Get personalized advice on nutrition, sleep, and childcare
+                                        </Text>
+                                    </View>
+                                    <Ionicons name="chevron-forward" size={18} color="#A5B4FC" />
+                                </TouchableOpacity>
+                            </View>
+                        )}
+
                         {messages.map((message) => (
                             <View key={message.id}>
                                 {message.sender === 'user' ? (
@@ -552,22 +687,8 @@ export default function ChatScreen() {
                             <Ionicons name="send" size={20} color={Colors.white} />
                         </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={[
-                                styles.voiceButton,
-                                isRecording && styles.recordingButton
-                            ]}
-                            onPress={handleVoicePress}
-                            disabled={isTyping}
-                        >
-                            <Ionicons
-                                name={isRecording ? "stop-circle" : "mic"}
-                                size={22}
-                                color={Colors.white}
-                            />
-                        </TouchableOpacity>
                     </View>
-                </KeyboardAvoidingView>
+                </Animated.View>
             </SafeAreaView>
 
             {/* Conversation History Modal */}
@@ -812,18 +933,78 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         elevation: 4,
     },
-    voiceButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: '#6366F1',
+    // Empty State / Welcome Card styles
+    emptyStateContainer: {
+        flex: 1,
+        alignItems: 'center',
+        paddingTop: 32,
+        paddingHorizontal: 8,
+    },
+    emptyStateIconWrapper: {
+        width: 72,
+        height: 72,
+        borderRadius: 36,
+        backgroundColor: '#EEF2FF',
         alignItems: 'center',
         justifyContent: 'center',
+        marginBottom: 16,
+    },
+    emptyStateTitle: {
+        fontSize: 22,
+        fontWeight: '700',
+        color: Colors.dark,
+        marginBottom: 8,
+        textAlign: 'center',
+    },
+    emptyStateSubtitle: {
+        fontSize: 14,
+        color: Colors.inactive,
+        textAlign: 'center',
+        lineHeight: 20,
+        marginBottom: 24,
+        paddingHorizontal: 16,
+    },
+    capabilityCard: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: Colors.white,
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 12,
+        width: '100%',
         shadowColor: '#6366F1',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
-        shadowRadius: 4,
-        elevation: 4,
+        shadowOpacity: 0.08,
+        shadowRadius: 8,
+        elevation: 3,
+        borderWidth: 1,
+        borderColor: '#F0EFFF',
+    },
+    capabilityIconBg: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 14,
+    },
+    capabilityEmoji: {
+        fontSize: 22,
+    },
+    capabilityTextContainer: {
+        flex: 1,
+        marginRight: 8,
+    },
+    capabilityTitle: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: Colors.dark,
+        marginBottom: 3,
+    },
+    capabilityDesc: {
+        fontSize: 12,
+        color: Colors.inactive,
+        lineHeight: 17,
     },
     imageContainer: {
         width: '100%',
@@ -864,9 +1045,6 @@ const styles = StyleSheet.create({
         right: 4,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         borderRadius: 12,
-    },
-    recordingButton: {
-        backgroundColor: '#EF4444',
     },
     // Modal styles
     modalOverlay: {
