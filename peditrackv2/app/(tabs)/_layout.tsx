@@ -1,6 +1,7 @@
 import { Tabs, useSegments, useRouter } from 'expo-router';
 import React from 'react';
 import { Platform, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TabBarIcon } from '@/components/BottomNav';
 import { TopBar } from '@/components/TopBar';
 import { Colors } from '@/constants/Colors';
@@ -13,11 +14,12 @@ export default function TabLayout() {
   const { user } = useAuth();
   const { selectedBaby } = useBaby();
   const hideUI = (segments as string[]).includes('feeding');
+  const insets = useSafeAreaInsets();
 
   return (
     <>
       {!hideUI && (
-        <TopBar 
+        <TopBar
           username={user?.name}
           childName={selectedBaby?.name}
           profileImage={user?.profilePicture}
@@ -33,8 +35,8 @@ export default function TabLayout() {
           tabBarStyle: {
             backgroundColor: Colors.white,
             borderTopWidth: 0,
-            height: Platform.OS === 'ios' ? 85 : 70,
-            paddingBottom: Platform.OS === 'ios' ? 25 : 10,
+            height: 60 + Math.max(insets.bottom, 10),
+            paddingBottom: Math.max(insets.bottom, 10),
             paddingTop: 10,
             ...styles.tabBarShadow,
           },
