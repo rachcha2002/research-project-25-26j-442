@@ -30,6 +30,7 @@ export default function ChatScreen() {
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [conversationHistory, setConversationHistory] = useState<Conversation[]>([]);
+    const [selectedLanguage, setSelectedLanguage] = useState<'en' | 'si' | 'ta'>('en');
     const scrollViewRef = useRef<ScrollView>(null);
     const keyboardPadding = useRef(new Animated.Value(0)).current;
 
@@ -190,7 +191,8 @@ export default function ChatScreen() {
                     response = await sendChatMessage(
                         currentText,
                         conversationId,
-                        'google'
+                        'google',
+                        selectedLanguage
                     );
                 }
 
@@ -479,12 +481,29 @@ export default function ChatScreen() {
         );
     };
 
+    const handleLanguageChange = (lang: 'en' | 'si' | 'ta') => {
+        if (lang !== selectedLanguage) {
+            // Save current conversation before switching
+            if (messages.length > 0) {
+                saveCurrentConversation();
+            }
+            setSelectedLanguage(lang);
+            // Start a fresh chat with the new language
+            setMessages([]);
+            setConversationId(undefined);
+            setInputText('');
+            setSelectedImage(null);
+        }
+    };
+
     return (
         <View style={styles.container}>
             <ChatTopBar
                 showBackButton={true}
                 onHistoryPress={handleShowHistory}
                 onNewChatPress={handleNewChat}
+                selectedLanguage={selectedLanguage}
+                onLanguageChange={handleLanguageChange}
             />
 
             <SafeAreaView style={styles.safeArea} edges={['bottom']}>
