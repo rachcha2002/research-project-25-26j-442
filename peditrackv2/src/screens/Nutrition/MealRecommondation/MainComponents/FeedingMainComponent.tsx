@@ -7,42 +7,32 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   RefreshControl,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
-import { useAuth } from '@/contexts/AuthContext';
 import { useBaby } from '@/contexts/BabyContext';
 import {
-  createMealPreference,
-  getMealPreference,
-  MealPreference,
-} from '@/services/mealPreferencesService';
-import {
-  PreferencesForm,
-  PreferencesFormValues,
-} from '../SubComponents/PreferencesForm';
-import { MealPreferencesSummaryCard } from '../SubComponents/MealPreferencesSummaryCard';
+  DailyGeneratedMealPlan,
+  getTodayGeneratedPlan,
+} from '@/services/generatedPlansService';
+import { TodayMealPlanCard } from '../SubComponents/TodayMealPlanCard';
 
 export const FeedingMainComponent: React.FC = () => {
-  const { user } = useAuth();
   const { selectedBaby } = useBaby();
 
-  const [preferenceData, setPreferenceData] = useState<MealPreference | null>(null);
+  const [todayPlan, setTodayPlan] = useState<DailyGeneratedMealPlan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const parentId = user?._id;
   const childId = selectedBaby?._id;
 
-  const loadPreferences = useCallback(async () => {
-    if (!parentId || !childId) {
-      setPreferenceData(null);
+  const loadTodayPlan = useCallback(async () => {
+    if (!childId) {
+      setTodayPlan(null);
       setIsLoading(false);
       setIsRefreshing(false);
-      setErrorMessage('Parent or child profile is not available.');
+      setErrorMessage('Child profile is not available.');
       return;
     }
 
@@ -51,53 +41,24 @@ export const FeedingMainComponent: React.FC = () => {
         setIsLoading(true);
       }
       setErrorMessage(null);
-      const data = await getMealPreference({ parentId, childId });
-      setPreferenceData(data);
+      const plan = await getTodayGeneratedPlan(childId);
+      setTodayPlan(plan);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to load meal preferences.';
+      const message = error instanceof Error ? error.message : 'Failed to load today meal plan.';
       setErrorMessage(message);
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [parentId, childId, isRefreshing]);
+  }, [childId, isRefreshing]);
 
   useEffect(() => {
-    loadPreferences();
-  }, [loadPreferences]);
+    loadTodayPlan();
+  }, [loadTodayPlan]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
-    loadPreferences();
-  };
-
-  const handleCreatePreference = async (values: PreferencesFormValues) => {
-    if (!parentId || !childId) {
-      Alert.alert('Profile missing', 'Please select a baby profile and try again.');
-      return;
-    }
-
-    try {
-      setIsSaving(true);
-      setErrorMessage(null);
-      const savedPreference = await createMealPreference({
-        parent_id: parentId,
-        child_id: childId,
-        diet_type: values.diet_type,
-        budget_level: values.budget_level,
-        meals_per_day: values.meals_per_day,
-        activity_level: values.activity_level,
-      });
-
-      setPreferenceData(savedPreference);
-      Alert.alert('Saved', 'Meal preferences saved successfully.');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to save meal preferences.';
-      setErrorMessage(message);
-      Alert.alert('Save failed', message);
-    } finally {
-      setIsSaving(false);
-    }
+    loadTodayPlan();
   };
 
   return (
@@ -111,41 +72,38 @@ export const FeedingMainComponent: React.FC = () => {
         <View style={styles.headerSection}>
           <Text style={styles.headerTitle}>Personalized Meal Plan</Text>
           <Text style={styles.headerDescription}>
-            Interactively, we collect this data to build a personalized meal plan for your child.
+            Here is your child&apos;s generated meal plan for today.
           </Text>
         </View>
 
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="small" color={Colors.primary.DEFAULT} />
-            <Text style={styles.loadingText}>Loading preferences...</Text>
+            <Text style={styles.loadingText}>Loading today&apos;s meal plan...</Text>
           </View>
         ) : null}
 
         {!isLoading && errorMessage ? (
           <View style={styles.errorCard}>
-            <Text style={styles.errorTitle}>Couldn’t load preferences</Text>
+            <Text style={styles.errorTitle}>Couldn&apos;t load today&apos;s meal plan</Text>
             <Text style={styles.errorMessage}>{errorMessage}</Text>
-            <TouchableOpacity style={styles.retryButton} onPress={loadPreferences} activeOpacity={0.8}>
+            <TouchableOpacity style={styles.retryButton} onPress={loadTodayPlan} activeOpacity={0.8}>
               <Text style={styles.retryButtonText}>Retry</Text>
             </TouchableOpacity>
           </View>
         ) : null}
 
-        {!isLoading && !errorMessage && preferenceData ? (
-          <MealPreferencesSummaryCard data={preferenceData} />
+        {!isLoading && !errorMessage && todayPlan ? (
+          <TodayMealPlanCard plan={todayPlan} />
         ) : null}
 
-        {!isLoading && !errorMessage && !preferenceData ? (
-          <>
-            <PreferencesForm onSubmit={handleCreatePreference} />
-            {isSaving ? (
-              <View style={styles.savingContainer}>
-                <ActivityIndicator size="small" color={Colors.primary.DEFAULT} />
-                <Text style={styles.savingText}>Saving preferences...</Text>
-              </View>
-            ) : null}
-          </>
+        {!isLoading && !errorMessage && !todayPlan ? (
+          <View style={styles.emptyStateCard}>
+            <Text style={styles.emptyStateTitle}>No meal plan displayed for today.</Text>
+            <Text style={styles.emptyStateDescription}>
+              Generate a meal plan first, then pull to refresh to view it here.
+            </Text>
+          </View>
         ) : null}
       </ScrollView>
     </SafeAreaView>
@@ -220,13 +178,27 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
-  savingContainer: {
-    marginTop: 12,
-    alignItems: 'center',
-    gap: 8,
+  emptyStateCard: {
+    backgroundColor: Colors.white,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 16,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  savingText: {
-    fontSize: 13,
+  emptyStateTitle: {
+    color: Colors.dark,
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  emptyStateDescription: {
     color: Colors.inactive,
+    fontSize: 13,
+    lineHeight: 20,
   },
 });

@@ -1,12 +1,14 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+from datetime import datetime, timezone
 import numpy as np
 from src.services.health_calculator import PediatricHealthCalculator
 from src.utils.database import Database
 from src.models.schemas import MealGenerationRequest, MealFeedback, BehavioralSeeds
 from src.services.meal_engine import MealOptimizerEngine
 from src.controllers.meal_preferences_controller import MealPreferencesController
+from src.controllers.generated_plans_controller import GeneratedPlansController
 
 # Global engine instance so it only loads the CSVs once at startup
 engine = None
@@ -37,6 +39,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Pediatric ML Nutrition API", lifespan=lifespan)
 app.include_router(MealPreferencesController.router)
+app.include_router(GeneratedPlansController.router)
 
 # MANDATORY FOR REACT NATIVE: CORS Middleware
 app.add_middleware(
@@ -87,7 +90,8 @@ async def generate_plan(request: MealGenerationRequest):
     await history_col.insert_one({
         "child_id": request.child_id,
         "metrics": optimized_result["research_metrics"],
-        "plan": optimized_result["daily_plan"]
+        "plan": optimized_result["daily_plan"],
+        "created_at": datetime.now(timezone.utc),
     })
 
     return {"message": "Plan generated successfully", "data": optimized_result}
