@@ -12,8 +12,17 @@ const aiInsightSchema = new mongoose.Schema({
   // Insight metadata
   insightType: {
     type: String,
-    enum: ['growth_prediction', 'health_alert', 'recommendation', 'milestone', 'trend_analysis'],
+    enum: [
+      'growth_prediction', 'health_alert', 'recommendation', 'milestone', 'trend_analysis',
+      'health_score', 'risk_assessment',  // ML service cache types
+    ],
     required: true,
+  },
+
+  // Full ML prediction result — stored for 24hr caching
+  cachedData: {
+    type: mongoose.Schema.Types.Mixed,
+    default: null,
   },
   generatedDate: {
     type: Date,

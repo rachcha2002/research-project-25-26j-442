@@ -2,6 +2,7 @@ const Post = require('../models/Post');
 const PostEngagement = require('../models/PostEngagement');
 const PostComment = require('../models/PostComments');
 const SavedPosts = require('../models/SavedPosts');
+const mongoose = require('mongoose');
 const { uploadToR2, deleteFromR2 } = require('./uploadController');
 
 // helper to build comment tree (same logic as getPostWithEngagement)
@@ -659,6 +660,109 @@ exports.getSavedPostsByUser = async (req, res) => {
         return res.status(200).json(result);
     } catch (error) {
         console.error('Error fetching saved posts:', error);
+        return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    }
+};
+
+// Get posts requiring approval for a specific doctor
+exports.getPostsRequiringApproval = async (req, res) => {
+    try {
+        const { DoctorID } = req.params;
+
+        if (!DoctorID) {
+            return res.status(400).json({ success: false, message: 'DoctorID is required.' });
+        }
+
+        // Verify doctor exists in database
+        const doctorsCollection = mongoose.connection.db.collection('doctors');
+        const doctor = await doctorsCollection.findOne({ doctor_id: DoctorID });
+
+        if (!doctor) {
+            return res.status(404).json({ success: false, message: 'Doctor not found.' });
+        }
+
+        // Get posts with ApprovementReq = true
+        const posts = await Post.find({ ApprovementReq: true })
+            .sort({ PostedTime: -1 })
+            .lean();
+
+        if (posts.length === 0) {
+            return res.status(200).json([]);
+        }
+
+        const postIds = posts.map(p => p.PostID);
+
+        // Get engagements for these posts
+        const engagements = await PostEngagement.find({ PostID: { $in: postIds } }).lean();
+        const engagementMap = {};
+        engagements.forEach(e => {
+            engagementMap[e.PostID] = e;
+        });
+
+        // Get comments for these posts
+        const comments = await PostComment.find({ PostID: { $in: postIds } })
+            .sort({ CommentTime: 1 });
+
+        const commentsByPost = {};
+        postIds.forEach(id => { commentsByPost[id] = []; });
+        comments.forEach(c => {
+            if (!commentsByPost[c.PostID]) commentsByPost[c.PostID] = [];
+            commentsByPost[c.PostID].push(c);
+        });
+
+        // Build response
+        const result = posts.map(post => ({
+            post,
+            engagement: engagementMap[post.PostID] || { PostID: post.PostID, LikedBy: [], DislikedBy: [] },
+            comments: buildCommentTree(commentsByPost[post.PostID] || []),
+        }));
+
+        return res.status(200).json(result);
+    } catch (error) {
+        console.error('Error fetching posts requiring approval:', error);
+        return res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    }
+};
+
+// Approve a post by a doctor
+exports.approvePost = async (req, res) => {
+    try {
+        const { DoctorID, PostID, Approved } = req.body;
+
+        if (!DoctorID || !PostID || typeof Approved !== 'boolean') {
+            return res.status(400).json({ success: false, message: 'DoctorID, PostID, and Approved (boolean) are required.' });
+        }
+
+        // Verify doctor exists in database
+        const doctorsCollection = mongoose.connection.db.collection('doctors');
+        const doctor = await doctorsCollection.findOne({ doctor_id: DoctorID });
+
+        if (!doctor) {
+            return res.status(404).json({ success: false, message: 'Doctor not found.' });
+        }
+
+        // Find the post
+        const post = await Post.findOne({ PostID });
+        if (!post) {
+            return res.status(404).json({ success: false, message: 'Post not found.' });
+        }
+
+        // Check if post requires approval
+        if (!post.ApprovementReq) {
+            return res.status(400).json({ success: false, message: 'This post does not require approval.' });
+        }
+
+        // Update approval status
+        post.Approved = Approved;
+        await post.save();
+
+        return res.status(200).json({
+            success: true,
+            message: `Post ${Approved ? 'approved' : 'rejected'} successfully.`,
+            post
+        });
+    } catch (error) {
+        console.error('Error approving post:', error);
         return res.status(500).json({ success: false, message: 'Server error', error: error.message });
     }
 };

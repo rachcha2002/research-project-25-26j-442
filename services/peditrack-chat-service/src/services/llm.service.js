@@ -37,7 +37,7 @@ class MultiProviderLLMService {
             case 'google':
             case 'gemini':
                 this.model = new ChatGoogleGenerativeAI({
-                    modelName: process.env.GOOGLE_MODEL || 'gemini-pro',
+                    model: process.env.GOOGLE_MODEL || 'gemini-pro',
                     temperature: parseFloat(process.env.DEFAULT_TEMPERATURE) || 0.7,
                     maxOutputTokens: parseInt(process.env.MAX_TOKENS) || 1000,
                     apiKey: process.env.GOOGLE_API_KEY,
@@ -320,17 +320,11 @@ Remember: You CAN see and analyze images. You are an assistant familiar with Sri
 
     /**
      * Generate a chat completion with image input
-     * Uses OpenAI's vision capabilities
+     * Supports both Gemini (native multimodal) and OpenAI vision
      */
     async generateResponseWithImage(messages, imageBuffer, imageMimeType, options = {}) {
         try {
             const { temperature, maxTokens } = options;
-
-            // Only OpenAI supports vision in our current setup
-            // For other providers, we'll need to switch temporarily or throw an error
-            if (this.provider !== 'openai') {
-                console.warn(`⚠️  Vision not supported for ${this.provider}, switching to OpenAI temporarily`);
-            }
 
             // Convert image buffer to base64
             const base64Image = imageBuffer.toString('base64');
@@ -344,6 +338,62 @@ Remember: You CAN see and analyze images. You are an assistant familiar with Sri
 
             // Build vision-specific system prompt
             const systemPrompt = this._getVisionSystemPrompt();
+
+            // Use Gemini for vision (native multimodal support)
+            if (this.provider === 'google' || this.provider === 'gemini') {
+                console.log(`🖼️  Using Gemini multimodal vision...`);
+
+                // Prepare messages with image for Gemini
+                const geminiMessages = [new SystemMessage(systemPrompt)];
+
+                // Add conversation history (text only)
+                for (let i = 0; i < messages.length - 1; i++) {
+                    const msg = messages[i];
+                    if (msg.role === 'user') {
+                        geminiMessages.push(new HumanMessage(msg.content));
+                    } else if (msg.role === 'assistant') {
+                        geminiMessages.push(new AIMessage(msg.content));
+                    }
+                }
+
+                // Add the latest message with image using LangChain's format
+                geminiMessages.push(new HumanMessage({
+                    content: [
+                        {
+                            type: 'text',
+                            text: userMessage.content || 'Please analyze this image and provide relevant information.'
+                        },
+                        {
+                            type: 'image_url',
+                            image_url: imageUrl
+                        }
+                    ]
+                }));
+
+                // Use Gemini vision model
+                const { ChatGoogleGenerativeAI } = require('@langchain/google-genai');
+                const visionModel = new ChatGoogleGenerativeAI({
+                    modelName: process.env.GOOGLE_VISION_MODEL || 'gemini-1.5-flash',
+                    temperature: temperature || 0.7,
+                    maxOutputTokens: maxTokens || 1000,
+                    apiKey: process.env.GOOGLE_API_KEY,
+                });
+
+                console.log(`   Model: ${visionModel.modelName}`);
+                const response = await visionModel.invoke(geminiMessages);
+
+                console.log('✅ Gemini vision response received');
+
+                return {
+                    success: true,
+                    response: response.content,
+                    provider: 'google',
+                    model: visionModel.modelName
+                };
+            }
+
+            // Fallback to OpenAI for vision if not using Gemini
+            console.log(`🖼️  Using OpenAI Vision API (fallback)...`);
 
             // Prepare messages for OpenAI vision API
             const visionMessages = [
@@ -374,13 +424,13 @@ Remember: You CAN see and analyze images. You are an assistant familiar with Sri
                         type: 'image_url',
                         image_url: {
                             url: imageUrl,
-                            detail: 'auto' // Can be 'low', 'high', or 'auto'
+                            detail: 'auto'
                         }
                     }
                 ]
             });
 
-            // Use OpenAI directly for vision (not through LangChain as it has limited vision support)
+            // Use OpenAI directly for vision
             const OpenAI = require('openai');
             
             // Clean API key (remove quotes if present)
@@ -395,7 +445,7 @@ Remember: You CAN see and analyze images. You are an assistant familiar with Sri
             });
 
             const visionModel = process.env.OPENAI_VISION_MODEL || 'gpt-4o-mini';
-            console.log(`🖼️  Calling OpenAI Vision API with model: ${visionModel}...`);
+            console.log(`   Model: ${visionModel}`);
             
             const response = await openai.chat.completions.create({
                 model: visionModel,
@@ -404,8 +454,7 @@ Remember: You CAN see and analyze images. You are an assistant familiar with Sri
                 max_tokens: maxTokens || 1000
             });
 
-            console.log('✅ Vision API response received');
-            console.log(`   Model used: ${response.model}`);
+            console.log('✅ OpenAI vision response received');
             console.log(`   Tokens used: ${response.usage?.total_tokens || 'N/A'}`);
 
             return {
@@ -420,9 +469,6 @@ Remember: You CAN see and analyze images. You are an assistant familiar with Sri
             console.error('❌ Vision API Error:', error.message);
             if (error.response) {
                 console.error('   API Response:', error.response.data);
-            }
-            if (error.message.includes('model')) {
-                console.error('   💡 Make sure OPENAI_VISION_MODEL is set to a vision-capable model (gpt-4o-mini, gpt-4o, gpt-4-turbo)');
             }
             throw error;
         }

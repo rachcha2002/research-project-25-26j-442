@@ -3,8 +3,7 @@ const mongoose = require('mongoose');
 const measurementSchema = new mongoose.Schema({
   // Reference to baby
   babyId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Baby',
+    type: String, // Changed from ObjectId to String to match frontend
     required: true,
     index: true,
   },
@@ -53,6 +52,12 @@ const measurementSchema = new mongoose.Schema({
   // Auto-calculated BMI
   bmi: {
     type: Number,
+  },
+
+  // Age in months at time of measurement (auto-calculated from baby DOB on save)
+  ageInMonths: {
+    type: Number,
+    index: true, // ML pipeline will query/group by this frequently
   },
 
   // Percentile data

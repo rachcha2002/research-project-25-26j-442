@@ -24,7 +24,15 @@ app.use('/api/babies', require('./routes/babies'));
 app.use('/api/measurements', require('./routes/measurements'));
 app.use('/api/health-records', require('./routes/healthRecords'));
 app.use('/api/medications', require('./routes/medications'));
+app.use('/api/vaccinations', require('./routes/vaccinations'));
+app.use('/api/vaccine-types', require('./routes/vaccineTypes'));
+app.use('/api/symptoms', require('./routes/symptoms'));
 app.use('/api/ai-insights', require('./routes/aiInsights'));
+app.use('/api/growth-standards', require('./routes/growthStandards'));
+app.use('/api/sleep', require('./routes/sleep'));
+app.use('/api/health-conditions', require('./routes/healthConditions'));
+app.use('/api/nutrition', require('./routes/nutrition'));
+app.use('/api/ai', require('./routes/ai'));
 
 // 404 handler
 app.use((req, res) => {

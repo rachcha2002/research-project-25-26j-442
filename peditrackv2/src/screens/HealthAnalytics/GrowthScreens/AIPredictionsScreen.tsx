@@ -1,572 +1,285 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import React, { useState, useCallback } from 'react';
+import {
+  View, Text, ScrollView, StyleSheet,
+  TouchableOpacity, Dimensions, ActivityIndicator,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { LineChart } from 'react-native-chart-kit';
+import { useBaby } from '../../../contexts/BabyContext';
+import {
+  getGrowthPredictions, PredictionsResponse,
+  riskLevelColor, confidenceBadge, hoursAgo,
+} from '../../../services/aiService';
 
 const { width } = Dimensions.get('window');
+type Period = 'current' | '3months' | '6months' | '12months';
 
-type TimePeriod = 'current' | '3months' | '6months' | '12months';
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const AIPredictionsScreen: React.FC = () => {
   const router = useRouter();
-  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('3months');
+  const { selectedBaby } = useBaby();
+  const [period, setPeriod]   = useState<Period>('3months');
+  const [data, setData]       = useState<PredictionsResponse | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]     = useState<string | null>(null);
 
-  const chartData = {
-    labels: ['3y', '3.5y', '4y', '4.5y'],
-    datasets: [
-      {
-        data: [95, 98, 102, 105],
-        color: () => '#3B82F6',
-        strokeWidth: 3,
-      },
-      {
-        data: [95, 97, 100, 103],
-        color: () => '#93C5FD',
-        strokeWidth: 2,
-        withDots: false,
-      },
-    ],
-  };
+  const load = useCallback(async () => {
+    if (!selectedBaby) return;
+    setLoading(true); setError(null);
+    try {
+      setData(await getGrowthPredictions(selectedBaby._id));
+    } catch (e: any) {
+      setError(e.message || 'Could not load predictions');
+    } finally { setLoading(false); }
+  }, [selectedBaby]);
 
-  const influenceFactors = [
-    { name: 'Growth Velocity', value: 28 },
-    { name: 'Nutrition Patterns', value: 25 },
-    { name: 'Sleep Quality', value: 18 },
-    { name: 'Genetic Factors', value: 15 },
-    { name: 'Health Status', value: 15 },
-    { name: 'Activity/Sleep', value: 10 },
-    { name: 'Other', value: 7 },
-  ];
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  // ── Helper: active forecast point
+  const activePred =
+    period === '3months'  ? data?.predictions.threeMonths  :
+    period === '6months'  ? data?.predictions.sixMonths    :
+    period === '12months' ? data?.predictions.twelveMonths : null;
+
+  // ── Chart data from real trajectory
+  const chartData = data
+    ? {
+        labels: data.trajectory.months
+          .filter((_, i) => i % 2 === 1)        // every other month label
+          .map(m => `+${m}mo`),
+        datasets: [{
+          data: data.trajectory.heights.filter((_, i) => i % 2 === 1),
+          color: () => '#3B82F6',
+          strokeWidth: 3,
+        }],
+      }
+    : { labels: [], datasets: [{ data: [0] }] };
 
   return (
     <>
       <SecondaryTopBar />
       <SafeAreaView style={styles.container} edges={['bottom']}>
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* AI Prediction Mode Badge */}
-          <View style={styles.aiModeBadge}>
-            <Ionicons name="sparkles" size={18} color="#3B82F6" />
-            <View style={styles.aiModeTextContainer}>
-              <Text style={styles.aiModeTitle}>AI Prediction Mode</Text>
-              <Text style={styles.aiModeSubtitle}>Based on 48 months of growth data</Text>
-            </View>
+        {loading ? (
+          <View style={styles.center}>
+            <ActivityIndicator size="large" color={Colors.primary} />
+            <Text style={styles.loadingText}>Generating 12-month forecast…</Text>
           </View>
-
-          {/* Time Period Selector */}
-          <View style={styles.periodSelector}>
-            <TouchableOpacity
-              style={[styles.periodButton, selectedPeriod === 'current' && styles.periodButtonActive]}
-              onPress={() => setSelectedPeriod('current')}
-            >
-              <Text style={[styles.periodText, selectedPeriod === 'current' && styles.periodTextActive]}>
-                Current
+        ) : error ? (
+          <View style={styles.center}>
+            <Ionicons name="alert-circle-outline" size={52} color="#EF4444" />
+            <Text style={styles.errorText}>{error}</Text>
+            {error.includes('4+') && (
+              <Text style={styles.hintText}>
+                Add more measurements to unlock growth predictions.
               </Text>
-              <Text style={[styles.periodValue, selectedPeriod === 'current' && styles.periodValueActive]}>
-                95 cm
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.periodButton, selectedPeriod === '3months' && styles.periodButtonActive]}
-              onPress={() => setSelectedPeriod('3months')}
-            >
-              <Text style={[styles.periodText, selectedPeriod === '3months' && styles.periodTextActive]}>
-                3 Months
-              </Text>
-              <Text style={[styles.periodValue, selectedPeriod === '3months' && styles.periodValueActive]}>
-                98 cm
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.periodButton, selectedPeriod === '6months' && styles.periodButtonActive]}
-              onPress={() => setSelectedPeriod('6months')}
-            >
-              <Text style={[styles.periodText, selectedPeriod === '6months' && styles.periodTextActive]}>
-                6 Months
-              </Text>
-              <Text style={[styles.periodValue, selectedPeriod === '6months' && styles.periodValueActive]}>
-                102 cm
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.periodButton, selectedPeriod === '12months' && styles.periodButtonActive]}
-              onPress={() => setSelectedPeriod('12months')}
-            >
-              <Text style={[styles.periodText, selectedPeriod === '12months' && styles.periodTextActive]}>
-                12 Months
-              </Text>
-              <Text style={[styles.periodValue, selectedPeriod === '12months' && styles.periodValueActive]}>
-                105 cm
-              </Text>
+            )}
+            <TouchableOpacity style={styles.retryBtn} onPress={load}>
+              <Text style={styles.retryBtnText}>Retry</Text>
             </TouchableOpacity>
           </View>
+        ) : !data ? null : (
+          <ScrollView style={styles.scroll} contentContainerStyle={styles.content}
+            showsVerticalScrollIndicator={false}>
 
-          {/* Growth Chart */}
-          <View style={styles.chartCard}>
-            <LineChart
-              data={chartData}
-              width={width - 40}
-              height={220}
-              chartConfig={{
-                backgroundColor: '#ffffff',
-                backgroundGradientFrom: '#ffffff',
-                backgroundGradientTo: '#ffffff',
-                decimalPlaces: 0,
-                color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
-                labelColor: () => '#9CA3AF',
-                style: {
-                  borderRadius: 16,
-                },
-                propsForDots: {
-                  r: '4',
-                  strokeWidth: '2',
-                  stroke: '#ffffff',
-                },
-              }}
-              bezier
-              style={styles.chart}
-              withVerticalLines={false}
-              withHorizontalLines={true}
-              withInnerLines={true}
-              withOuterLines={false}
-            />
-            <View style={styles.chartLegend}>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
-                <Text style={styles.legendText}>Predicted</Text>
+            {/* Header badge */}
+            <View style={styles.aiModeBadge}>
+              <Ionicons name="sparkles" size={18} color="#3B82F6" />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.aiModeTitle}>AI Growth Predictions</Text>
+                <Text style={styles.aiModeSubtitle}>
+                  {data.cached
+                    ? `Cached · ${hoursAgo(data.lastCalculated)}`
+                    : `LSTM model · ${Math.round((data.trajectory.confidences[0] ?? 0.94) * 100)}% starting confidence`}
+                </Text>
               </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: '#93C5FD' }]} />
-                <Text style={styles.legendText}>Confidence</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Action Buttons */}
-          <View style={styles.actionButtons}>
-            <TouchableOpacity style={styles.primaryActionButton}>
-              <Ionicons name="add-circle" size={20} color="#ffffff" />
-              <Text style={styles.primaryActionText}>Set Measurement Reminder</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.secondaryActionButton}>
-              <Ionicons name="share-social-outline" size={20} color="#3B82F6" />
-              <Text style={styles.secondaryActionText}>Share with Pediatrician</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Current Metrics */}
-          <View style={styles.metricsCard}>
-            <View style={styles.metricRow}>
-              <Text style={styles.metricLabel}>Weight: 15.1 kg</Text>
-              <Text style={styles.metricChange}>+0.9 kg</Text>
-            </View>
-            <View style={styles.metricDivider} />
-            <View style={styles.metricRow}>
-              <Text style={styles.metricSubtext}>Expected: 47th-55th</Text>
-              <Text style={styles.metricSubtext}>percentile</Text>
-            </View>
-          </View>
-
-          {/* Forecast Cards */}
-          <View style={styles.forecastSection}>
-            <View style={styles.forecastCard}>
-              <View style={styles.forecastHeader}>
-                <Ionicons name="calendar-outline" size={18} color="#F59E0B" />
-                <Text style={styles.forecastTitle}>6-Month Forecast</Text>
-                <View style={styles.confidenceBadge}>
-                  <Text style={styles.confidenceText}>Medium (78%)</Text>
-                </View>
-              </View>
-              <View style={styles.forecastMetrics}>
-                <View style={styles.forecastMetric}>
-                  <Text style={styles.forecastLabel}>Height: 102 cm</Text>
-                  <Text style={styles.forecastValue}>+7 cm</Text>
-                </View>
-                <View style={styles.forecastMetric}>
-                  <Text style={styles.forecastLabel}>Weight: 15.9 kg</Text>
-                  <Text style={styles.forecastValue}>+0.8 kg</Text>
-                </View>
-              </View>
-              <Text style={styles.forecastNote}>Expected: 48th-54th percentile</Text>
+              {data.cached && <Text style={styles.cachedTag}>CACHED</Text>}
             </View>
 
-            <View style={styles.forecastCard}>
-              <View style={styles.forecastHeader}>
-                <Ionicons name="calendar-outline" size={18} color="#F59E0B" />
-                <Text style={styles.forecastTitle}>12-Month Forecast</Text>
-                <View style={[styles.confidenceBadge, { backgroundColor: '#FEF3C7' }]}>
-                  <Text style={[styles.confidenceText, { color: '#92400E' }]}>Medium-Low (59%)</Text>
-                </View>
-              </View>
-              <View style={styles.forecastMetrics}>
-                <View style={styles.forecastMetric}>
-                  <Text style={styles.forecastLabel}>Height: 105 cm</Text>
-                  <Text style={styles.forecastValue}>+10 cm</Text>
-                </View>
-                <View style={styles.forecastMetric}>
-                  <Text style={styles.forecastLabel}>Weight: 17.2 kg</Text>
-                  <Text style={styles.forecastValue}>+2.1 kg</Text>
-                </View>
-              </View>
-              <Text style={styles.forecastNote}>Expected: 46th-52nd percentile</Text>
+            {/* Period selector */}
+            <View style={styles.periodSelector}>
+              {([
+                { key: 'current',  label: 'Current', val: `${data.current.height?.toFixed(1)} cm` },
+                { key: '3months',  label: '3 mo',    val: data.predictions.threeMonths  ? `${data.predictions.threeMonths.height_cm.toFixed(1)} cm`  : '—' },
+                { key: '6months',  label: '6 mo',    val: data.predictions.sixMonths    ? `${data.predictions.sixMonths.height_cm.toFixed(1)} cm`    : '—' },
+                { key: '12months', label: '12 mo',   val: data.predictions.twelveMonths ? `${data.predictions.twelveMonths.height_cm.toFixed(1)} cm` : '—' },
+              ] as const).map(({ key, label, val }) => (
+                <TouchableOpacity
+                  key={key}
+                  style={[styles.periodBtn, period === key && styles.periodBtnActive]}
+                  onPress={() => setPeriod(key)}
+                >
+                  <Text style={[styles.periodLabel, period === key && styles.periodLabelActive]}>{label}</Text>
+                  <Text style={[styles.periodVal, period === key && styles.periodValActive]}>{val}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
-          </View>
 
-          {/* Influence Factors */}
-          <View style={styles.influenceSection}>
-            <View style={styles.influenceHeader}>
-              <Ionicons name="help-circle-outline" size={20} color={Colors.dark} />
-              <Text style={styles.influenceTitle}>What Influences This Prediction?</Text>
-            </View>
-            {influenceFactors.map((factor, index) => (
-              <View key={index} style={styles.influenceItem}>
-                <Text style={styles.influenceName}>{factor.name}</Text>
-                <View style={styles.influenceBarContainer}>
-                  <View style={[styles.influenceBar, { width: `${factor.value}%` }]} />
+            {/* Line chart */}
+            {data.trajectory.heights.length > 3 && (
+              <View style={styles.chartCard}>
+                <Text style={styles.chartTitle}>Height Trajectory (cm)</Text>
+                <LineChart
+                  data={chartData}
+                  width={width - 48}
+                  height={180}
+                  chartConfig={{
+                    backgroundColor: '#fff',
+                    backgroundGradientFrom: '#fff',
+                    backgroundGradientTo: '#fff',
+                    decimalPlaces: 0,
+                    color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
+                    labelColor: () => '#9CA3AF',
+                    propsForDots: { r: '4', strokeWidth: '2', stroke: '#3B82F6' },
+                  }}
+                  bezier
+                  style={{ borderRadius: 12 }}
+                  withShadow={false}
+                />
+              </View>
+            )}
+
+            {/* Forecast cards */}
+            <Text style={styles.sectionTitle}>Milestones</Text>
+            <View style={styles.forecastRow}>
+              {[
+                { label: '3 Months', pred: data.predictions.threeMonths },
+                { label: '6 Months', pred: data.predictions.sixMonths },
+                { label: '12 Months', pred: data.predictions.twelveMonths },
+              ].map(({ label, pred }) => pred && (
+                <View key={label} style={styles.forecastCard}>
+                  <Text style={styles.forecastPeriod}>{label}</Text>
+                  <Text style={styles.forecastHeight}>{pred.height_cm.toFixed(1)} cm</Text>
+                  <Text style={styles.forecastWeight}>{pred.weight_kg.toFixed(1)} kg</Text>
+                  <Text style={styles.forecastConf}>{Math.round(pred.confidence * 100)}% conf.</Text>
                 </View>
-                <Text style={styles.influenceValue}>{factor.value}</Text>
+              ))}
+            </View>
+
+            {/* Current metrics */}
+            <View style={styles.currentCard}>
+              <Text style={styles.sectionTitle}>Current Measurements</Text>
+              <View style={styles.metricsRow}>
+                {[
+                  { label: 'Height', val: `${data.current.height?.toFixed(1)} cm` },
+                  { label: 'Weight', val: `${data.current.weight?.toFixed(1)} kg` },
+                  { label: 'BMI',    val: data.current.bmi?.toFixed(1) ?? '—' },
+                ].map(({ label, val }) => (
+                  <View key={label} style={styles.metricItem}>
+                    <Text style={styles.metricVal}>{val}</Text>
+                    <Text style={styles.metricLabel}>{label}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            {/* Warnings */}
+            {data.warnings.length > 0 && (
+              <View style={styles.warningsCard}>
+                <Text style={styles.sectionTitle}>⚠️ Clinical Notes</Text>
+                {data.warnings.map((w, i) => (
+                  <View key={i} style={[styles.warningRow,
+                    { borderLeftColor: w.severity === 'high' ? '#EF4444' : w.severity === 'medium' ? '#F59E0B' : '#60A5FA' }]}>
+                    <Text style={styles.warningText}>{w.message}</Text>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Recommendations */}
+            {data.recommendations.slice(0, 3).map((rec, i) => (
+              <View key={i} style={styles.recCard}>
+                <Text style={styles.recIcon}>{rec.icon}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.recTitle}>{rec.title}</Text>
+                  <Text style={styles.recDesc} numberOfLines={2}>{rec.description}</Text>
+                </View>
+                <View style={[styles.priorityTag,
+                  { backgroundColor: rec.priority === 'urgent' ? '#FEE2E2' : rec.priority === 'high' ? '#FEF3C7' : '#F0FDF4' }]}>
+                  <Text style={[styles.priorityText,
+                    { color: rec.priority === 'urgent' ? '#DC2626' : rec.priority === 'high' ? '#D97706' : '#16A34A' }]}>
+                    {rec.priority}
+                  </Text>
+                </View>
               </View>
             ))}
-          </View>
-
-          {/* Alert Card */}
-          <View style={styles.alertCard}>
-            <Ionicons name="warning" size={20} color="#F59E0B" />
-            <View style={styles.alertContent}>
-              <Text style={styles.alertTitle}>Prediction shows potential growth velocity decrease in next 6 months</Text>
-              <Text style={styles.alertSubtitle}>Consider reviewing nutrition plan →</Text>
-            </View>
-          </View>
-
-          {/* Recommendation */}
-          <View style={styles.recommendationCard}>
-            <View style={styles.recommendationHeader}>
-              <Ionicons name="calendar-outline" size={18} color={Colors.dark} />
-              <Text style={styles.recommendationTitle}>Recommended Next Measurement</Text>
-            </View>
-            <Text style={styles.recommendationDate}>December 10, 2025</Text>
-          </View>
-        </ScrollView>
+          </ScrollView>
+        )}
       </SafeAreaView>
     </>
   );
 };
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-  scroll: {
-    flex: 1,
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 32,
-  },
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  scroll: { flex: 1 },
+  content: { padding: 16, paddingBottom: 32, gap: 14 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 },
+  loadingText: { fontSize: 15, color: '#6B7280', textAlign: 'center' },
+  errorText:   { fontSize: 15, color: '#EF4444', textAlign: 'center' },
+  hintText:    { fontSize: 13, color: '#9CA3AF', textAlign: 'center' },
+  retryBtn:    { backgroundColor: '#3B82F6', borderRadius: 10, paddingHorizontal: 24, paddingVertical: 10 },
+  retryBtnText:{ color: '#fff', fontWeight: '600', fontSize: 15 },
+
   aiModeBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#DBEAFE',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    gap: 10,
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: '#EFF6FF', borderRadius: 14, padding: 14,
   },
-  aiModeTextContainer: {
-    flex: 1,
+  aiModeTitle:   { fontSize: 14, fontWeight: '700', color: '#1E40AF' },
+  aiModeSubtitle:{ fontSize: 12, color: '#6B7280' },
+  cachedTag:     { fontSize: 10, color: '#F59E0B', fontWeight: '700',
+                   backgroundColor: '#FEF3C7', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+
+  periodSelector:{ flexDirection: 'row', gap: 8 },
+  periodBtn: {
+    flex: 1, backgroundColor: '#fff', borderRadius: 12, padding: 10, alignItems: 'center',
+    borderWidth: 1.5, borderColor: '#E5E7EB',
   },
-  aiModeTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#1E40AF',
-    marginBottom: 2,
-  },
-  aiModeSubtitle: {
-    fontSize: 12,
-    color: '#3B82F6',
-  },
-  periodSelector: {
-    flexDirection: 'row',
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 8,
-    marginBottom: 16,
-    gap: 8,
-  },
-  periodButton: {
-    flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  periodButtonActive: {
-    backgroundColor: '#DBEAFE',
-  },
-  periodText: {
-    fontSize: 11,
-    color: Colors.inactive,
-    marginBottom: 4,
-  },
-  periodTextActive: {
-    color: '#1E40AF',
-    fontWeight: '600',
-  },
-  periodValue: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.dark,
-  },
-  periodValueActive: {
-    color: '#1E40AF',
-  },
-  chartCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 16,
-  },
-  chart: {
-    marginVertical: 8,
-    borderRadius: 16,
-  },
-  chartLegend: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-    marginTop: 12,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  legendText: {
-    fontSize: 12,
-    color: Colors.inactive,
-  },
-  actionButtons: {
-    gap: 12,
-    marginBottom: 16,
-  },
-  primaryActionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#3B82F6',
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
-  },
-  primaryActionText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#ffffff',
-  },
-  secondaryActionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.white,
-    paddingVertical: 14,
-    borderRadius: 12,
-    gap: 8,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  secondaryActionText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#3B82F6',
-  },
-  metricsCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  metricRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  metricLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.dark,
-  },
-  metricChange: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#3B82F6',
-  },
-  metricDivider: {
-    height: 1,
-    backgroundColor: Colors.background,
-    marginVertical: 12,
-  },
-  metricSubtext: {
-    fontSize: 13,
-    color: Colors.inactive,
-  },
-  forecastSection: {
-    gap: 12,
-    marginBottom: 16,
-  },
+  periodBtnActive: { backgroundColor: '#3B82F6', borderColor: '#3B82F6' },
+  periodLabel:     { fontSize: 11, color: '#9CA3AF', fontWeight: '600' },
+  periodLabelActive:{ color: 'rgba(255,255,255,0.8)' },
+  periodVal:       { fontSize: 13, fontWeight: '700', color: '#1F2937', marginTop: 2 },
+  periodValActive: { color: '#fff' },
+
+  chartCard: { backgroundColor: '#fff', borderRadius: 16, padding: 14 },
+  chartTitle: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 10 },
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1F2937' },
+
+  forecastRow: { flexDirection: 'row', gap: 10 },
   forecastCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 16,
+    flex: 1, backgroundColor: '#fff', borderRadius: 14, padding: 12, alignItems: 'center',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05, shadowRadius: 3, elevation: 1,
   },
-  forecastHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    gap: 8,
+  forecastPeriod:{ fontSize: 11, color: '#9CA3AF', fontWeight: '600' },
+  forecastHeight:{ fontSize: 17, fontWeight: '800', color: '#1F2937', marginTop: 4 },
+  forecastWeight:{ fontSize: 13, color: '#6B7280' },
+  forecastConf:  { fontSize: 11, color: '#10B981', marginTop: 4, fontWeight: '600' },
+
+  currentCard: { backgroundColor: '#fff', borderRadius: 16, padding: 14, gap: 12 },
+  metricsRow:  { flexDirection: 'row', justifyContent: 'space-around' },
+  metricItem:  { alignItems: 'center', gap: 2 },
+  metricVal:   { fontSize: 20, fontWeight: '800', color: '#1F2937' },
+  metricLabel: { fontSize: 12, color: '#9CA3AF' },
+
+  warningsCard: { backgroundColor: '#FFF7ED', borderRadius: 16, padding: 14, gap: 8 },
+  warningRow:   { borderLeftWidth: 3, paddingLeft: 10, paddingVertical: 4 },
+  warningText:  { fontSize: 13, color: '#374151' },
+
+  recCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#fff', borderRadius: 14, padding: 14,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05, shadowRadius: 3, elevation: 1,
   },
-  forecastTitle: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.dark,
-  },
-  confidenceBadge: {
-    backgroundColor: '#FEF3C7',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  confidenceText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#92400E',
-  },
-  forecastMetrics: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  forecastMetric: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  forecastLabel: {
-    fontSize: 14,
-    color: Colors.dark,
-  },
-  forecastValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#3B82F6',
-  },
-  forecastNote: {
-    fontSize: 12,
-    color: Colors.inactive,
-    fontStyle: 'italic',
-  },
-  influenceSection: {
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-  influenceHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 8,
-  },
-  influenceTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.dark,
-  },
-  influenceItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-    gap: 12,
-  },
-  influenceName: {
-    fontSize: 13,
-    color: Colors.dark,
-    width: 120,
-  },
-  influenceBarContainer: {
-    flex: 1,
-    height: 6,
-    backgroundColor: Colors.background,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  influenceBar: {
-    height: '100%',
-    backgroundColor: '#3B82F6',
-    borderRadius: 3,
-  },
-  influenceValue: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: Colors.dark,
-    width: 30,
-    textAlign: 'right',
-  },
-  alertCard: {
-    flexDirection: 'row',
-    backgroundColor: '#FEF3C7',
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    gap: 12,
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-  },
-  alertContent: {
-    flex: 1,
-  },
-  alertTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#92400E',
-    marginBottom: 4,
-  },
-  alertSubtitle: {
-    fontSize: 12,
-    color: '#92400E',
-  },
-  recommendationCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: 16,
-  },
-  recommendationHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    gap: 8,
-  },
-  recommendationTitle: {
-    fontSize: 14,
-    color: Colors.inactive,
-  },
-  recommendationDate: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.dark,
-  },
+  recIcon:  { fontSize: 24 },
+  recTitle: { fontSize: 14, fontWeight: '700', color: '#1F2937' },
+  recDesc:  { fontSize: 12, color: '#6B7280', marginTop: 2 },
+  priorityTag:  { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, alignSelf: 'flex-start' },
+  priorityText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
 });
