@@ -481,18 +481,30 @@ export default function ChatScreen() {
         );
     };
 
+    const LANG_NAMES: Record<string, string> = { en: 'English', si: 'Sinhala', ta: 'Tamil' };
+
     const handleLanguageChange = (lang: 'en' | 'si' | 'ta') => {
         if (lang !== selectedLanguage) {
-            // Save current conversation before switching
-            if (messages.length > 0) {
-                saveCurrentConversation();
-            }
-            setSelectedLanguage(lang);
-            // Start a fresh chat with the new language
-            setMessages([]);
-            setConversationId(undefined);
-            setInputText('');
-            setSelectedImage(null);
+            Alert.alert(
+                'Switch Language',
+                `Switching to ${LANG_NAMES[lang]} will start a new chat. Continue?`,
+                [
+                    { text: 'Cancel', style: 'cancel' },
+                    {
+                        text: 'Switch',
+                        onPress: () => {
+                            if (messages.length > 0) {
+                                saveCurrentConversation();
+                            }
+                            setSelectedLanguage(lang);
+                            setMessages([]);
+                            setConversationId(undefined);
+                            setInputText('');
+                            setSelectedImage(null);
+                        }
+                    }
+                ]
+            );
         }
     };
 

@@ -364,9 +364,9 @@ STRICT RULES:
                 // Use Gemini vision model
                 const { ChatGoogleGenerativeAI } = require('@langchain/google-genai');
                 const visionModel = new ChatGoogleGenerativeAI({
-                    modelName: process.env.GOOGLE_VISION_MODEL || 'gemini-1.5-flash',
+                    model: process.env.GOOGLE_VISION_MODEL || 'gemini-2.5-flash',
                     temperature: temperature || 0.7,
-                    maxOutputTokens: maxTokens || 1000,
+                    maxOutputTokens: maxTokens || 2000,
                     apiKey: process.env.GOOGLE_API_KEY,
                 });
 
