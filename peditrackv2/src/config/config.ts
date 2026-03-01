@@ -24,6 +24,11 @@ export const API_CONFIG = {
   HEALTH_SERVICE_URL: __DEV__
     ? `http://${COMPUTER_IP}:5001/api`
     : 'https://your-production-health-service.com/api',
+
+  // Meal Recommendation Service API (port 5050)
+  MEAL_RECOMMENDATION_SERVICE_URL: __DEV__
+    ? `http://${COMPUTER_IP}:5050`
+    : 'https://your-production-meal-service.com',
   
   // Request timeout in milliseconds
   REQUEST_TIMEOUT: 30000,
