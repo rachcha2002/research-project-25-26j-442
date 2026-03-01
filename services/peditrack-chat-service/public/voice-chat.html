@@ -1,16 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- v1.1 Force Update -->
+<!-- v3.0 PediTrack Premium Voice -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PediTrack Live Voice</title>
+    <title>PediTrack Voice</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #7C3AED;
+            --primary-light: #8B5CF6;
+            --primary-dark: #6D28D9;
+            --primary-glow: rgba(124, 58, 237, 0.35);
+            --bg-start: #F5F3FF;
+            --bg-end: #EDE9FE;
+            --surface: rgba(255, 255, 255, 0.72);
+            --surface-border: rgba(255, 255, 255, 0.5);
+            --text-primary: #1E1B4B;
+            --text-secondary: #6B7280;
+            --danger: #EF4444;
+            --success: #10B981;
+            --warning: #F59E0B;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #1a1b1e;
-            color: white;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(160deg, var(--bg-start) 0%, var(--bg-end) 50%, #F0EAFF 100%);
+            color: var(--text-primary);
             min-height: 100dvh;
             display: flex;
             flex-direction: column;
@@ -18,261 +38,329 @@
             justify-content: flex-start;
             overflow: hidden;
         }
+
+        /* Decorative background orbs */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            z-index: 0;
+            pointer-events: none;
+        }
+        body::before {
+            width: 350px; height: 350px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.25), transparent 70%);
+            top: -80px; right: -60px;
+        }
+        body::after {
+            width: 300px; height: 300px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.2), transparent 70%);
+            bottom: -50px; left: -80px;
+        }
+
         .container {
+            position: relative;
+            z-index: 1;
             width: 100%;
-            max-width: 500px;
-            padding: 14px 14px 10px;
+            max-width: 440px;
+            padding: 24px 20px 16px;
             text-align: center;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            align-items: center;
+            gap: 0;
             height: 100dvh;
             overflow: hidden;
         }
-        .header {
-            padding-top: 4px;
-        }
+
+        /* ─── STATUS BADGE ─── */
         .status-badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.1);
-            font-size: 0.9rem;
-            margin-bottom: 10px;
-            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 16px;
+            border-radius: 24px;
+            background: var(--surface);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--surface-border);
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            letter-spacing: 0.01em;
+            transition: all 0.4s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
         }
-        .status-badge.connected { background: rgba(16, 185, 129, 0.2); color: #10B981; }
-        .status-badge.error { background: rgba(239, 68, 68, 0.2); color: #EF4444; }
-        .status-badge.connecting { background: rgba(251, 191, 36, 0.2); color: #FBBF24; }
-        
-        .visualizer {
-            height: 110px;
+        .status-badge::before {
+            content: '';
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #D1D5DB;
+            transition: background 0.3s;
+        }
+        .status-badge.connected { color: var(--success); }
+        .status-badge.connected::before { background: var(--success); box-shadow: 0 0 6px rgba(16,185,129,0.5); }
+        .status-badge.error { color: var(--danger); }
+        .status-badge.error::before { background: var(--danger); }
+        .status-badge.connecting { color: var(--warning); }
+        .status-badge.connecting::before { background: var(--warning); animation: blink 1s infinite; }
+
+        @keyframes blink {
+            50% { opacity: 0.3; }
+        }
+
+        /* ─── BRANDING ─── */
+        .branding {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 28px;
+        }
+        .brand-ring {
+            position: relative;
+            width: 88px; height: 88px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0;
-            gap: 4px;
-            flex-shrink: 0;
+            box-shadow: 0 12px 40px var(--primary-glow), 0 0 0 6px rgba(124, 58, 237, 0.08);
+            margin-bottom: 18px;
+        }
+        .brand-ring::after {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            border: 2px solid rgba(124, 58, 237, 0.12);
+            animation: ring-breathe 3s ease-in-out infinite;
+        }
+        @keyframes ring-breathe {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.06); opacity: 0.2; }
+        }
+        .brand-icon {
+            font-size: 36px;
+            filter: grayscale(1) brightness(10);
+        }
+        .brand-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+        .brand-subtitle {
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            font-weight: 400;
+        }
+
+        /* ─── SPACER ─── */
+        .spacer { flex: 1; min-height: 12px; }
+
+        /* ─── VISUALIZER ─── */
+        .visualizer-wrapper {
+            width: 100%;
+            padding: 16px 0;
+        }
+        .visualizer {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
         }
         .bar {
-            width: 6px;
-            background: #6366f1;
-            border-radius: 3px;
+            width: 5px;
+            background: rgba(124, 58, 237, 0.15);
+            border-radius: 100px;
             height: 10px;
-            transition: height 0.1s ease;
+            transition: height 0.08s ease-out, background 0.2s ease;
         }
-        .bar.active { background: #818cf8; box-shadow: 0 0 10px #818cf8; }
-        
+        .bar.active {
+            background: linear-gradient(180deg, var(--primary-light), var(--primary));
+            box-shadow: 0 0 12px rgba(124, 58, 237, 0.35);
+        }
+
+        /* ─── LANGUAGE SELECTOR ─── */
+        .lang-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: var(--surface);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--surface-border);
+            border-radius: 14px;
+            padding: 10px 18px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+        }
+        .lang-card label {
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+        .language-select {
+            background: transparent;
+            color: var(--text-primary);
+            border: none;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.88rem;
+            font-weight: 600;
+            outline: none;
+            cursor: pointer;
+            padding: 2px 4px;
+        }
+        .language-select option {
+            background: #fff;
+            color: var(--text-primary);
+        }
+        .language-note {
+            font-size: 0.72rem;
+            color: var(--warning);
+            min-height: 16px;
+            margin-top: 6px;
+        }
+
+        /* ─── CONTROLS ─── */
         .controls {
             display: flex;
-            gap: 20px;
+            gap: 24px;
             justify-content: center;
             align-items: center;
-            padding: 8px 0 calc(8px + env(safe-area-inset-bottom));
-            flex-shrink: 0;
+            padding: 20px 0 calc(20px + env(safe-area-inset-bottom));
         }
         .mic-btn {
-            width: 80px;
-            height: 80px;
+            width: 76px;
+            height: 76px;
             border-radius: 50%;
-            background: #4f46e5;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
             border: none;
             color: white;
             font-size: 32px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
-            transition: all 0.2s;
+            box-shadow: 0 8px 28px var(--primary-glow);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
+            position: relative;
+        }
+        .mic-btn::after {
+            content: '';
+            position: absolute;
+            inset: -5px;
+            border-radius: 50%;
+            border: 2px solid rgba(124, 58, 237, 0.15);
+            transition: all 0.3s;
+        }
+        .mic-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 36px var(--primary-glow);
         }
         .mic-btn:disabled {
-            opacity: 0.5;
+            opacity: 0.45;
             cursor: not-allowed;
+            transform: none;
         }
         .mic-btn:active { transform: scale(0.95); }
         .mic-btn.listening {
-            background: #ef4444;
-            animation: pulse 2s infinite;
+            background: linear-gradient(135deg, #EF4444 0%, #F87171 100%);
+            box-shadow: 0 8px 28px rgba(239, 68, 68, 0.35);
+            animation: pulse-mic 2s ease-in-out infinite;
         }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-            70% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        .mic-btn.listening::after {
+            border-color: rgba(239, 68, 68, 0.2);
+            animation: pulse-ring 2s ease-in-out infinite;
         }
-        
-        .stop-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: #dc2626;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
-            transition: all 0.2s;
-            display: none;
+        @keyframes pulse-mic {
+            0%, 100% { box-shadow: 0 8px 28px rgba(239, 68, 68, 0.35); }
+            50% { box-shadow: 0 8px 40px rgba(239, 68, 68, 0.55); }
         }
-        .stop-btn:hover { background: #b91c1c; }
-        .stop-btn:active { transform: scale(0.95); }
-        .stop-btn.visible { display: flex; align-items: center; justify-content: center; }
-        
-        .transcript-area {
-            background: rgba(255,255,255,0.05);
-            border-radius: 12px;
-            padding: 12px;
-            margin: 0;
-            min-height: 110px;
-            flex: 1;
-            overflow-y: auto;
-            text-align: left;
-            font-size: 1rem;
-            line-height: 1.6;
-        }
-        .transcript-area .user-msg {
-            color: #60a5fa;
-            margin-bottom: 8px;
-        }
-        .transcript-area .ai-msg {
-            color: #34d399;
-            margin-bottom: 8px;
-        }
-        .transcript-area .label {
-            font-weight: bold;
-            opacity: 0.8;
-        }
-        
-        .debug-info {
-            font-size: 0.7rem;
-            color: #666;
-            margin-top: 10px;
-        }
-        
-        .user-speech-box {
-            background: rgba(96, 165, 250, 0.15);
-            border: 1px solid rgba(96, 165, 250, 0.3);
-            border-radius: 12px;
-            padding: 12px 15px;
-            margin: 0;
-            min-height: 50px;
-            text-align: left;
-            font-size: 0.95rem;
-        }
-        .user-speech-box .label {
-            color: #60a5fa;
-            font-weight: bold;
-            font-size: 0.8rem;
-            display: block;
-            margin-bottom: 4px;
-        }
-        .user-speech-box .content {
-            color: #fff;
-            display: block;
-            word-break: break-word;
-        }
-        .ai-speech-box {
-            background: rgba(34, 197, 94, 0.15);
-            border: 1px solid rgba(34, 197, 94, 0.3);
-            border-radius: 12px;
-            padding: 12px 15px;
-            margin: 0;
-            min-height: 50px;
-            text-align: left;
-            font-size: 0.95rem;
-        }
-        .ai-speech-box .label {
-            color: #22c55e;
-            font-weight: bold;
-            font-size: 0.8rem;
-            display: block;
-            margin-bottom: 4px;
-        }
-        .ai-speech-box .content {
-            color: #fff;
-            display: block;
-            word-break: break-word;
-        }
-        .language-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            margin: 0;
-            flex-wrap: wrap;
-        }
-        .language-row label {
-            font-size: 0.85rem;
-            opacity: 0.85;
-        }
-        .language-select {
-            background: rgba(255,255,255,0.08);
-            color: #fff;
-            border: 1px solid rgba(255,255,255,0.2);
-            border-radius: 8px;
-            padding: 6px 10px;
-            font-size: 0.9rem;
-        }
-        .language-note {
-            font-size: 0.75rem;
-            color: #fbbf24;
-            min-height: 18px;
-            margin: 0;
+        @keyframes pulse-ring {
+            0%, 100% { transform: scale(1); opacity: 0.3; }
+            50% { transform: scale(1.15); opacity: 0; }
         }
 
-        @media (max-height: 760px) {
-            .container {
-                gap: 8px;
-                padding: 10px 10px 8px;
-            }
-            .mic-btn {
-                width: 68px;
-                height: 68px;
-                font-size: 28px;
-            }
-            .stop-btn {
-                width: 54px;
-                height: 54px;
-                font-size: 22px;
-            }
-            .visualizer {
-                height: 78px;
-            }
-            .user-speech-box,
-            .ai-speech-box {
-                padding: 10px 12px;
-                min-height: 44px;
-                font-size: 0.9rem;
-            }
-            .transcript-area {
-                min-height: 90px;
-                font-size: 0.92rem;
-            }
-            .debug-info {
-                display: none;
-            }
+        .stop-btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #DC2626 0%, #EF4444 100%);
+            border: none;
+            color: white;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.25);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: none;
+        }
+        .stop-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(220, 38, 38, 0.35);
+        }
+        .stop-btn:active { transform: scale(0.95); }
+        .stop-btn.visible { display: flex; align-items: center; justify-content: center; }
+
+        /* ─── HELPER LABEL ─── */
+        .mic-label {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-top: -8px;
+            letter-spacing: 0.01em;
+            opacity: 0.8;
+            transition: opacity 0.3s;
+        }
+
+        /* ─── RESPONSIVE ─── */
+        @media (max-height: 700px) {
+            .container { padding: 14px 16px 8px; }
+            .branding { margin-top: 16px; }
+            .brand-ring { width: 64px; height: 64px; margin-bottom: 12px; }
+            .brand-icon { font-size: 28px; }
+            .brand-title { font-size: 1.2rem; }
+            .mic-btn { width: 66px; height: 66px; font-size: 28px; }
+            .stop-btn { width: 48px; height: 48px; font-size: 20px; }
+            .visualizer { height: 80px; }
+            .controls { padding: 14px 0 calc(14px + env(safe-area-inset-bottom)); }
+        }
+
+        @media (max-height: 560px) {
+            .brand-ring { width: 52px; height: 52px; margin-bottom: 8px; }
+            .brand-icon { font-size: 22px; }
+            .brand-subtitle { display: none; }
+            .visualizer { height: 60px; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <div id="status" class="status-badge">Ready</div>
-            <h2>Gemini Live</h2>
+        <div id="status" class="status-badge">Ready</div>
+
+        <div class="branding">
+            <div class="brand-ring">
+                <span class="brand-icon">🎙️</span>
+            </div>
+            <h2 class="brand-title">Peditrack AI is live</h2>
+            <p class="brand-subtitle">Tap the mic to start a voice conversation</p>
         </div>
 
-        <div class="user-speech-box" id="userSpeechBox">
-            <span class="label">🎤 What You Said:</span>
-            <span class="content" id="userSpeechContent">Waiting for your voice...</span>
+        <div class="spacer"></div>
+
+        <div class="visualizer-wrapper">
+            <div class="visualizer" id="visualizer">
+                <!-- Bars generated by JS -->
+            </div>
         </div>
 
-        <div class="ai-speech-box" id="aiSpeechBox">
-            <span class="label">🤖 AI Response (Text):</span>
-            <span class="content" id="aiSpeechContent">AI will respond here...</span>
-        </div>
-
-        <div class="language-row">
-            <label for="languageSelect">Language</label>
+        <div class="lang-card">
+            <label for="languageSelect">🌐</label>
             <select id="languageSelect" class="language-select">
                 <option value="en">English</option>
                 <option value="ta">தமிழ் (Tamil)</option>
@@ -281,31 +369,20 @@
         </div>
         <div id="languageNote" class="language-note"></div>
 
-        <div class="transcript-area" id="transcript">
-            Tap the microphone to start a live conversation...
-        </div>
-
-        <div class="visualizer" id="visualizer">
-            <!-- Bars generated by JS -->
-        </div>
-
         <div class="controls">
             <button id="micBtn" class="mic-btn">🎙️</button>
             <button id="stopBtn" class="stop-btn">⏹️</button>
         </div>
-        
-        <div class="debug-info" id="debugInfo"></div>
+        <div class="mic-label" id="micLabel">Tap to begin</div>
     </div>
 
     <script>
         // ===== CONFIGURATION =====
-        // Using Railway hosted backend with HTTPS/WSS
         const SERVER_HOST = 'peditrack-chat-service-production-0d1d.up.railway.app';
-        
-        // Industry Standard Spec for Gemini Live
-        const INPUT_SAMPLE_RATE = 16000;  // Send 16kHz to Gemini
-        const OUTPUT_SAMPLE_RATE = 24000; // Gemini replies at 24kHz
-        
+
+        const INPUT_SAMPLE_RATE = 16000;
+        const OUTPUT_SAMPLE_RATE = 24000;
+
         // ===== STATE =====
         let ws = null;
         let audioContext = null;
@@ -320,26 +397,24 @@
         const micBtn = document.getElementById('micBtn');
         const stopBtn = document.getElementById('stopBtn');
         const visualizer = document.getElementById('visualizer');
-        const transcriptEl = document.getElementById('transcript');
-        const debugInfo = document.getElementById('debugInfo');
-        const userSpeechContent = document.getElementById('userSpeechContent');
-        const aiSpeechContent = document.getElementById('aiSpeechContent');
         const languageSelect = document.getElementById('languageSelect');
         const languageNote = document.getElementById('languageNote');
+        const micLabel = document.getElementById('micLabel');
 
-        const LANGUAGE_LABELS = {
-            en: 'English',
-            ta: 'Tamil',
-            si: 'Sinhala'
-        };
+        // No-op placeholders for removed text boxes
+        const transcriptEl = { innerHTML: '', textContent: '', querySelector: () => null, appendChild: () => {}, scrollTop: 0, scrollHeight: 0 };
+        const debugInfo = { textContent: '' };
+        const userSpeechContent = { textContent: '' };
+        const aiSpeechContent = { textContent: '' };
+
+        const LANGUAGE_LABELS = { en: 'English', ta: 'Tamil', si: 'Sinhala' };
         let selectedLanguage = 'en';
 
-        // Show debug info
         debugInfo.textContent = 'Waiting for connection...';
 
         function updateLanguageNote() {
             if (selectedLanguage === 'si') {
-                languageNote.textContent = 'Sinhala support depends on Live model language coverage and may be less accurate than English/Tamil.';
+                languageNote.textContent = 'Sinhala support depends on Live model language coverage and may be less accurate.';
             } else {
                 languageNote.textContent = '';
             }
@@ -348,8 +423,6 @@
         languageSelect.addEventListener('change', () => {
             selectedLanguage = languageSelect.value;
             updateLanguageNote();
-
-            // Apply on next session; reconnect if currently active
             if (ws && ws.readyState === WebSocket.OPEN) {
                 endCall();
             }
@@ -357,7 +430,7 @@
         updateLanguageNote();
 
         // Create visualizer bars
-        for (let i = 0; i < 15; i++) {
+        for (let i = 0; i < 20; i++) {
             const bar = document.createElement('div');
             bar.className = 'bar';
             visualizer.appendChild(bar);
@@ -370,85 +443,54 @@
             statusEl.className = 'status-badge ' + type;
         }
 
+        function updateMicLabel(text) {
+            micLabel.textContent = text;
+        }
+
         function log(message) {
             console.log('[VoiceChat]', message);
             debugInfo.textContent = message;
         }
-        
-        // Add transcript message to the conversation display
+
         function addTranscript(label, text, className) {
-            // Clear placeholder text if present
-            if (transcriptEl.querySelector('span[style*="opacity"]')) {
-                transcriptEl.innerHTML = '';
-            }
-            
-            const msgDiv = document.createElement('div');
-            msgDiv.className = className;
-            msgDiv.innerHTML = `<span class="label">${label}:</span> ${text}`;
-            transcriptEl.appendChild(msgDiv);
-            
-            // Auto-scroll to bottom
-            transcriptEl.scrollTop = transcriptEl.scrollHeight;
+            console.log(`[Transcript] ${label}: ${text}`);
         }
-        
-        // Clear transcript when starting new session
-        function clearTranscript() {
-            transcriptEl.innerHTML = '<span style="opacity:0.5">Listening... Speak now!</span>';
-        }
+
+        function clearTranscript() {}
 
         async function initAudio() {
             try {
                 log('Requesting microphone...');
-                
-                // OPTIMIZED: Request 16kHz directly + enable all processing
                 mediaStream = await navigator.mediaDevices.getUserMedia({
                     audio: {
                         channelCount: 1,
-                        // Keep capture near device-native quality, worklet handles 16kHz output
                         sampleRate: { ideal: 48000 },
-                        echoCancellation: true,         // Essential for speech
-                        noiseSuppression: true,         // Essential for clarity
-                        autoGainControl: true,          // Normalize volume
-                        latency: 0.01                   // Low latency
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        autoGainControl: true,
+                        latency: 0.01
                     }
                 });
 
-                // Create AudioContext
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                
                 log(`Audio: ${audioContext.sampleRate}Hz (requested 16kHz)`);
 
-                // Load AudioWorklet from external file (CSP-compliant)
                 await audioContext.audioWorklet.addModule('/audio-worklet.js');
                 log('Worklet loaded with 20ms frames');
 
-                // Create audio processing pipeline
                 const source = audioContext.createMediaStreamSource(mediaStream);
                 processor = new AudioWorkletNode(audioContext, 'audio-recorder-worklet');
 
-                // Handle audio data from worklet
                 processor.port.onmessage = async (event) => {
                     if (!isListening || !ws || ws.readyState !== WebSocket.OPEN) return;
-                    
                     const msg = event.data;
                     if (msg.type === 'audio') {
                         try {
-                            // Convert to Float32Array
                             const float32Samples = new Float32Array(msg.data);
-                            
-                            // Normalize quiet speech before encoding
                             const normalized = normalizeAudio(float32Samples);
-                            
-                            // Visualizer using RMS from worklet
                             updateVisualizerLevel(msg.rms || 0);
-                            // IMPORTANT: audio-worklet.js already outputs 16kHz
-                            // Do not resample again here (double-resampling hurts transcript accuracy).
                             const finalSamples = normalized;
-                            
-                            // Convert to Int16 PCM
                             const pcmData = floatTo16BitPCM(finalSamples);
-
-                            // Send to server
                             ws.send(JSON.stringify({
                                 type: 'audio',
                                 data: arrayBufferToBase64(pcmData.buffer),
@@ -461,31 +503,24 @@
                 };
 
                 source.connect(processor);
-                // Note: AudioWorkletNode doesn't need to connect to destination
-
                 log('Microphone ready (AudioWorklet)');
                 return true;
             } catch (err) {
                 console.error('Audio init error:', err);
                 log('Mic error: ' + err.message);
                 updateStatus('Microphone Error', 'error');
+                updateMicLabel('Microphone access denied');
                 return false;
             }
         }
 
-        // Normalize very quiet speech to improve ASR quality without clipping louder input
         function normalizeAudio(samples) {
             let maxAmp = 0;
             for (let i = 0; i < samples.length; i++) {
                 const value = Math.abs(samples[i]);
                 if (value > maxAmp) maxAmp = value;
             }
-
-            // Leave silence and already-loud audio untouched
-            if (maxAmp <= 0.01 || maxAmp >= 0.5) {
-                return samples;
-            }
-
+            if (maxAmp <= 0.01 || maxAmp >= 0.5) return samples;
             const gain = 0.7 / maxAmp;
             const normalized = new Float32Array(samples.length);
             for (let i = 0; i < samples.length; i++) {
@@ -495,10 +530,9 @@
             return normalized;
         }
 
-        // Simple visualizer update
         function updateVisualizerLevel(level) {
             bars.forEach((bar) => {
-                const h = Math.max(10, Math.min(100, level * 300 * (Math.random() + 0.5)));
+                const h = Math.max(8, Math.min(110, level * 380 * (Math.random() + 0.5)));
                 bar.style.height = h + 'px';
                 if (level > 0.02) bar.classList.add('active');
                 else bar.classList.remove('active');
@@ -508,12 +542,12 @@
         // ===== WEBSOCKET CONNECTION =====
         function connectWebSocket() {
             return new Promise((resolve, reject) => {
-                // Generate fresh ID for every connection to ensure no memory of previous chat
                 const conversationId = 'voice-' + Math.random().toString(36).substring(2, 9) + '-' + Date.now();
                 const wsUrl = `wss://${SERVER_HOST}/ws/live?conversationId=${conversationId}&language=${encodeURIComponent(selectedLanguage)}`;
-                
+
                 log(`Connecting (${LANGUAGE_LABELS[selectedLanguage] || selectedLanguage})...`);
                 updateStatus('Connecting...', 'connecting');
+                updateMicLabel('Establishing connection...');
                 isConnecting = true;
 
                 try {
@@ -523,7 +557,7 @@
                     reject(err);
                     return;
                 }
-                
+
                 const timeout = setTimeout(() => {
                     log('Connection timeout');
                     ws.close();
@@ -536,32 +570,26 @@
                     isIntentionalClose = false;
                     log('Connected!');
                     updateStatus('Connected', 'connected');
-                    stopBtn.classList.add('visible'); // Show stop button
+                    stopBtn.classList.add('visible');
                     resolve();
                 };
 
                 ws.onmessage = async (event) => {
                     try {
                         const msg = JSON.parse(event.data);
-                        
+
                         if (msg.type === 'audio') {
                             playPcmAudio(msg.data);
                         } else if (msg.type === 'user_transcript') {
-                            // Show what user said in the dedicated box
                             userSpeechContent.textContent = msg.text;
-                            // Also add to conversation log
                             addTranscript('You', msg.text, 'user-msg');
                         } else if (msg.type === 'ai_transcript') {
-                            // Show what AI said (text version) in dedicated green box
                             aiSpeechContent.textContent = msg.text;
-                            // Also add to conversation log
                             addTranscript('AI', msg.text, 'ai-msg');
                         } else if (msg.type === 'text') {
-                            // Fallback for text responses
                             aiSpeechContent.textContent = msg.text;
                             addTranscript('AI', msg.text, 'ai-msg');
                         } else if (msg.type === 'interrupted') {
-                            // Gemini interrupted current generation (user started speaking)
                             audioQueue = [];
                             isPlaying = false;
                             nextStartTime = audioContext ? audioContext.currentTime : 0;
@@ -574,11 +602,12 @@
                             }
                         } else if (msg.type === 'setup_complete') {
                             log('Gemini ready');
-                            transcriptEl.innerHTML = '<span style="opacity:0.5">Listening... Speak now!</span>';
+                            updateStatus('Listening...', 'connected');
+                            updateMicLabel('Speak now — I\'m listening');
                         } else if (msg.type === 'error') {
                             log('Error: ' + msg.error);
                             updateStatus('Error', 'error');
-                            transcriptEl.innerHTML = '<span style="color:#ef4444">Error: ' + msg.error + '</span>';
+                            updateMicLabel('Something went wrong');
                         }
                     } catch (err) {
                         console.error('Message parse error:', err);
@@ -593,12 +622,12 @@
                     if (isIntentionalClose) {
                         isIntentionalClose = false;
                         updateStatus('Ready', '');
-                        transcriptEl.textContent = 'Call ended. Tap the microphone to start a new conversation.';
+                        updateMicLabel('Tap to begin');
                         log('Call ended');
                     } else {
                         log(`Disconnected (code: ${event.code})`);
                         updateStatus('Disconnected', 'error');
-                        transcriptEl.textContent = 'Connection closed. Tap to reconnect.';
+                        updateMicLabel('Connection lost — tap to reconnect');
                     }
                     stopBtn.classList.remove('visible');
                     ws = null;
@@ -610,6 +639,7 @@
                     console.error('WS Error:', e);
                     log('Connection failed');
                     updateStatus('Connection Failed', 'error');
+                    updateMicLabel('Could not connect');
                     reject(new Error('WebSocket error'));
                 };
             });
@@ -617,65 +647,41 @@
 
         // ===== MIC BUTTON HANDLER =====
         micBtn.onclick = async () => {
-            // Already connecting, ignore
-            if (isConnecting) {
-                log('Already connecting...');
-                return;
-            }
+            if (isConnecting) { log('Already connecting...'); return; }
 
-            // If already connected and listening, toggle off
             if (ws && ws.readyState === WebSocket.OPEN && isListening) {
                 stopListening();
                 return;
             }
 
-            // If connected but not listening, start listening
             if (ws && ws.readyState === WebSocket.OPEN && !isListening) {
                 startListening();
                 return;
             }
 
-            // Need to initialize everything
             micBtn.disabled = true;
-            
             try {
-                // Step 1: Initialize audio if needed
                 if (!audioContext) {
                     const audioOk = await initAudio();
-                    if (!audioOk) {
-                        micBtn.disabled = false;
-                        return;
-                    }
+                    if (!audioOk) { micBtn.disabled = false; return; }
                 }
-
-                // Step 2: Connect WebSocket
                 await connectWebSocket();
-
-                // Step 3: Start listening
                 startListening();
-                
             } catch (err) {
                 log('Failed: ' + err.message);
                 updateStatus('Failed', 'error');
+                updateMicLabel('Tap to try again');
             }
-
             micBtn.disabled = false;
         };
 
         function startListening() {
-            if (!ws || ws.readyState !== WebSocket.OPEN) {
-                log('Not connected');
-                return;
-            }
-            
-            if (audioContext && audioContext.state === 'suspended') {
-                audioContext.resume();
-            }
-            
+            if (!ws || ws.readyState !== WebSocket.OPEN) { log('Not connected'); return; }
+            if (audioContext && audioContext.state === 'suspended') { audioContext.resume(); }
             isListening = true;
             micBtn.classList.add('listening');
             updateStatus('Listening...', 'connected');
-            transcriptEl.textContent = 'Listening... Speak now!';
+            updateMicLabel('Listening — tap to pause');
             log('Listening started');
         }
 
@@ -683,6 +689,7 @@
             isListening = false;
             micBtn.classList.remove('listening');
             updateStatus('Paused', '');
+            updateMicLabel('Paused — tap to resume');
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: 'audio_stream_end' }));
             }
@@ -690,18 +697,14 @@
         }
 
         // ===== STOP/END CALL =====
-        stopBtn.onclick = () => {
-            endCall();
-        };
+        stopBtn.onclick = () => { endCall(); };
 
         function endCall() {
-            // Stop listening
             isListening = false;
             isConnecting = false;
             micBtn.classList.remove('listening');
             isIntentionalClose = true;
-            
-            // Close WebSocket
+
             if (ws) {
                 if (ws.readyState === WebSocket.OPEN) {
                     ws.send(JSON.stringify({ type: 'audio_stream_end' }));
@@ -710,35 +713,26 @@
             } else {
                 isIntentionalClose = false;
             }
-            
-            // Clear audio queue
+
             audioQueue = [];
             isPlaying = false;
             nextStartTime = 0;
-            
-            // Hide stop button
             stopBtn.classList.remove('visible');
-            
-            // Reset UI
             updateStatus('Ready', '');
-            transcriptEl.textContent = 'Call ended. Tap the microphone to start a new conversation.';
+            updateMicLabel('Tap to begin');
             log('Call ended');
         }
 
         // ===== AUDIO HELPERS =====
-        // Simple Float32 -> Int16 conversion
         function floatTo16BitPCM(input) {
             const output = new Int16Array(input.length);
             for (let i = 0; i < input.length; i++) {
-                // Clamp and scale
                 const s = Math.max(-1, Math.min(1, input[i]));
-                // Convert to 16-bit
                 output[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
             }
             return output;
         }
 
-        // Helper to encode buffer to base64
         function arrayBufferToBase64(buffer) {
             let binary = '';
             const bytes = new Uint8Array(buffer);
@@ -755,16 +749,15 @@
                 sum += Math.abs(data[i]);
             }
             const avg = sum / (data.length / 100);
-            
             bars.forEach((bar) => {
-                const h = Math.max(10, Math.min(100, avg * 500 * (Math.random() + 0.5)));
+                const h = Math.max(8, Math.min(110, avg * 500 * (Math.random() + 0.5)));
                 bar.style.height = h + 'px';
                 if (avg > 0.1) bar.classList.add('active');
                 else bar.classList.remove('active');
             });
         }
 
-         // Audio Queue Management
+        // Audio Queue Management
         let audioQueue = [];
         let isPlaying = false;
         let nextStartTime = 0;
@@ -776,7 +769,6 @@
 
         function processAudioQueue() {
             if (isPlaying || audioQueue.length === 0) return;
-            
             isPlaying = true;
             const base64Data = audioQueue.shift();
 
@@ -786,40 +778,35 @@
                 for (let i = 0; i < binaryString.length; i++) {
                     bytes[i] = binaryString.charCodeAt(i);
                 }
-                
+
                 const int16 = new Int16Array(bytes.buffer);
                 const float32 = new Float32Array(int16.length);
-                for(let i=0; i<int16.length; i++) {
+                for (let i = 0; i < int16.length; i++) {
                     float32[i] = int16[i] / 32768;
                 }
 
-                const buffer = audioContext.createBuffer(1, float32.length, OUTPUT_SAMPLE_RATE); // 24kHz standard output
+                const buffer = audioContext.createBuffer(1, float32.length, OUTPUT_SAMPLE_RATE);
                 buffer.getChannelData(0).set(float32);
 
                 const source = audioContext.createBufferSource();
                 source.buffer = buffer;
                 source.connect(audioContext.destination);
-                
-                // Ensure smooth sequential playback
+
                 const currentTime = audioContext.currentTime;
                 if (nextStartTime < currentTime) {
                     nextStartTime = currentTime;
                 }
-                
+
                 source.start(nextStartTime);
                 nextStartTime += buffer.duration;
-                
-                // When this chunk finishes, process next (with small overlap buffer)
+
                 source.onended = () => {
-                    // Don't wait strictly for onended to process next if we scheduled it
-                    // But if queue was empty, we need to reset state
                     if (audioQueue.length === 0 && audioContext.currentTime >= nextStartTime) {
                         isPlaying = false;
                     }
                 };
-                
-                // Process next chunk immediately to schedule it
-                isPlaying = false; 
+
+                isPlaying = false;
                 processAudioQueue();
 
             } catch (e) {
