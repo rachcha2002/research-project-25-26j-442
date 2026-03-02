@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   modeCard: {
-    backgroundColor: '#E8E5FF',
+    backgroundColor: '#EDE9FE',
     borderRadius: 20,
     padding: 32,
     alignItems: 'center',
@@ -113,10 +113,10 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   voiceIconCircle: {
-    backgroundColor: '#6366F1',
+    backgroundColor: '#7C3AED',
   },
   chatIconCircle: {
-    backgroundColor: '#6366F1',
+    backgroundColor: '#7C3AED',
   },
   modeTitle: {
     color: Colors.dark,

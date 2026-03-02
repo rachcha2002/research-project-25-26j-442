@@ -4,6 +4,7 @@ const User = require('../models/User');
 const passport = require('../config/passport');
 const { verifyRefreshToken } = require('../utils/tokenManager');
 const { validateRegistration, validateLogin } = require('../middleware/validation');
+const { OAuth2Client } = require('google-auth-library');
 
 /**
  * @route   POST /api/auth/register
@@ -174,6 +175,100 @@ router.post('/logout', async (req, res) => {
     console.error('Logout error:', error);
     // Still return success even if token removal fails
     res.json({ message: 'Logged out successfully' });
+  }
+});
+
+/**
+ * @route   POST /api/auth/google
+ * @desc    Authenticate with Google ID token (for mobile apps)
+ * @access  Public
+ */
+router.post('/google', async (req, res) => {
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return res.status(400).json({ error: 'Google ID token is required' });
+    }
+
+    // Verify the Google ID token
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    let ticket;
+    try {
+      ticket = await client.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID,
+      });
+    } catch (verifyError) {
+      console.error('Google token verification failed:', verifyError);
+      return res.status(401).json({ error: 'Invalid Google ID token' });
+    }
+
+    const payload = ticket.getPayload();
+    const googleId = payload.sub;
+    const email = payload.email;
+    const name = payload.name || 'User';
+    const profilePicture = payload.picture || null;
+
+    if (!email) {
+      return res.status(400).json({ error: 'No email provided by Google account' });
+    }
+
+    // Check if user already exists with this Google ID
+    let user = await User.findOne({ googleId });
+
+    if (!user) {
+      // Check if user exists with this email
+      user = await User.findOne({ email });
+
+      if (user) {
+        // Link Google account to existing user
+        user.googleId = googleId;
+        user.isEmailVerified = true;
+        if (!user.profilePicture && profilePicture) {
+          user.profilePicture = profilePicture;
+        }
+        await user.save();
+      } else {
+        // Create new user with a google-based marker password
+        // This password is hashed and cannot be used for normal login
+        // but satisfies the schema requirement
+        const bcrypt = require('bcryptjs');
+        const googleMarkerPassword = await bcrypt.hash(`google_oauth_${googleId}_${Date.now()}`, 10);
+
+        user = new User({
+          email,
+          name,
+          googleId,
+          profilePicture,
+          password: googleMarkerPassword,
+          isEmailVerified: true,
+        });
+
+        // Skip the pre-save password hashing since we already hashed it
+        user.$skipPasswordHash = true;
+        await user.save();
+      }
+    }
+
+    // Generate tokens
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    // Save refresh token
+    user.refreshTokens.push({ token: refreshToken });
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Google authentication successful',
+      user: user.toJSON(),
+      accessToken,
+      refreshToken,
+    });
+  } catch (error) {
+    console.error('Google auth error:', error);
+    res.status(500).json({ error: 'Google authentication failed' });
   }
 });
 
