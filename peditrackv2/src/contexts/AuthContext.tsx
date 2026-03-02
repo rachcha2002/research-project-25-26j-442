@@ -23,6 +23,8 @@ interface AuthContextType {
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   uploadProfilePicture: (imageUri: string) => Promise<void>;
   setDefaultBaby: (babyId: string) => Promise<void>;
+  upgradeToPro: (plan: string) => Promise<void>;
+  cancelSubscription: () => Promise<void>;
   clearError: () => void;
 }
 
@@ -278,6 +280,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const upgradeToPro = async (plan: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const updatedUser = await userService.upgradeToPro(plan);
+      setUser(updatedUser);
+      await userService.saveUserData(updatedUser);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to upgrade to PRO';
+      setError(message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const cancelSubscription = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const updatedUser = await userService.cancelSubscription();
+      setUser(updatedUser);
+      await userService.saveUserData(updatedUser);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to cancel subscription';
+      setError(message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const clearError = () => {
     setError(null);
   };
@@ -296,6 +332,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     changePassword,
     uploadProfilePicture,
     setDefaultBaby,
+    upgradeToPro,
+    cancelSubscription,
     clearError,
   };
 

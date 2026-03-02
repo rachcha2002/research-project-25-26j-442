@@ -7,7 +7,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
+import { useAuth } from '../../../contexts/AuthContext';
 import { useBaby } from '../../../contexts/BabyContext';
 import {
   getRiskAssessment, RisksResponse,
@@ -55,6 +57,8 @@ const RiskCard = ({
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export const RiskAssessmentScreen: React.FC = () => {
+  const router = useRouter();
+  const { user } = useAuth();
   const { selectedBaby } = useBaby();
   const [data, setData]     = useState<RisksResponse | null>(null);
   const [loading, setLoad]  = useState(true);
@@ -79,8 +83,26 @@ export const RiskAssessmentScreen: React.FC = () => {
       <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         {loading ? (
           <View style={styles.center}>
-            <ActivityIndicator size="large" color={Colors.primary} />
+            <ActivityIndicator size="large" color={typeof Colors.primary === 'string' ? Colors.primary : Colors.primary.DEFAULT || '#7C3AED'} />
             <Text style={styles.loadingText}>Analysing health risks…</Text>
+          </View>
+        ) : !user?.isPro ? (
+          <View style={styles.center}>
+            <Ionicons name="lock-closed-outline" size={64} color="#F59E0B" />
+            <Text style={styles.proTitle}>PRO Version Required</Text>
+            <Text style={styles.proDesc}>
+              Upgrade to PRO to unlock detailed health risk assessments and actionable recommendations.
+            </Text>
+            <TouchableOpacity style={styles.upgradeBtn} onPress={() => router.push('/profile/subscription' as any)}>
+              <LinearGradient
+                colors={['#F59E0B', '#D97706']}
+                style={styles.upgradeBtnGradient}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              >
+                <Ionicons name="star" size={20} color="#fff" />
+                <Text style={styles.upgradeBtnText}>Upgrade to PRO</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         ) : error ? (
           <View style={styles.center}>
@@ -246,4 +268,14 @@ const styles = StyleSheet.create({
   actionItem:    { flexDirection: 'row', gap: 6 },
   actionBullet:  { color: '#9CA3AF', fontSize: 13 },
   actionText:    { fontSize: 13, color: '#374151', flex: 1 },
+  
+  // PRO Lock
+  proTitle: { fontSize: 24, fontWeight: '800', color: '#1F2937', marginTop: 8 },
+  proDesc: { fontSize: 15, color: '#6B7280', textAlign: 'center', paddingHorizontal: 20, lineHeight: 22 },
+  upgradeBtn: { marginTop: 12, width: '100%', paddingHorizontal: 20 },
+  upgradeBtnGradient: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingVertical: 14, borderRadius: 12,
+  },
+  upgradeBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

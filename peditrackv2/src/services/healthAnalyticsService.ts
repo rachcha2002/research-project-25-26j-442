@@ -116,6 +116,7 @@ export interface HealthCondition {
   _id?: string;
   babyId: string;
   conditionName: string;
+  conditionType?: 'acute' | 'chronic' | 'resolved' | '';
   diagnosisDate: string;
   severity?: 'mild' | 'moderate' | 'severe';
   status: 'active' | 'resolved' | 'monitoring';
@@ -319,6 +320,7 @@ export interface HealthRecord {
   oxygenSaturation?: number;
   
   // Clinical information
+  conditionType?: 'acute' | 'chronic' | 'resolved' | '';
   symptoms?: string[];
   diagnosis?: string;
   severity?: 'mild' | 'moderate' | 'severe' | '';

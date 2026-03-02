@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useAuth } from '../../../contexts/AuthContext';
 
 // ─── Static Info Data ─────────────────────────────────────────────────────────
 const MODELS = [
@@ -51,11 +52,38 @@ const RISK_LEVELS = [
 ];
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
-export const ModelPerformanceScreen: React.FC = () => (
-  <>
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}>
+export const ModelPerformanceScreen: React.FC = () => {
+  const { user, upgradeToPro } = useAuth();
+  
+  if (!user?.isPro) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <View style={styles.centerState}>
+          <Ionicons name="lock-closed-outline" size={64} color="#F59E0B" />
+          <Text style={styles.proTitle}>PRO Version Required</Text>
+          <Text style={styles.proDesc}>
+            Upgrade to PRO to learn about the AI models, validation metrics, and how our predictive engine works.
+          </Text>
+          <TouchableOpacity style={styles.upgradeBtn} onPress={upgradeToPro}>
+            <LinearGradient
+              colors={['#F59E0B', '#D97706']}
+              style={styles.upgradeBtnGradient}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+            >
+              <Ionicons name="star" size={20} color="#fff" />
+              <Text style={styles.upgradeBtnText}>Upgrade to PRO</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}>
 
         {/* Hero */}
         <LinearGradient colors={['#6366F1', '#8B5CF6']} style={styles.hero}
@@ -146,7 +174,8 @@ export const ModelPerformanceScreen: React.FC = () => (
       </ScrollView>
     </SafeAreaView>
   </>
-);
+  );
+};
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
@@ -208,4 +237,15 @@ const styles = StyleSheet.create({
   },
   disclaimerText: { flex: 1, fontSize: 12, color: '#6B7280', lineHeight: 18 },
   versionText: { textAlign: 'center', fontSize: 11, color: '#9CA3AF' },
+  
+  // States / PRO Lock
+  centerState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 },
+  proTitle: { fontSize: 24, fontWeight: '800', color: '#1F2937', marginTop: 8 },
+  proDesc: { fontSize: 15, color: '#6B7280', textAlign: 'center', paddingHorizontal: 20, lineHeight: 22 },
+  upgradeBtn: { marginTop: 12, width: '100%', paddingHorizontal: 20 },
+  upgradeBtnGradient: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingVertical: 14, borderRadius: 12,
+  },
+  upgradeBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });
