@@ -9,6 +9,7 @@
 // For Physical Device: use your computer's IP address
 
 // Get your computer's IP by running 'ipconfig' (Windows) or 'ifconfig' (Mac/Linux)
+
 const COMPUTER_IP = '192.168.1.179'; // Update this with your actual IP
 
 // Detect if running in Expo Go vs production
@@ -24,6 +25,11 @@ export const API_CONFIG = {
   HEALTH_SERVICE_URL: __DEV__
     ? `http://${COMPUTER_IP}:5001/api`
     : 'https://your-production-health-service.com/api',
+
+  // Meal Recommendation Service API (port 5050)
+  MEAL_RECOMMENDATION_SERVICE_URL: __DEV__
+    ? `http://${COMPUTER_IP}:5050`
+    : 'https://your-production-meal-service.com',
   
   // Request timeout in milliseconds
   REQUEST_TIMEOUT: 30000,

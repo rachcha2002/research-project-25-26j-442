@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { router } from 'expo-router';
-import { TopBar } from '@/components/TopBar';
+import { SecondaryTopBar } from '@/components/SecondaryTopBar';
 
 export const LocationScreen: React.FC = () => {
   // Dummy recent activity data
@@ -38,7 +38,7 @@ export const LocationScreen: React.FC = () => {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={{ paddingBottom: 120 }}
         >
-          <TopBar />
+          <SecondaryTopBar />
           {/* Main Actions */}
           <View style={styles.actionsWrap}>
             {/* ...existing code for action cards... */}
