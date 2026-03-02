@@ -7,7 +7,7 @@ const { v4: uuidv4 } = require('uuid');
  */
 async function sendMessage(req, res) {
     try {
-        const { message, conversationId, userId, useRAG } = req.body;
+        const { message, conversationId, userId, useRAG, language } = req.body;
 
         // Validation
         if (!message || message.trim().length === 0) {
@@ -42,10 +42,12 @@ async function sendMessage(req, res) {
 
         // Get LLM service and generate response
         const llmService = getLLMService();
+        const maxTokens = (language && language !== 'en') ? 2000 : 800;
         const result = await llmService.generateResponse(messages, {
             useRAG: useRAG !== undefined ? useRAG : true, // Default to using RAG
             temperature: 0.7,
-            maxTokens: 1000
+            maxTokens: maxTokens,
+            language: language || 'en'
         });
 
         // Add assistant response to history
@@ -180,7 +182,7 @@ async function sendMessageWithImage(req, res) {
  */
 async function streamMessage(req, res) {
     try {
-        const { message, conversationId, userId, useRAG } = req.body;
+        const { message, conversationId, userId, useRAG, language } = req.body;
 
         if (!message || message.trim().length === 0) {
             return res.status(400).json({
@@ -218,10 +220,12 @@ async function streamMessage(req, res) {
         const llmService = getLLMService();
         let fullResponse = '';
 
+        const streamMaxTokens = (language && language !== 'en') ? 2000 : 800;
         for await (const chunk of llmService.generateStreamingResponse(messages, {
             useRAG: useRAG !== undefined ? useRAG : true,
             temperature: 0.7,
-            maxTokens: 1000
+            maxTokens: streamMaxTokens,
+            language: language || 'en'
         })) {
             fullResponse += chunk;
             

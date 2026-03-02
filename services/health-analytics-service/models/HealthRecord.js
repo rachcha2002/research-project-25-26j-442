@@ -39,6 +39,11 @@ const healthRecordSchema = new mongoose.Schema({
   },
 
   // Clinical information
+  conditionType: {
+    type: String,
+    enum: ['acute', 'chronic', 'resolved', ''],
+    default: '',
+  },
   symptoms: [{
     type: String,
     trim: true,

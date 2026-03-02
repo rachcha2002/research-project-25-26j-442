@@ -9,6 +9,7 @@ import { Colors } from '@/constants/Colors';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { useAuth } from '../../contexts/AuthContext';
 import { useBaby } from '../../contexts/BabyContext';
 import {
   getHealthScore, HealthScoreResponse,
@@ -40,6 +41,7 @@ const ConfidenceBadge = ({ level }: { level: string }) => {
 
 export const AIInsightsScreen: React.FC = () => {
   const router = useRouter();
+  const { user } = useAuth();
   const { selectedBaby } = useBaby();
   const [data, setData] = useState<HealthScoreResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -75,6 +77,24 @@ export const AIInsightsScreen: React.FC = () => {
           <View style={styles.centerState}>
             <ActivityIndicator size="large" color="#7C3AED" />
             <Text style={styles.loadingText}>Calculating health score…</Text>
+          </View>
+        ) : !user?.isPro ? (
+          <View style={styles.centerState}>
+            <Ionicons name="lock-closed-outline" size={64} color="#F59E0B" />
+            <Text style={styles.proTitle}>PRO Version Required</Text>
+            <Text style={styles.proDesc}>
+              Upgrade to PRO to unlock advanced AI insights, predictive health scoring, and personalized analytics for your baby.
+            </Text>
+            <TouchableOpacity style={styles.upgradeBtn} onPress={() => router.push('/profile/subscription' as any)}>
+              <LinearGradient
+                colors={['#F59E0B', '#D97706']}
+                style={styles.upgradeBtnGradient}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              >
+                <Ionicons name="star" size={20} color="#fff" />
+                <Text style={styles.upgradeBtnText}>Upgrade to PRO</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         ) : error ? (
           <View style={styles.centerState}>
@@ -248,4 +268,14 @@ const styles = StyleSheet.create({
   },
   babyInfoText: { fontSize: 13, color: '#374151' },
   babyName: { fontWeight: '700', color: '#3B82F6' },
+  
+  // PRO Lock
+  proTitle: { fontSize: 24, fontWeight: '800', color: '#1F2937', marginTop: 8 },
+  proDesc: { fontSize: 15, color: '#6B7280', textAlign: 'center', paddingHorizontal: 20, lineHeight: 22 },
+  upgradeBtn: { marginTop: 12, width: '100%', paddingHorizontal: 20 },
+  upgradeBtnGradient: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingVertical: 14, borderRadius: 12,
+  },
+  upgradeBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });
