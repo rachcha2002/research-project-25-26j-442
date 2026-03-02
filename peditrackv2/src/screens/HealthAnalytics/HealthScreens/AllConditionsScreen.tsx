@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, ActivityIndicator, RefreshControl, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { getHealthRecords, HealthRecord, deleteHealthRecord } from '@/services/healthAnalyticsService';
 import { useBaby } from '@/contexts/BabyContext';
@@ -38,7 +38,7 @@ export const AllConditionsScreen: React.FC = () => {
     return {
       id: record._id || '',
       name: record.diagnosis || 'Unnamed Condition',
-      type: 'chronic', // Default, could be enhanced with more data
+      type: (record.conditionType as ConditionType) || 'chronic', // Map from actual backend field
       severity: record.severity || 'mild',
       diagnosisDate: new Date(record.recordDate).toLocaleDateString('en-US', { 
         year: 'numeric', 
@@ -50,7 +50,7 @@ export const AllConditionsScreen: React.FC = () => {
     };
   };
 
-  const fetchConditions = async () => {
+  const fetchConditions = useCallback(async () => {
     if (!selectedBaby) {
       setLoading(false);
       return;
@@ -68,11 +68,13 @@ export const AllConditionsScreen: React.FC = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
-
-  useEffect(() => {
-    fetchConditions();
   }, [selectedBaby]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchConditions();
+    }, [fetchConditions])
+  );
 
   const handleRefresh = () => {
     setRefreshing(true);

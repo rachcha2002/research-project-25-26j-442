@@ -41,6 +41,19 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isPro: {
+    type: Boolean,
+    default: false
+  },
+  subscriptionPlan: {
+    type: String,
+    enum: ['basic', 'pro_monthly', 'pro_yearly'],
+    default: 'basic'
+  },
+  subscriptionExpiry: {
+    type: Date,
+    default: null
+  },
   defaultBabyProfile: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'BabyProfile',

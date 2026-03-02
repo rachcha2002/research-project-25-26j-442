@@ -8,7 +8,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
+import { LinearGradient } from 'expo-linear-gradient';
 import { LineChart } from 'react-native-chart-kit';
+import { useAuth } from '../../../contexts/AuthContext';
 import { useBaby } from '../../../contexts/BabyContext';
 import {
   getGrowthPredictions, PredictionsResponse,
@@ -22,6 +24,7 @@ type Period = 'current' | '3months' | '6months' | '12months';
 
 export const AIPredictionsScreen: React.FC = () => {
   const router = useRouter();
+  const { user } = useAuth();
   const { selectedBaby } = useBaby();
   const [period, setPeriod]   = useState<Period>('3months');
   const [data, setData]       = useState<PredictionsResponse | null>(null);
@@ -47,14 +50,31 @@ export const AIPredictionsScreen: React.FC = () => {
     period === '12months' ? data?.predictions.twelveMonths : null;
 
   // ── Chart data from real trajectory
-  const chartData = data
+  const chartData = data && data.trajectory && data.trajectory.heights
     ? {
-        labels: data.trajectory.months
-          .filter((_, i) => i % 2 === 1)        // every other month label
-          .map(m => `+${m}mo`),
+        labels: data.trajectory.months.map(m => {
+          if (m === 0) return 'Now';
+          if (typeof m === 'number') return `+${m}mo`;
+          return m.toString();
+        }),
         datasets: [{
-          data: data.trajectory.heights.filter((_, i) => i % 2 === 1),
+          data: data.trajectory.heights,
           color: () => '#3B82F6',
+          strokeWidth: 3,
+        }],
+      }
+    : { labels: [], datasets: [{ data: [0] }] };
+
+  const chartDataWeight = data && data.trajectory && data.trajectory.weights
+    ? {
+        labels: data.trajectory.months.map(m => {
+          if (m === 0) return 'Now';
+          if (typeof m === 'number') return `+${m}mo`;
+          return m.toString();
+        }),
+        datasets: [{
+          data: data.trajectory.weights,
+          color: () => '#10B981', // green metric
           strokeWidth: 3,
         }],
       }
@@ -66,8 +86,26 @@ export const AIPredictionsScreen: React.FC = () => {
       <SafeAreaView style={styles.container} edges={['bottom']}>
         {loading ? (
           <View style={styles.center}>
-            <ActivityIndicator size="large" color={Colors.primary} />
+            <ActivityIndicator size="large" color={typeof Colors.primary === 'string' ? Colors.primary : Colors.primary.DEFAULT || '#3B82F6'} />
             <Text style={styles.loadingText}>Generating 12-month forecast…</Text>
+          </View>
+        ) : !user?.isPro ? (
+          <View style={styles.center}>
+            <Ionicons name="lock-closed-outline" size={64} color="#F59E0B" />
+            <Text style={styles.proTitle}>PRO Version Required</Text>
+            <Text style={styles.proDesc}>
+              Upgrade to PRO to unlock AI Growth Predictions and visualize your baby's future trajectory.
+            </Text>
+            <TouchableOpacity style={styles.upgradeBtn} onPress={() => router.push('/profile/subscription' as any)}>
+              <LinearGradient
+                colors={['#F59E0B', '#D97706']}
+                style={styles.upgradeBtnGradient}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              >
+                <Ionicons name="star" size={20} color="#fff" />
+                <Text style={styles.upgradeBtnText}>Upgrade to PRO</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
         ) : error ? (
           <View style={styles.center}>
@@ -119,7 +157,7 @@ export const AIPredictionsScreen: React.FC = () => {
               ))}
             </View>
 
-            {/* Line chart */}
+            {/* Line chart (Height) */}
             {data.trajectory.heights.length > 3 && (
               <View style={styles.chartCard}>
                 <Text style={styles.chartTitle}>Height Trajectory (cm)</Text>
@@ -135,6 +173,30 @@ export const AIPredictionsScreen: React.FC = () => {
                     color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
                     labelColor: () => '#9CA3AF',
                     propsForDots: { r: '4', strokeWidth: '2', stroke: '#3B82F6' },
+                  }}
+                  bezier
+                  style={{ borderRadius: 12 }}
+                  withShadow={false}
+                />
+              </View>
+            )}
+
+            {/* Line chart (Weight) */}
+            {data.trajectory.weights.length > 3 && (
+              <View style={[styles.chartCard, { marginTop: 12 }]}>
+                <Text style={styles.chartTitle}>Weight Trajectory (kg)</Text>
+                <LineChart
+                  data={chartDataWeight}
+                  width={width - 48}
+                  height={180}
+                  chartConfig={{
+                    backgroundColor: '#fff',
+                    backgroundGradientFrom: '#fff',
+                    backgroundGradientTo: '#fff',
+                    decimalPlaces: 1,
+                    color: (opacity = 1) => `rgba(16, 185, 129, ${opacity})`,
+                    labelColor: () => '#9CA3AF',
+                    propsForDots: { r: '4', strokeWidth: '2', stroke: '#10B981' },
                   }}
                   bezier
                   style={{ borderRadius: 12 }}
@@ -282,4 +344,14 @@ const styles = StyleSheet.create({
   recDesc:  { fontSize: 12, color: '#6B7280', marginTop: 2 },
   priorityTag:  { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 4, alignSelf: 'flex-start' },
   priorityText: { fontSize: 11, fontWeight: '700', textTransform: 'uppercase' },
+  
+  // PRO Lock
+  proTitle: { fontSize: 24, fontWeight: '800', color: '#1F2937', marginTop: 8 },
+  proDesc: { fontSize: 15, color: '#6B7280', textAlign: 'center', paddingHorizontal: 20, lineHeight: 22 },
+  upgradeBtn: { marginTop: 12, width: '100%', paddingHorizontal: 20 },
+  upgradeBtnGradient: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingVertical: 14, borderRadius: 12,
+  },
+  upgradeBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });
