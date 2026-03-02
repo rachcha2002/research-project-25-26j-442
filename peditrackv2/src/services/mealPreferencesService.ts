@@ -48,3 +48,15 @@ export const createMealPreference = async (
 
   return handleResponse<MealPreference>(response);
 };
+
+export const updateMealPreference = async (
+  payload: MealPreference,
+): Promise<MealPreference> => {
+  const response = await fetch(`${BASE_URL}/meal-preferences`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  return handleResponse<MealPreference>(response);
+};

@@ -148,3 +148,41 @@ class MealOptimizerEngine:
                 "behavioral_alignment_score": f"{round(best_similarity_score * 100, 2)}%"
             }
         }
+
+    def generate_replacement_meal(
+        self,
+        meal_type: str,
+        target_calories: float,
+        allergies: list,
+        budget_level: str,
+        dislikes: list,
+        likes: list,
+    ):
+        best_meal = None
+        best_loss = float('inf')
+        best_score = 0
+
+        for _ in range(15):
+            safe_dfs = {
+                name: self._apply_safety_filters(df, allergies, dislikes, meal_type, budget_level)
+                for name, df in self.datasets.items()
+            }
+
+            meal_data, meal_score = self._generate_single_meal(meal_type, safe_dfs, likes)
+            if not meal_data["plate"]:
+                continue
+
+            loss = abs(meal_data["calories"] - target_calories)
+            if loss < best_loss:
+                best_loss = loss
+                best_meal = meal_data
+                best_score = meal_score
+
+        if best_meal is None:
+            return None
+
+        return {
+            "meal": best_meal,
+            "calorie_loss": round(best_loss, 2),
+            "similarity_score": round(best_score, 4),
+        }

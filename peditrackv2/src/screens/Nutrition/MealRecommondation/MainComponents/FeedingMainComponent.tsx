@@ -7,6 +7,8 @@ import {
   ActivityIndicator,
   TouchableOpacity,
   RefreshControl,
+  Modal,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
@@ -18,10 +20,19 @@ import {
 } from '@/services/healthAnalyticsService';
 import {
   DailyGeneratedMealPlan,
+  GenerateMealPlanPayload,
+  generateMealPlan,
   getTodayGeneratedPlan,
+  MealFeedbackMap,
 } from '@/services/generatedPlansService';
 import { getBehavioralState } from '@/services/behavioralStateService';
-import { getMealPreference } from '@/services/mealPreferencesService';
+import {
+  createMealPreference,
+  getMealPreference,
+  MealPreference,
+  updateMealPreference,
+} from '@/services/mealPreferencesService';
+import { PreferencesForm, PreferencesFormValues } from '../SubComponents/PreferencesForm';
 import { TodayMealPlanCard } from '../SubComponents/TodayMealPlanCard';
 
 const calculateAgeMonths = (selectedBaby: any): number | null => {
@@ -55,38 +66,39 @@ export const FeedingMainComponent: React.FC = () => {
   const { selectedBaby } = useBaby();
 
   const [todayPlan, setTodayPlan] = useState<DailyGeneratedMealPlan | null>(null);
+  const [mealFeedback, setMealFeedback] = useState<MealFeedbackMap>({});
+  const [mealPreference, setMealPreference] = useState<MealPreference | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isSavingPreference, setIsSavingPreference] = useState(false);
+  const [isPreferencesModalVisible, setIsPreferencesModalVisible] = useState(false);
+  const [isEditingPreferences, setIsEditingPreferences] = useState(false);
 
   const childId = selectedBaby?._id;
+  const parentId = selectedBaby?.userId;
 
-  const buildAndLogFinalPayload = useCallback(async () => {
+  const buildAndLogFinalPayload = useCallback(async (prefData: MealPreference | null) => {
     if (!selectedBaby?._id) {
-      return;
+      return null;
     }
 
-    const parentId = selectedBaby.userId;
-
     try {
-      const [latestMeasurement, activeMedications, activeConditions, mealPreference, behavioralState] = await Promise.all([
+      const [latestMeasurement, activeMedications, activeConditions, behavioralState] = await Promise.all([
         getLatestMeasurement(selectedBaby._id),
         getActiveMedications(selectedBaby._id),
         getActiveConditions(selectedBaby._id),
-        parentId
-          ? getMealPreference({ parentId, childId: selectedBaby._id })
-          : Promise.resolve(null),
         getBehavioralState(selectedBaby._id),
       ]);
 
-      const finalPayload = {
+      const finalPayload: GenerateMealPlanPayload = {
         child_id: selectedBaby._id,
         health_data: {
           age_months: calculateAgeMonths(selectedBaby) ?? 0,
           weight_kg: latestMeasurement?.weight?.value ?? 0,
           height_cm: latestMeasurement?.height?.value ?? 0,
           gender: selectedBaby.gender ?? 'string',
-          activity_level: mealPreference?.activity_level ?? 'Moderate',
+          activity_level: prefData?.activity_level ?? 'Moderate',
           medical_conditions: (activeConditions ?? [])
             .map((condition) => condition.conditionName)
             .filter(Boolean),
@@ -96,12 +108,12 @@ export const FeedingMainComponent: React.FC = () => {
           daily_calorie_target: 0,
         },
         preferences: {
-          diet_type: mealPreference?.diet_type ?? 'Standard',
+          diet_type: prefData?.diet_type ?? 'Standard',
           allergies: selectedBaby.allergies ?? [],
-          budget_level: mealPreference?.budget_level ?? 'Medium',
+          budget_level: prefData?.budget_level ?? 'Medium',
         },
         lifestyle: {
-          meals_per_day: mealPreference?.meals_per_day ?? 5,
+          meals_per_day: prefData?.meals_per_day ?? 5,
         },
         behavioral_state: {
           disliked_ingredients: behavioralState?.disliked_ingredients ?? [],
@@ -110,14 +122,18 @@ export const FeedingMainComponent: React.FC = () => {
       };
 
       console.log('[FeedingMainComponent] Final generate-plan payload:', finalPayload);
+      return finalPayload;
     } catch (error) {
       console.error('[FeedingMainComponent] Failed to build final payload:', error);
+      return null;
     }
   }, [selectedBaby]);
 
   const loadTodayPlan = useCallback(async () => {
     if (!childId) {
       setTodayPlan(null);
+      setMealFeedback({});
+      setMealPreference(null);
       setIsLoading(false);
       setIsRefreshing(false);
       setErrorMessage('Child profile is not available.');
@@ -129,11 +145,24 @@ export const FeedingMainComponent: React.FC = () => {
         setIsLoading(true);
       }
       setErrorMessage(null);
-      const plan = await getTodayGeneratedPlan(childId);
-      setTodayPlan(plan);
+      const [plan, preferences] = await Promise.all([
+        getTodayGeneratedPlan(childId),
+        parentId ? getMealPreference({ parentId, childId }) : Promise.resolve(null),
+      ]);
+      setMealPreference(preferences);
+      setTodayPlan(plan?.plan ?? null);
+      setMealFeedback(plan?.meal_feedback ?? {});
 
-      if (!plan) {
-        await buildAndLogFinalPayload();
+      if (!plan?.plan && preferences) {
+        const finalPayload = await buildAndLogFinalPayload(preferences);
+        if (finalPayload) {
+          await generateMealPlan(finalPayload);
+          const generatedTodayPlan = await getTodayGeneratedPlan(childId);
+          setTodayPlan(generatedTodayPlan?.plan ?? null);
+          setMealFeedback(generatedTodayPlan?.meal_feedback ?? {});
+        }
+      } else if (!plan?.plan) {
+        await buildAndLogFinalPayload(preferences);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to load today meal plan.';
@@ -142,15 +171,53 @@ export const FeedingMainComponent: React.FC = () => {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [childId, isRefreshing, buildAndLogFinalPayload]);
+  }, [childId, parentId, isRefreshing, buildAndLogFinalPayload]);
 
   useEffect(() => {
     loadTodayPlan();
   }, [loadTodayPlan]);
 
+  const handleSavePreference = async (values: PreferencesFormValues) => {
+    if (!childId || !parentId) {
+      Alert.alert('Missing profile', 'Parent or child profile is not available.');
+      return;
+    }
+
+    try {
+      setIsSavingPreference(true);
+      const payload = {
+        parent_id: parentId,
+        child_id: childId,
+        diet_type: values.diet_type,
+        budget_level: values.budget_level,
+        meals_per_day: values.meals_per_day,
+        activity_level: values.activity_level,
+      };
+
+      const saved = mealPreference
+        ? await updateMealPreference(payload)
+        : await createMealPreference(payload);
+
+      setMealPreference(saved);
+      setIsEditingPreferences(false);
+      setIsPreferencesModalVisible(false);
+      Alert.alert('Saved', 'Preferences saved successfully.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to save preferences.';
+      Alert.alert('Save failed', message);
+    } finally {
+      setIsSavingPreference(false);
+    }
+  };
+
   const handleRefresh = () => {
     setIsRefreshing(true);
     loadTodayPlan();
+  };
+
+  const handleOpenPreferences = () => {
+    setIsEditingPreferences(false);
+    setIsPreferencesModalVisible(true);
   };
 
   return (
@@ -162,7 +229,16 @@ export const FeedingMainComponent: React.FC = () => {
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
       >
         <View style={styles.headerSection}>
-          <Text style={styles.headerTitle}>Personalized Meal Plan</Text>
+          <View style={styles.headerRow}>
+            <Text style={styles.headerTitle}>Personalized Meal Plan</Text>
+            <TouchableOpacity
+              style={styles.settingsButton}
+              activeOpacity={0.8}
+              onPress={handleOpenPreferences}
+            >
+              <Text style={styles.settingsButtonText}>Preferences</Text>
+            </TouchableOpacity>
+          </View>
           <Text style={styles.headerDescription}>
             Here is your child&apos;s generated meal plan for today.
           </Text>
@@ -186,10 +262,28 @@ export const FeedingMainComponent: React.FC = () => {
         ) : null}
 
         {!isLoading && !errorMessage && todayPlan ? (
-          <TodayMealPlanCard plan={todayPlan} />
+          <TodayMealPlanCard
+            plan={todayPlan}
+            mealFeedback={mealFeedback}
+            childId={childId!}
+            onPlanUpdated={setTodayPlan}
+            onFeedbackDone={loadTodayPlan}
+          />
         ) : null}
 
-        {!isLoading && !errorMessage && !todayPlan ? (
+        {!isLoading && !errorMessage && !mealPreference ? (
+          <>
+            <PreferencesForm onSubmit={handleSavePreference} />
+            {isSavingPreference ? (
+              <View style={styles.savingContainer}>
+                <ActivityIndicator size="small" color={Colors.primary.DEFAULT} />
+                <Text style={styles.savingText}>Saving preferences...</Text>
+              </View>
+            ) : null}
+          </>
+        ) : null}
+
+        {!isLoading && !errorMessage && !todayPlan && !!mealPreference ? (
           <View style={styles.emptyStateCard}>
             <Text style={styles.emptyStateTitle}>No meal plan displayed for today.</Text>
             <Text style={styles.emptyStateDescription}>
@@ -197,6 +291,106 @@ export const FeedingMainComponent: React.FC = () => {
             </Text>
           </View>
         ) : null}
+
+        <Modal
+          transparent
+          animationType="fade"
+          visible={isPreferencesModalVisible}
+          onRequestClose={() => setIsPreferencesModalVisible(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalCard}>
+              {isEditingPreferences || !mealPreference ? (
+                <>
+                  <View style={styles.modalHeaderRow}>
+                    <Text style={styles.modalTitle}>
+                      {mealPreference ? 'Update Meal Preferences' : 'Create Meal Preferences'}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.modalSecondaryButton}
+                      activeOpacity={0.8}
+                      onPress={() => {
+                        setIsEditingPreferences(false);
+                        setIsPreferencesModalVisible(false);
+                      }}
+                    >
+                      <Text style={styles.modalSecondaryButtonText}>Cancel</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <PreferencesForm
+                    onSubmit={handleSavePreference}
+                    initialValues={
+                      mealPreference
+                        ? {
+                            diet_type:
+                              mealPreference.diet_type === 'Veg' ? 'Veg' : 'Standard',
+                            budget_level:
+                              mealPreference.budget_level === 'Low' ||
+                              mealPreference.budget_level === 'High'
+                                ? mealPreference.budget_level
+                                : 'Medium',
+                            meals_per_day: mealPreference.meals_per_day ?? 3,
+                            activity_level:
+                              mealPreference.activity_level === 'Light' ||
+                              mealPreference.activity_level === 'Active'
+                                ? mealPreference.activity_level
+                                : 'Moderate',
+                          }
+                        : undefined
+                    }
+                  />
+
+                  {isSavingPreference ? (
+                    <View style={styles.savingContainer}>
+                      <ActivityIndicator size="small" color={Colors.primary.DEFAULT} />
+                      <Text style={styles.savingText}>Saving preferences...</Text>
+                    </View>
+                  ) : null}
+                </>
+              ) : (
+                <>
+                  <Text style={styles.modalTitle}>Meal Preferences</Text>
+
+                  <View style={styles.modalRow}>
+                    <Text style={styles.modalLabel}>Diet Type</Text>
+                    <Text style={styles.modalValue}>{mealPreference.diet_type ?? '-'}</Text>
+                  </View>
+                  <View style={styles.modalRow}>
+                    <Text style={styles.modalLabel}>Budget Level</Text>
+                    <Text style={styles.modalValue}>{mealPreference.budget_level ?? '-'}</Text>
+                  </View>
+                  <View style={styles.modalRow}>
+                    <Text style={styles.modalLabel}>Meals Per Day</Text>
+                    <Text style={styles.modalValue}>{mealPreference.meals_per_day ?? '-'}</Text>
+                  </View>
+                  <View style={styles.modalRow}>
+                    <Text style={styles.modalLabel}>Activity Level</Text>
+                    <Text style={styles.modalValue}>{mealPreference.activity_level ?? '-'}</Text>
+                  </View>
+
+                  <View style={styles.modalActionRow}>
+                    <TouchableOpacity
+                      style={styles.modalSecondaryButton}
+                      activeOpacity={0.8}
+                      onPress={() => setIsPreferencesModalVisible(false)}
+                    >
+                      <Text style={styles.modalSecondaryButtonText}>Close</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.modalCloseButton}
+                      activeOpacity={0.8}
+                      onPress={() => setIsEditingPreferences(true)}
+                    >
+                      <Text style={styles.modalCloseButtonText}>Edit</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
     </SafeAreaView>
   );
@@ -217,11 +411,27 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
   },
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
   headerTitle: {
     fontSize: 22,
     fontWeight: '700',
     color: Colors.dark,
     marginBottom: 6,
+  },
+  settingsButton: {
+    backgroundColor: Colors.white,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  settingsButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.primary.DEFAULT,
   },
   headerDescription: {
     fontSize: 14,
@@ -270,6 +480,15 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
+  savingContainer: {
+    marginTop: 12,
+    alignItems: 'center',
+    gap: 8,
+  },
+  savingText: {
+    fontSize: 13,
+    color: Colors.inactive,
+  },
   emptyStateCard: {
     backgroundColor: Colors.white,
     marginHorizontal: 16,
@@ -292,5 +511,76 @@ const styles = StyleSheet.create({
     color: Colors.inactive,
     fontSize: 13,
     lineHeight: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  modalCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.dark,
+    marginBottom: 12,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  modalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+    gap: 12,
+  },
+  modalLabel: {
+    color: Colors.inactive,
+    fontSize: 14,
+  },
+  modalValue: {
+    color: Colors.dark,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  modalEmptyText: {
+    color: Colors.inactive,
+    fontSize: 14,
+    marginBottom: 14,
+  },
+  modalCloseButton: {
+    backgroundColor: Colors.primary.DEFAULT,
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+  },
+  modalCloseButtonText: {
+    color: Colors.white,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  modalActionRow: {
+    marginTop: 10,
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 10,
+  },
+  modalSecondaryButton: {
+    backgroundColor: Colors.gray.light,
+    borderRadius: 999,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+  },
+  modalSecondaryButtonText: {
+    color: Colors.dark,
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

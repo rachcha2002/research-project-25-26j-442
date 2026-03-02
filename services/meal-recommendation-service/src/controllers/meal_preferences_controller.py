@@ -18,6 +18,19 @@ async def create_meal_preference(payload: MealPreferenceCreateRequest):
     return await MealPreferencesService.insert_preference(payload)
 
 
+@MealPreferencesController.router.put("/", response_model=MealPreferenceRecord)
+async def update_meal_preference(payload: MealPreferenceCreateRequest):
+    if not payload.parent_id.strip() or not payload.child_id.strip():
+        raise HTTPException(status_code=400, detail="parent_id and child_id are required")
+
+    updated = await MealPreferencesService.update_preference(payload)
+
+    if updated is None:
+        raise HTTPException(status_code=404, detail="Meal preference not found for given parent_id and child_id")
+
+    return updated
+
+
 @MealPreferencesController.router.get("/", response_model=Optional[MealPreferenceRecord])
 async def get_meal_preference(
     parent_id: str = Query(..., alias="parentId"),

@@ -10,6 +10,8 @@ from src.services.meal_engine import MealOptimizerEngine
 from src.controllers.meal_preferences_controller import MealPreferencesController
 from src.controllers.generated_plans_controller import GeneratedPlansController
 from src.controllers.behavioral_state_controller import BehavioralStateController
+from src.services.generated_plans_service import GeneratedPlansService
+from src.services.meal_preferences_service import MealPreferencesService
 
 # Global engine instance so it only loads the CSVs once at startup
 engine = None
@@ -24,6 +26,18 @@ def _to_native_types(value):
     if isinstance(value, tuple):
         return tuple(_to_native_types(v) for v in value)
     return value
+
+
+def _normalize_meal_key(plan: dict, raw_meal_type: str):
+    if raw_meal_type in plan:
+        return raw_meal_type
+
+    normalized_input = ''.join(raw_meal_type.lower().split())
+    for key in plan.keys():
+        if ''.join(str(key).lower().split()) == normalized_input:
+            return key
+
+    return None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -93,6 +107,7 @@ async def generate_plan(request: MealGenerationRequest):
         "child_id": request.child_id,
         "metrics": optimized_result["research_metrics"],
         "plan": optimized_result["daily_plan"],
+        "meal_feedback": {},
         "created_at": datetime.now(timezone.utc),
     })
 
@@ -140,7 +155,98 @@ async def process_feedback(feedback: MealFeedback):
         upsert=True
     )
 
+    latest_plan_document = await GeneratedPlansService.get_latest_today_plan_document_by_child_id(
+        feedback.child_id
+    )
+
+    current_plan = latest_plan_document.get("plan", {}) if latest_plan_document else {}
+    meal_key = _normalize_meal_key(current_plan, feedback.meal_type) if current_plan else None
+
+    if latest_plan_document and meal_key:
+        await GeneratedPlansService.update_meal_feedback_in_today_plan(
+            document_id=latest_plan_document["_id"],
+            meal_key=meal_key,
+            status="accepted" if feedback.action == "accept" else "rejected",
+            actioned_items=feedback.actioned_items,
+            new_meal=feedback.new_meal,
+        )
+
+    if feedback.action == "reject" and feedback.new_meal:
+        if not latest_plan_document or "plan" not in latest_plan_document:
+            raise HTTPException(status_code=404, detail="No generated meal plan found for today")
+
+        if not meal_key:
+            raise HTTPException(status_code=404, detail="Requested meal type not found in today's plan")
+
+        old_meal = current_plan.get(meal_key, {})
+        target_meal_calories = float(old_meal.get("calories", 0) or 0)
+
+        preferences = await MealPreferencesService.get_by_child_id(feedback.child_id)
+        budget_level = preferences.budget_level if preferences and preferences.budget_level else "Medium"
+        allergies = []
+
+        replacement = engine.generate_replacement_meal(
+            meal_type=meal_key,
+            target_calories=target_meal_calories,
+            allergies=allergies,
+            budget_level=budget_level,
+            dislikes=state.get("disliked_ingredients", []),
+            likes=state.get("liked_ingredients", []),
+        )
+
+        if not replacement:
+            raise HTTPException(status_code=500, detail="Failed to generate replacement meal")
+
+        new_meal = _to_native_types(replacement["meal"])
+        updated_plan = {**current_plan, meal_key: new_meal}
+
+        existing_metrics = latest_plan_document.get("metrics", {}) or {}
+        target_daily_calories = float(existing_metrics.get("target_calories", 0) or 0)
+        achieved_daily_calories = sum(
+            float((meal or {}).get("calories", 0) or 0) for meal in updated_plan.values()
+        )
+
+        updated_metrics = {
+            **existing_metrics,
+            "achieved_calories": round(achieved_daily_calories, 2),
+            "optimization_loss_kcal": round(abs(achieved_daily_calories - target_daily_calories), 2),
+        }
+
+        await GeneratedPlansService.update_meal_in_today_plan(
+            document_id=latest_plan_document["_id"],
+            meal_key=meal_key,
+            meal_data=new_meal,
+            updated_metrics=updated_metrics,
+        )
+
+        await GeneratedPlansService.update_meal_feedback_in_today_plan(
+            document_id=latest_plan_document["_id"],
+            meal_key=meal_key,
+            status="rejected",
+            actioned_items=feedback.actioned_items,
+            new_meal=feedback.new_meal,
+        )
+
+        await GeneratedPlansService.clear_meal_feedback_in_today_plan(
+            document_id=latest_plan_document["_id"],
+            meal_key=meal_key,
+        )
+
+        refreshed_plan_document = await GeneratedPlansService.get_latest_today_plan_document_by_child_id(
+            feedback.child_id
+        )
+
+        return {
+            "message": f"Feedback processed and only '{meal_key}' regenerated.",
+            "meal_type": meal_key,
+            "updated_meal": new_meal,
+            "updated_plan": updated_plan,
+            "meal_feedback": refreshed_plan_document.get("meal_feedback", {}) if refreshed_plan_document else {},
+            "current_state": state,
+        }
+
     return {
         "message": f"ML Profile updated. {len(feedback.actioned_items)} items logged as {feedback.action}.",
+        "meal_feedback": latest_plan_document.get("meal_feedback", {}) if latest_plan_document else {},
         "current_state": state
     }

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Colors } from '@/constants/Colors';
 
@@ -15,6 +15,7 @@ export type PreferencesFormValues = {
 
 type PreferencesFormProps = {
 	onSubmit?: (values: PreferencesFormValues) => void;
+	initialValues?: Partial<PreferencesFormValues>;
 };
 
 const INITIAL_VALUES: PreferencesFormValues = {
@@ -24,9 +25,21 @@ const INITIAL_VALUES: PreferencesFormValues = {
 	activity_level: 'Moderate',
 };
 
-export const PreferencesForm: React.FC<PreferencesFormProps> = ({ onSubmit }) => {
+export const PreferencesForm: React.FC<PreferencesFormProps> = ({ onSubmit, initialValues }) => {
 	const [stepIndex, setStepIndex] = useState(0);
 	const [values, setValues] = useState<PreferencesFormValues>(INITIAL_VALUES);
+		useEffect(() => {
+			if (!initialValues) {
+				return;
+			}
+
+			setValues((prev) => ({
+				...prev,
+				...initialValues,
+			}));
+			setStepIndex(0);
+		}, [initialValues]);
+
 	const dietOptions: { label: 'Veg' | 'Non-Veg'; value: DietType }[] = [
 		{ label: 'Veg', value: 'Veg' },
 		{ label: 'Non-Veg', value: 'Standard' },

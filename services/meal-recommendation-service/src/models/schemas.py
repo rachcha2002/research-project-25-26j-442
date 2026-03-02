@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import List, Optional
+from typing import Literal
 
 # --- Initial Onboarding State ---
 class HealthData(BaseModel):
@@ -38,3 +39,15 @@ class MealFeedback(BaseModel):
     meal_type: str
     action: str # "accept" or "reject"
     actioned_items: List[str]
+    new_meal: bool = False
+
+
+class BehavioralMealsListResponse(BaseModel):
+    child_id: str
+    meals: List[str] = []
+
+
+class RemoveBehavioralItemsRequest(BaseModel):
+    child_id: str
+    list_type: Literal["accepted", "rejected"]
+    items: List[str]
