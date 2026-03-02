@@ -12,10 +12,44 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import { useBaby } from '@/contexts/BabyContext';
 import {
+  getActiveConditions,
+  getActiveMedications,
+  getLatestMeasurement,
+} from '@/services/healthAnalyticsService';
+import {
   DailyGeneratedMealPlan,
   getTodayGeneratedPlan,
 } from '@/services/generatedPlansService';
+import { getBehavioralState } from '@/services/behavioralStateService';
+import { getMealPreference } from '@/services/mealPreferencesService';
 import { TodayMealPlanCard } from '../SubComponents/TodayMealPlanCard';
+
+const calculateAgeMonths = (selectedBaby: any): number | null => {
+  if (selectedBaby?.dateOfBirth) {
+    const birth = new Date(selectedBaby.dateOfBirth);
+    if (!Number.isNaN(birth.getTime())) {
+      const now = new Date();
+      return (
+        (now.getFullYear() - birth.getFullYear()) * 12 +
+        (now.getMonth() - birth.getMonth())
+      );
+    }
+  }
+
+  if (typeof selectedBaby?.age === 'number') {
+    return selectedBaby.age;
+  }
+
+  if (selectedBaby?.age && typeof selectedBaby.age === 'object') {
+    const years = Number(selectedBaby.age.years ?? 0);
+    const months = Number(selectedBaby.age.months ?? 0);
+    if (!Number.isNaN(years) && !Number.isNaN(months)) {
+      return years * 12 + months;
+    }
+  }
+
+  return null;
+};
 
 export const FeedingMainComponent: React.FC = () => {
   const { selectedBaby } = useBaby();
@@ -26,6 +60,60 @@ export const FeedingMainComponent: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const childId = selectedBaby?._id;
+
+  const buildAndLogFinalPayload = useCallback(async () => {
+    if (!selectedBaby?._id) {
+      return;
+    }
+
+    const parentId = selectedBaby.userId;
+
+    try {
+      const [latestMeasurement, activeMedications, activeConditions, mealPreference, behavioralState] = await Promise.all([
+        getLatestMeasurement(selectedBaby._id),
+        getActiveMedications(selectedBaby._id),
+        getActiveConditions(selectedBaby._id),
+        parentId
+          ? getMealPreference({ parentId, childId: selectedBaby._id })
+          : Promise.resolve(null),
+        getBehavioralState(selectedBaby._id),
+      ]);
+
+      const finalPayload = {
+        child_id: selectedBaby._id,
+        health_data: {
+          age_months: calculateAgeMonths(selectedBaby) ?? 0,
+          weight_kg: latestMeasurement?.weight?.value ?? 0,
+          height_cm: latestMeasurement?.height?.value ?? 0,
+          gender: selectedBaby.gender ?? 'string',
+          activity_level: mealPreference?.activity_level ?? 'Moderate',
+          medical_conditions: (activeConditions ?? [])
+            .map((condition) => condition.conditionName)
+            .filter(Boolean),
+          medications: (activeMedications ?? [])
+            .map((medication) => medication.name)
+            .filter(Boolean),
+          daily_calorie_target: 0,
+        },
+        preferences: {
+          diet_type: mealPreference?.diet_type ?? 'Standard',
+          allergies: selectedBaby.allergies ?? [],
+          budget_level: mealPreference?.budget_level ?? 'Medium',
+        },
+        lifestyle: {
+          meals_per_day: mealPreference?.meals_per_day ?? 5,
+        },
+        behavioral_state: {
+          disliked_ingredients: behavioralState?.disliked_ingredients ?? [],
+          liked_ingredients: behavioralState?.liked_ingredients ?? [],
+        },
+      };
+
+      console.log('[FeedingMainComponent] Final generate-plan payload:', finalPayload);
+    } catch (error) {
+      console.error('[FeedingMainComponent] Failed to build final payload:', error);
+    }
+  }, [selectedBaby]);
 
   const loadTodayPlan = useCallback(async () => {
     if (!childId) {
@@ -43,6 +131,10 @@ export const FeedingMainComponent: React.FC = () => {
       setErrorMessage(null);
       const plan = await getTodayGeneratedPlan(childId);
       setTodayPlan(plan);
+
+      if (!plan) {
+        await buildAndLogFinalPayload();
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to load today meal plan.';
       setErrorMessage(message);
@@ -50,7 +142,7 @@ export const FeedingMainComponent: React.FC = () => {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [childId, isRefreshing]);
+  }, [childId, isRefreshing, buildAndLogFinalPayload]);
 
   useEffect(() => {
     loadTodayPlan();
