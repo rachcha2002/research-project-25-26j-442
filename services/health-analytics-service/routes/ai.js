@@ -91,6 +91,36 @@ function generateRecommendations(ra) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// HELPER — Verify PRO Status
+// ─────────────────────────────────────────────────────────────────────────────
+
+async function getBabyAndCheckPro(babyId, res) {
+  try {
+    const usersDb = mongoose.connection.useDb('peditrack_users');
+    const babyProfile = await usersDb.collection('babyprofiles').findOne({ _id: new mongoose.Types.ObjectId(babyId) });
+    
+    if (!babyProfile) {
+      res.status(404).json({ error: 'Baby not found' });
+      return null;
+    }
+
+    if (babyProfile.userId) {
+      const user = await usersDb.collection('users').findOne({ _id: new mongoose.Types.ObjectId(babyProfile.userId) });
+      if (!user || user.isPro !== true) {
+        res.status(403).json({ error: 'PRO Version required to access AI Insights.' });
+        return null;
+      }
+    }
+
+    return babyProfile;
+  } catch (err) {
+    console.error('PRO verification error:', err);
+    res.status(500).json({ error: 'Internal error verifying PRO status' });
+    return null;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // HELPER — Gather comprehensive baby data for ML Service
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -192,12 +222,8 @@ async function runPrediction(babyId, babyProfile) {
 router.get('/health-score/:babyId', async (req, res) => {
   try {
     const { babyId } = req.params;
-    let babyProfile;
-    try {
-      const usersDb = mongoose.connection.useDb('peditrack_users');
-      babyProfile = await usersDb.collection('babyprofiles').findOne({ _id: new mongoose.Types.ObjectId(babyId) });
-    } catch (_) {}
-    if (!babyProfile) return res.status(404).json({ error: 'Baby not found in user service DB' });
+    const babyProfile = await getBabyAndCheckPro(babyId, res);
+    if (!babyProfile) return;
 
     const { result } = await runPrediction(babyId, babyProfile);
 
@@ -232,12 +258,8 @@ router.get('/health-score/:babyId', async (req, res) => {
 router.get('/predictions/:babyId', async (req, res) => {
   try {
     const { babyId } = req.params;
-    let babyProfile;
-    try {
-      const usersDb = mongoose.connection.useDb('peditrack_users');
-      babyProfile = await usersDb.collection('babyprofiles').findOne({ _id: new mongoose.Types.ObjectId(babyId) });
-    } catch (_) {}
-    if (!babyProfile) return res.status(404).json({ error: 'Baby not found' });
+    const babyProfile = await getBabyAndCheckPro(babyId, res);
+    if (!babyProfile) return;
 
     const { result, measurements } = await runPrediction(babyId, babyProfile);
 
@@ -257,8 +279,13 @@ router.get('/predictions/:babyId', async (req, res) => {
     if (result.growth_forecast) {
       const h0 = latest.height?.value ?? latest.height;
       const w0 = latest.weight?.value ?? latest.weight;
-      const h3 = result.growth_forecast.next_height;
-      const w3 = result.growth_forecast.next_weight;
+      
+      const rawH3 = result.growth_forecast.next_height;
+      const rawW3 = result.growth_forecast.next_weight;
+
+      // Minimum realistic growth over 3 months if AI outputs anomaly/shrinkage
+      const h3 = rawH3 <= h0 ? h0 + 1.5 : rawH3;
+      const w3 = rawW3 <= w0 ? w0 + 0.4 : rawW3;
       
       // Calculate monthly delta to synthesize future milestones for the UI chart
       const dh = (h3 - h0) / 3;
@@ -271,15 +298,35 @@ router.get('/predictions/:babyId', async (req, res) => {
       const h12 = h9 + dh * 3;
       const w12 = w9 + dw * 3;
       
-      threeMonths = { height_cm: h3, weight_kg: w3, bmi: result.growth_forecast.next_bmi };
-      sixMonths =   { height_cm: h6, weight_kg: w6, bmi: w6 / Math.pow(h6/100, 2) };
-      twelveMonths = { height_cm: h12, weight_kg: w12, bmi: w12 / Math.pow(h12/100, 2) };
+      threeMonths = { height_cm: h3, weight_kg: w3, bmi: result.growth_forecast.next_bmi, confidence: 0.90 };
+      sixMonths =   { height_cm: h6, weight_kg: w6, bmi: w6 / Math.pow(h6/100, 2), confidence: 0.82 };
+      twelveMonths = { height_cm: h12, weight_kg: w12, bmi: w12 / Math.pow(h12/100, 2), confidence: 0.60 };
       
+      const allMonths = [];
+      const allHeights = [];
+      const allWeights = [];
+      const allConf = [];
+
+      // Append up to 3 historical points for the chart context
+      const history = measurements.slice(0, -1).slice(-3);
+      history.forEach((m, idx) => {
+        allMonths.push(`-` + (history.length - idx) + `m`); // e.g. -2m, -1m
+        allHeights.push(m.height?.value ?? m.height);
+        allWeights.push(m.weight?.value ?? m.weight);
+        allConf.push(1.0);
+      });
+
+      // Append current and future
+      allMonths.push('Now', '+3m', '+6m', '+9m', '+12m');
+      allHeights.push(h0, h3, h6, h9, h12);
+      allWeights.push(w0, w3, w6, w9, w12);
+      allConf.push(1.0, 0.90, 0.82, 0.75, 0.60);
+
       trajectory = {
-         months: [0, 3, 6, 9, 12],
-         heights: [h0, h3, h6, h9, h12],
-         weights: [w0, w3, w6, w9, w12],
-         confidences: [1.0, 0.90, 0.82, 0.75, 0.60]
+         months: allMonths,
+         heights: allHeights,
+         weights: allWeights,
+         confidences: allConf
       };
     }
 
@@ -319,12 +366,8 @@ router.get('/predictions/:babyId', async (req, res) => {
 router.get('/risks/:babyId', async (req, res) => {
   try {
     const { babyId } = req.params;
-    let babyProfile;
-    try {
-      const usersDb = mongoose.connection.useDb('peditrack_users');
-      babyProfile = await usersDb.collection('babyprofiles').findOne({ _id: new mongoose.Types.ObjectId(babyId) });
-    } catch (_) {}
-    if (!babyProfile) return res.status(404).json({ error: 'Baby not found' });
+    const babyProfile = await getBabyAndCheckPro(babyId, res);
+    if (!babyProfile) return;
 
     const { result } = await runPrediction(babyId, babyProfile);
     

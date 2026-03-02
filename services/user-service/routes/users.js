@@ -169,4 +169,73 @@ router.put('/me/default-baby/:babyId', auth, validateObjectId, async (req, res) 
   }
 });
 
+/**
+ * @route   PUT /api/users/me/upgrade
+ * @desc    Subscribe to PRO
+ * @access  Private
+ */
+router.put('/me/upgrade', auth, async (req, res) => {
+  try {
+    const { plan } = req.body; // 'pro_monthly' or 'pro_yearly'
+    if (!['pro_monthly', 'pro_yearly'].includes(plan)) {
+      return res.status(400).json({ error: 'Invalid subscription plan specified' });
+    }
+
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Mock payment processing and setting expiry date
+    user.isPro = true;
+    user.subscriptionPlan = plan;
+    
+    const expiryDate = new Date();
+    if (plan === 'pro_monthly') {
+      expiryDate.setMonth(expiryDate.getMonth() + 1);
+    } else if (plan === 'pro_yearly') {
+      expiryDate.setFullYear(expiryDate.getFullYear() + 1);
+    }
+    user.subscriptionExpiry = expiryDate;
+
+    await user.save();
+
+    res.json({
+      message: `Successfully upgraded to ${plan === 'pro_monthly' ? 'Monthly' : 'Yearly'} PRO`,
+      user: user.toJSON()
+    });
+  } catch (error) {
+    console.error('Upgrade user error:', error);
+    res.status(500).json({ error: 'Failed to process subscription' });
+  }
+});
+
+/**
+ * @route   PUT /api/users/me/cancel-subscription
+ * @desc    Cancel PRO subscription
+ * @access  Private
+ */
+router.put('/me/cancel-subscription', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    user.isPro = false;
+    user.subscriptionPlan = 'basic';
+    user.subscriptionExpiry = null;
+
+    await user.save();
+
+    res.json({
+      message: 'Subscription cancelled successfully.',
+      user: user.toJSON()
+    });
+  } catch (error) {
+    console.error('Cancel subscription error:', error);
+    res.status(500).json({ error: 'Failed to cancel subscription' });
+  }
+});
+
 module.exports = router;

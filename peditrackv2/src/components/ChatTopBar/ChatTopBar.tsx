@@ -10,13 +10,25 @@ interface ChatTopBarProps {
     onBackPress?: () => void;
     onHistoryPress?: () => void;
     onNewChatPress?: () => void;
+    selectedLanguage?: 'en' | 'si' | 'ta';
+    onLanguageChange?: (lang: 'en' | 'si' | 'ta') => void;
 }
+
+const LANG_LABELS: Record<string, string> = {
+    en: 'EN',
+    si: 'සිං',
+    ta: 'தமி',
+};
+
+const LANG_ORDER: ('en' | 'si' | 'ta')[] = ['en', 'si', 'ta'];
 
 export const ChatTopBar: React.FC<ChatTopBarProps> = ({
     showBackButton = true,
     onBackPress,
     onHistoryPress,
     onNewChatPress,
+    selectedLanguage = 'en',
+    onLanguageChange,
 }) => {
     const router = useRouter();
 
@@ -26,6 +38,12 @@ export const ChatTopBar: React.FC<ChatTopBarProps> = ({
         } else {
             router.back();
         }
+    };
+
+    const handleLanguageCycle = () => {
+        const currentIndex = LANG_ORDER.indexOf(selectedLanguage);
+        const nextLang = LANG_ORDER[(currentIndex + 1) % LANG_ORDER.length];
+        onLanguageChange?.(nextLang);
     };
 
     return (
@@ -54,8 +72,17 @@ export const ChatTopBar: React.FC<ChatTopBarProps> = ({
                     </View>
                 </View>
 
-                {/* Right Section - History and New Chat */}
+                {/* Right Section - Language, History and New Chat */}
                 <View style={styles.rightSection}>
+                    <TouchableOpacity
+                        onPress={handleLanguageCycle}
+                        style={styles.langButton}
+                        accessibilityLabel="Switch Language"
+                        accessibilityRole="button"
+                    >
+                        <Text style={styles.langButtonText}>{LANG_LABELS[selectedLanguage]}</Text>
+                    </TouchableOpacity>
+
                     <TouchableOpacity
                         onPress={onHistoryPress}
                         style={styles.iconButton}
@@ -136,7 +163,20 @@ const styles = StyleSheet.create({
     rightSection: {
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: 4,
+    },
+    langButton: {
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 14,
+        backgroundColor: `${Colors.primary.DEFAULT}15`,
+        borderWidth: 1,
+        borderColor: `${Colors.primary.DEFAULT}30`,
+    },
+    langButtonText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: Colors.primary.DEFAULT,
     },
     iconButton: {
         width: 40,

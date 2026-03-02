@@ -15,6 +15,9 @@ export interface User {
   email: string;
   profilePicture?: string;
   googleId?: string;
+  isPro?: boolean;
+  subscriptionPlan?: string;
+  subscriptionExpiry?: string;
   defaultBabyProfile?: string;
   createdAt: string;
   updatedAt: string;
@@ -347,6 +350,24 @@ class UserService {
       const response = await this.api.put<{ success: boolean; user: User }>(
         `/users/me/default-baby/${babyId}`
       );
+      return response.data.user;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async upgradeToPro(plan: string): Promise<User> {
+    try {
+      const response = await this.api.put<{ message: string; user: User }>('/users/me/upgrade', { plan });
+      return response.data.user;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async cancelSubscription(): Promise<User> {
+    try {
+      const response = await this.api.put<{ message: string; user: User }>('/users/me/cancel-subscription');
       return response.data.user;
     } catch (error) {
       throw this.handleError(error);

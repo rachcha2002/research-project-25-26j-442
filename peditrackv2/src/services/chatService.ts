@@ -43,7 +43,8 @@ export interface ConversationHistory {
 export const sendChatMessage = async (
     message: string,
     conversationId?: string,
-    provider: string = 'google'
+    provider: string = 'google',
+    language: string = 'en'
 ): Promise<SendMessageResponse> => {
     try {
         const response = await fetch(`${API_BASE_URL}/chat/message`, {
@@ -55,6 +56,7 @@ export const sendChatMessage = async (
                 message,
                 conversationId,
                 provider,
+                language,
             }),
         });
 
