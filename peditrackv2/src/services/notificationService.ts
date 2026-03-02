@@ -5,7 +5,8 @@ import { Platform } from 'react-native';
 // Configure how notifications should be handled when app is in foreground
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
@@ -17,6 +18,20 @@ export interface MedicationReminderData {
   dosage: string;
   babyId: string;
 }
+
+type MedicationReminderPayload = MedicationReminderData & {
+  type: 'medication_reminder';
+} & Record<string, unknown>;
+
+const isMedicationReminderPayload = (data: Record<string, unknown>): data is MedicationReminderPayload => {
+  return (
+    data.type === 'medication_reminder' &&
+    typeof data.medicationId === 'string' &&
+    typeof data.medicationName === 'string' &&
+    typeof data.dosage === 'string' &&
+    typeof data.babyId === 'string'
+  );
+};
 
 /**
  * Request notification permissions from the user
@@ -87,23 +102,25 @@ export const scheduleMedicationReminder = async (medication: {
     for (const time of medication.reminderTimes) {
       const [hours, minutes] = time.split(':').map(Number);
       
-      const trigger: Notifications.NotificationTriggerInput = {
+      const trigger: Notifications.DailyTriggerInput = {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
         hour: hours,
         minute: minutes,
-        repeats: true, // Repeat daily
+      };
+
+      const payload: MedicationReminderPayload = {
+        medicationId: medication._id,
+        medicationName: medication.name,
+        dosage: `${medication.dosage.amount}${medication.dosage.unit}`,
+        babyId: medication.babyId,
+        type: 'medication_reminder',
       };
 
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
           title: '💊 Medication Reminder',
           body: `Time to take ${medication.name} (${medication.dosage.amount}${medication.dosage.unit})`,          
-          data: {
-            medicationId: medication._id,
-            medicationName: medication.name,
-            dosage: `${medication.dosage.amount}${medication.dosage.unit}`,
-            babyId: medication.babyId,
-            type: 'medication_reminder',
-          } as MedicationReminderData & { type: string },
+          data: payload,
           sound: 'default',
           priority: Notifications.AndroidNotificationPriority.HIGH,
         },
@@ -179,11 +196,11 @@ export const setupNotificationResponseHandler = (
   onNotificationTap: (data: MedicationReminderData) => void
 ): void => {
   Notifications.addNotificationResponseReceivedListener((response) => {
-    const data = response.notification.request.content.data as MedicationReminderData & { type: string };
+    const rawData = response.notification.request.content.data;
     
-    if (data.type === 'medication_reminder') {
-      console.log('[Notifications] User tapped medication reminder:', data);
-      onNotificationTap(data);
+    if (rawData && isMedicationReminderPayload(rawData)) {
+      console.log('[Notifications] User tapped medication reminder:', rawData);
+      onNotificationTap(rawData);
     }
   });
 };
