@@ -67,35 +67,26 @@ export default function PastDataScreen() {
     [acceptedMeals, rejectedMeals, activeTab],
   );
 
-  const handleDeleteItem = (item: string) => {
+  const handleDeleteItem = async (item: string) => {
     if (!childId || isDeleting) {
       return;
     }
 
-    Alert.alert('Remove item', `Delete "${item}" from ${activeTab} meals?`, [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            setIsDeleting(true);
-            const response = await removeBehavioralItems(childId, activeTab, [item]);
+    try {
+      setIsDeleting(true);
+      const response = await removeBehavioralItems(childId, activeTab, [item]);
 
-            if (activeTab === 'accepted') {
-              setAcceptedMeals(response.meals ?? []);
-            } else {
-              setRejectedMeals(response.meals ?? []);
-            }
-          } catch (error) {
-            const message = error instanceof Error ? error.message : 'Failed to delete item.';
-            Alert.alert('Error', message);
-          } finally {
-            setIsDeleting(false);
-          }
-        },
-      },
-    ]);
+      if (activeTab === 'accepted') {
+        setAcceptedMeals(response.meals ?? []);
+      } else {
+        setRejectedMeals(response.meals ?? []);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to delete item.';
+      Alert.alert('Error', message);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (

@@ -172,7 +172,7 @@ export const TodayMealPlanCard: React.FC<TodayMealPlanCardProps> = ({
                 activeOpacity={0.8}
                 onPress={() => handleAcceptMeal(meal)}
               >
-                <Text style={styles.actionButtonText}>Accept</Text>
+                <Text style={[styles.actionButtonText, styles.acceptButtonText]}>Accept</Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -180,7 +180,7 @@ export const TodayMealPlanCard: React.FC<TodayMealPlanCardProps> = ({
                 activeOpacity={0.8}
                 onPress={() => handleOpenRejectModal(meal)}
               >
-                <Text style={styles.actionButtonText}>Reject</Text>
+                <Text style={[styles.actionButtonText, styles.rejectButtonText]}>Reject</Text>
               </TouchableOpacity>
             </View>
           ) : null}
@@ -344,15 +344,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   acceptButton: {
-    backgroundColor: Colors.primary.DEFAULT,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.primary.DEFAULT,
   },
   rejectButton: {
-    backgroundColor: Colors.error,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: Colors.error,
   },
   actionButtonText: {
-    color: Colors.white,
     fontSize: 13,
     fontWeight: '700',
+  },
+  acceptButtonText: {
+    color: Colors.primary.DEFAULT,
+  },
+  rejectButtonText: {
+    color: Colors.error,
   },
   modalOverlay: {
     flex: 1,
