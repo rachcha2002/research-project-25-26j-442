@@ -11,6 +11,8 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { useBaby } from '@/contexts/BabyContext';
 import {
@@ -64,6 +66,7 @@ const calculateAgeMonths = (selectedBaby: any): number | null => {
 
 export const FeedingMainComponent: React.FC = () => {
   const { selectedBaby } = useBaby();
+  const router = useRouter();
 
   const [todayPlan, setTodayPlan] = useState<DailyGeneratedMealPlan | null>(null);
   const [mealFeedback, setMealFeedback] = useState<MealFeedbackMap>({});
@@ -231,13 +234,24 @@ export const FeedingMainComponent: React.FC = () => {
         <View style={styles.headerSection}>
           <View style={styles.headerRow}>
             <Text style={styles.headerTitle}>Personalized Meal Plan</Text>
-            <TouchableOpacity
-              style={styles.settingsButton}
-              activeOpacity={0.8}
-              onPress={handleOpenPreferences}
-            >
-              <Text style={styles.settingsButtonText}>Preferences</Text>
-            </TouchableOpacity>
+            <View style={styles.headerActionsColumn}>
+              <TouchableOpacity
+                style={styles.settingsButton}
+                activeOpacity={0.8}
+                onPress={handleOpenPreferences}
+              >
+                <Text style={styles.settingsButtonText}>Preferences</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.pastIconButton}
+                activeOpacity={0.8}
+                onPress={() => router.push('/past-data')}
+              >
+                <Ionicons name="time-outline" size={16} color={Colors.primary.DEFAULT} />
+                <Text style={styles.pastIconButtonText}>Past</Text>
+              </TouchableOpacity>
+            </View>
           </View>
           <Text style={styles.headerDescription}>
             Here is your child&apos;s generated meal plan for today.
@@ -414,7 +428,7 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
   },
   headerTitle: {
     fontSize: 22,
@@ -429,6 +443,24 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   settingsButtonText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: Colors.primary.DEFAULT,
+  },
+  headerActionsColumn: {
+    alignItems: 'flex-end',
+    gap: 8,
+  },
+  pastIconButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Colors.white,
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  pastIconButtonText: {
     fontSize: 12,
     fontWeight: '600',
     color: Colors.primary.DEFAULT,
