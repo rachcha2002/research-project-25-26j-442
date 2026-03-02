@@ -232,30 +232,27 @@ export const FeedingMainComponent: React.FC = () => {
         refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
       >
         <View style={styles.headerSection}>
-          <View style={styles.headerRow}>
-            <Text style={styles.headerTitle}>Personalized Meal Plan</Text>
-            <View style={styles.headerActionsColumn}>
-              <TouchableOpacity
-                style={styles.settingsButton}
-                activeOpacity={0.8}
-                onPress={handleOpenPreferences}
-              >
-                <Text style={styles.settingsButtonText}>Preferences</Text>
-              </TouchableOpacity>
+          <Text style={styles.headerTitle}>Personalized Meal Plan</Text>
 
-              <TouchableOpacity
-                style={styles.pastIconButton}
-                activeOpacity={0.8}
-                onPress={() => router.push('/past-data')}
-              >
-                <Ionicons name="time-outline" size={16} color={Colors.primary.DEFAULT} />
-                <Text style={styles.pastIconButtonText}>Past</Text>
-              </TouchableOpacity>
-            </View>
+          <View style={styles.headerButtonsRow}>
+            <TouchableOpacity
+              style={styles.pastIconButton}
+              activeOpacity={0.8}
+              onPress={handleOpenPreferences}
+            >
+              <Ionicons name="options-outline" size={16} color={Colors.primary.DEFAULT} />
+              <Text style={styles.pastIconButtonText}>Preferences</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.pastIconButton}
+              activeOpacity={0.8}
+              onPress={() => router.push('/past-data')}
+            >
+              <Ionicons name="time-outline" size={16} color={Colors.primary.DEFAULT} />
+              <Text style={styles.pastIconButtonText}>Past</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={styles.headerDescription}>
-            Here is your child&apos;s generated meal plan for today.
-          </Text>
         </View>
 
         {isLoading ? (
@@ -425,43 +422,48 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 16,
   },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
   headerTitle: {
     fontSize: 22,
     fontWeight: '700',
     color: Colors.dark,
     marginBottom: 6,
   },
+  headerButtonsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 8,
+  },
   settingsButton: {
-    backgroundColor: Colors.white,
-    borderRadius: 999,
+    flex: 1,
+    backgroundColor: Colors.primary.DEFAULT,
+    borderRadius: 12,
     paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  settingsButtonText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.primary.DEFAULT,
-  },
-  headerActionsColumn: {
-    alignItems: 'flex-end',
-    gap: 8,
-  },
-  pastIconButton: {
+    paddingVertical: 10,
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  settingsButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+  pastIconButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     gap: 6,
     backgroundColor: Colors.white,
-    borderRadius: 999,
+    borderRadius: 12,
     paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: Colors.primary.DEFAULT,
   },
   pastIconButtonText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
     color: Colors.primary.DEFAULT,
   },
