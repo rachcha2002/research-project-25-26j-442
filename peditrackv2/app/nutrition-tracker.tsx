@@ -122,7 +122,7 @@ export default function NutritionTrackerScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Nutrition Tracker</Text>
+        <Text style={styles.title}>Nutrition Checker</Text>
         <Text style={styles.subtitle}>
           Capture or describe a meal to extract nutrition information for your child.
         </Text>
