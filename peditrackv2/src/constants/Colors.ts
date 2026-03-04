@@ -3,6 +3,10 @@ export const Colors = {
     DEFAULT: '#7C3AED',
     light: '#6366F1',
   },
+  success: {
+    DEFAULT: '#16A34A',
+    light: '#DCFCE7',
+  },
   inactive: '#6B7280',
   background: '#F9FAFB',
   white: '#FFFFFF',

@@ -8,6 +8,7 @@ import {
   TextInput,
   Image,
   Alert,
+  Modal,
 } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar';
@@ -114,6 +115,17 @@ export default function NutritionTrackerScreen() {
     [safetyStatus],
   );
 
+  const handleCloseModal = () => {
+    setAnalysisDone(false);
+    setImageUri(null);
+    setDescription('');
+    setFoodIdentified('');
+    setNutrients([]);
+    setAnalysisSummary('');
+    setSafetyStatus(null);
+    setIsAnalyzing(false);
+  };
+
   return (
     <>
       <SecondaryTopBar />
@@ -175,9 +187,26 @@ export default function NutritionTrackerScreen() {
           </Text>
         </TouchableOpacity>
 
-        {analysisDone && (
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Extracted nutrition</Text>
+      </ScrollView>
+
+      <Modal
+        visible={analysisDone}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {}}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.sectionTitle}>Nutrition</Text>
+              <TouchableOpacity
+                style={styles.closeIconButton}
+                activeOpacity={0.8}
+                onPress={handleCloseModal}
+              >
+                <Ionicons name="close" size={20} color={Colors.dark} />
+              </TouchableOpacity>
+            </View>
             {!!foodIdentified && (
               <Text style={styles.helperText}>Detected meal: {foodIdentified}</Text>
             )}
@@ -187,7 +216,7 @@ export default function NutritionTrackerScreen() {
                 <Ionicons
                   name={isSafeForChild ? 'checkmark-circle' : 'alert-circle'}
                   size={16}
-                  color={isSafeForChild ? Colors.primary.DEFAULT : Colors.error}
+                  color={isSafeForChild ? Colors.success.DEFAULT : Colors.error}
                 />
                 <Text style={[styles.safetyBadgeText, isSafeForChild ? styles.safeText : styles.unsafeText]}>
                   {isSafeForChild ? 'Safe to give' : 'Not safe to give'}
@@ -215,8 +244,8 @@ export default function NutritionTrackerScreen() {
 
             {!!analysisSummary && <Text style={styles.helperText}>{analysisSummary}</Text>}
           </View>
-        )}
-      </ScrollView>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -323,8 +352,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   safeBadge: {
-    backgroundColor: Colors.gray.light,
-    borderColor: Colors.primary.DEFAULT,
+    backgroundColor: Colors.success.light,
+    borderColor: Colors.success.DEFAULT,
   },
   unsafeBadge: {
     backgroundColor: Colors.gray.light,
@@ -336,7 +365,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   safeText: {
-    color: Colors.primary.DEFAULT,
+    color: Colors.success.DEFAULT,
   },
   unsafeText: {
     color: Colors.error,
@@ -362,5 +391,29 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: Colors.dark,
     fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  modalCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  closeIconButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.gray.light,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
