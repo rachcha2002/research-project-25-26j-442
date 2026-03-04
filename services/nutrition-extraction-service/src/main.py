@@ -1,6 +1,6 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Optional
+from typing import Optional, List
 import json
 
 from src.schemas import TextScanRequest, ClinicalSafetyResponse, ChildMedicalProfile
@@ -16,6 +16,18 @@ app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
 )
 
+
+def _normalize_nutrients(value) -> List[str]:
+    if isinstance(value, list):
+        cleaned = [str(item).strip() for item in value if str(item).strip()]
+        return list(dict.fromkeys(cleaned))
+
+    if isinstance(value, str):
+        tokens = [token.strip() for token in value.replace(";", ",").split(",") if token.strip()]
+        return list(dict.fromkeys(tokens))
+
+    return []
+
 # ==========================================
 # ENDPOINT 1: TEXT ONLY (Scenario 3)
 # Accepts pure JSON. Super fast, no YOLO.
@@ -29,10 +41,15 @@ async def scan_food_text(request: TextScanRequest):
         identified_food = llm_result.get("verified_food", request.food_query)
         if isinstance(identified_food, list):
             identified_food = ", ".join(identified_food)
+
+        nutrients = _normalize_nutrients(llm_result.get("nutrients", []))
+        if not nutrients:
+            nutrients = ["Energy"]
         
         return ClinicalSafetyResponse(
             food_identified=identified_food,
             detection_confidence=1.0, 
+            nutrients=nutrients,
             safety_status=llm_result.get("safety_status", "Warning"),
             clinical_reasoning=llm_result.get("clinical_reasoning", "Error reading clinical data.")
         )
@@ -68,9 +85,14 @@ async def scan_food_vision(
             yolo_guess, profile, img_bytes, user_text_hint
         )
 
+        nutrients = _normalize_nutrients(llm_result.get("nutrients", []))
+        if not nutrients:
+            nutrients = ["Energy"]
+
         return ClinicalSafetyResponse(
             food_identified=llm_result.get("verified_food", yolo_guess), 
             detection_confidence=round(confidence, 2), 
+            nutrients=nutrients,
             safety_status=llm_result.get("safety_status", "Warning"),
             clinical_reasoning=llm_result.get("clinical_reasoning", "Error reading clinical data.")
         )

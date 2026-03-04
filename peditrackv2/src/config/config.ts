@@ -30,6 +30,11 @@ export const API_CONFIG = {
   MEAL_RECOMMENDATION_SERVICE_URL: __DEV__
     ? `http://${COMPUTER_IP}:5050`
     : 'https://your-production-meal-service.com',
+
+  // Nutrition Extraction Service API (port 5560)
+  NUTRITION_EXTRACTION_SERVICE_URL: __DEV__
+    ? `http://${COMPUTER_IP}:5560`
+    : 'https://your-production-nutrition-extraction-service.com',
   
   // Request timeout in milliseconds
   REQUEST_TIMEOUT: 30000,

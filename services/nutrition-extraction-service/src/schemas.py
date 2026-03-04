@@ -13,5 +13,5 @@ class TextScanRequest(BaseModel):
 class ClinicalSafetyResponse(BaseModel):
     food_identified: str
     detection_confidence: Optional[float] = None
+    nutrients: List[str] = []
     safety_status: str
-    clinical_reasoning: str
