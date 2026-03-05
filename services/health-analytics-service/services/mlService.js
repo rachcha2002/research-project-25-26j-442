@@ -80,4 +80,22 @@ async function healthCheck() {
   }
 }
 
-module.exports = { predict, healthCheck };
+/**
+ * Invalidate the cached prediction for a baby.
+ * Call this whenever a measurement is added, updated, or deleted so the
+ * next request to /ai/predictions or /ai/health-score gets a fresh result
+ * instead of the stale 24-hour cache.
+ */
+async function invalidateCache(babyId) {
+  // Clear in-memory rate-limit entry so the next predict() call goes through
+  _lastCallMap.delete(`${babyId}:predict`);
+
+  // Remove the MongoDB cached document
+  try {
+    await AIInsight.deleteMany({ babyId, insightType: 'comprehensive_prediction' });
+  } catch (err) {
+    console.warn('[mlService] Cache invalidation DB delete failed:', err.message);
+  }
+}
+
+module.exports = { predict, healthCheck, invalidateCache };

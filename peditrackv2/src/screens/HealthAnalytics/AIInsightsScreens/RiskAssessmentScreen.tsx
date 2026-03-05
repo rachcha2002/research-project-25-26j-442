@@ -9,6 +9,7 @@ import { Colors } from '@/constants/Colors';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Circle } from 'react-native-svg';
+import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useBaby } from '../../../contexts/BabyContext';
 import {
@@ -80,7 +81,8 @@ export const RiskAssessmentScreen: React.FC = () => {
 
   return (
     <>
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SecondaryTopBar />
+      <SafeAreaView style={styles.container} edges={['bottom']}>
         {loading ? (
           <View style={styles.center}>
             <ActivityIndicator size="large" color={typeof Colors.primary === 'string' ? Colors.primary : Colors.primary.DEFAULT || '#7C3AED'} />
@@ -124,7 +126,6 @@ export const RiskAssessmentScreen: React.FC = () => {
                   {data.overallRisk.charAt(0).toUpperCase() + data.overallRisk.slice(1)} Risk
                 </Text>
                 <Text style={styles.overallSub}>{selectedBaby?.name}</Text>
-                {/* Confidence badge */}
                 {badge && (
                   <View style={[styles.confBadge, { borderColor: badge.color }]}>
                     <Text style={[styles.confBadgeText, { color: badge.color }]}>{badge.label}</Text>
@@ -140,38 +141,29 @@ export const RiskAssessmentScreen: React.FC = () => {
 
             {/* Risk Categories */}
             <Text style={styles.sectionTitle}>Risk Categories</Text>
-            <RiskCard
-              icon="📏" label="Growth & Development"
+            <RiskCard icon="📏" label="Growth & Development"
               score={data.riskCategories.growth.score}
               level={data.riskCategories.growth.level}
-              color={data.riskCategories.growth.color}
-            />
-            <RiskCard
-              icon="🥗" label="Nutritional"
+              color={data.riskCategories.growth.color} />
+            <RiskCard icon="🥗" label="Nutritional"
               score={data.riskCategories.nutrition.score}
               level={data.riskCategories.nutrition.level}
-              color={data.riskCategories.nutrition.color}
-            />
-            <RiskCard
-              icon="🧠" label="Developmental"
+              color={data.riskCategories.nutrition.color} />
+            <RiskCard icon="🧠" label="Developmental"
               score={data.riskCategories.development.score}
               level={data.riskCategories.development.level}
-              color={data.riskCategories.development.color}
-            />
-            <RiskCard
-              icon="😊" label="Behavioral"
+              color={data.riskCategories.development.color} />
+            <RiskCard icon="😊" label="Behavioral"
               score={data.riskCategories.behavioral.score}
               level={data.riskCategories.behavioral.level}
-              color={data.riskCategories.behavioral.color}
-            />
+              color={data.riskCategories.behavioral.color} />
 
             {/* Recommendations */}
             {data.recommendations.length > 0 && (
               <>
                 <Text style={styles.sectionTitle}>Recommended Actions</Text>
                 {data.recommendations.map((rec, i) => (
-                  <View key={i} style={[styles.recCard,
-                    rec.priority === 'urgent' && styles.recCardUrgent]}>
+                  <View key={i} style={[styles.recCard, rec.priority === 'urgent' && styles.recCardUrgent]}>
                     <View style={styles.recTopRow}>
                       <Text style={styles.recIcon}>{rec.icon}</Text>
                       <View style={{ flex: 1 }}>
@@ -179,14 +171,10 @@ export const RiskAssessmentScreen: React.FC = () => {
                         <Text style={styles.recDesc}>{rec.description}</Text>
                       </View>
                       <View style={[styles.priorityPill, {
-                        backgroundColor:
-                          rec.priority === 'urgent' ? '#FEE2E2' :
-                          rec.priority === 'high'   ? '#FEF3C7' : '#F0FDF4',
+                        backgroundColor: rec.priority === 'urgent' ? '#FEE2E2' : rec.priority === 'high' ? '#FEF3C7' : '#F0FDF4',
                       }]}>
                         <Text style={[styles.priorityText, {
-                          color:
-                            rec.priority === 'urgent' ? '#DC2626' :
-                            rec.priority === 'high'   ? '#D97706' : '#16A34A',
+                          color: rec.priority === 'urgent' ? '#DC2626' : rec.priority === 'high' ? '#D97706' : '#16A34A',
                         }]}>{rec.priority.toUpperCase()}</Text>
                       </View>
                     </View>
@@ -268,8 +256,7 @@ const styles = StyleSheet.create({
   actionItem:    { flexDirection: 'row', gap: 6 },
   actionBullet:  { color: '#9CA3AF', fontSize: 13 },
   actionText:    { fontSize: 13, color: '#374151', flex: 1 },
-  
-  // PRO Lock
+
   proTitle: { fontSize: 24, fontWeight: '800', color: '#1F2937', marginTop: 8 },
   proDesc: { fontSize: 15, color: '#6B7280', textAlign: 'center', paddingHorizontal: 20, lineHeight: 22 },
   upgradeBtn: { marginTop: 12, width: '100%', paddingHorizontal: 20 },

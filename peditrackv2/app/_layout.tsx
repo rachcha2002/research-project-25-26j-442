@@ -3,8 +3,13 @@ import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '../src/contexts/AuthContext';
 import { BabyProvider } from '../src/contexts/BabyContext';
+import { requestPushPermissionsAsync } from '../src/services/pushNotificationService';
 
 export default function RootLayout() {
+  React.useEffect(() => {
+    // Request push notification permissions on app launch
+    requestPushPermissionsAsync();
+  }, []);
   return (
     <SafeAreaProvider>
       <AuthProvider>

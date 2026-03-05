@@ -10,7 +10,7 @@
 
 // Get your computer's IP by running 'ipconfig' (Windows) or 'ifconfig' (Mac/Linux)
 
-const COMPUTER_IP = '192.168.1.2'; // Update this with your actual IP
+const COMPUTER_IP = '10.174.51.59'; // Update this with your actual IP
 
 // Detect if running in Expo Go vs production
 const __DEV__ = process.env.NODE_ENV !== 'production';
@@ -31,6 +31,11 @@ export const API_CONFIG = {
     ? `http://${COMPUTER_IP}:5050`
     : 'https://your-production-meal-service.com',
 
+
+  // Nutrition Extraction Service API (port 5560)
+  NUTRITION_EXTRACTION_SERVICE_URL: __DEV__
+    ? `http://${COMPUTER_IP}:5560`
+    : 'https://your-production-nutrition-extraction-service.com',
   // Request timeout in milliseconds
   REQUEST_TIMEOUT: 30000,
 };
