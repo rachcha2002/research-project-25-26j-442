@@ -437,6 +437,32 @@ router.post('/cancel', auth, async (req, res) => {
   try {
     const subscription = await Subscription.findOne({ userId: req.userId });
     if (!subscription || !subscription.stripeSubscriptionId) {
+      // If the user manually got marked as Pro in DB, auto-heal their account status back to Free
+      const user = await User.findById(req.userId);
+      if (user && user.isPro) {
+        user.isPro = false;
+        user.subscriptionPlan = 'basic';
+        user.$skipPasswordHash = true;
+        await user.save();
+        
+        if (subscription) {
+          subscription.status = 'none';
+          subscription.cancelAtPeriodEnd = false;
+          subscription.autoRenew = false;
+          await subscription.save();
+        }
+
+        return res.json({
+          success: true,
+          message: 'Subscription successfully removed (downgraded to Free).',
+          subscription: {
+            status: 'none',
+            cancelAtPeriodEnd: false,
+            currentPeriodEnd: null,
+          }
+        });
+      }
+
       return res.status(404).json({ error: 'No active subscription found' });
     }
 
@@ -623,6 +649,56 @@ router.post('/verify-session', auth, async (req, res) => {
   } catch (error) {
     console.error('Verify session error:', error);
     res.status(500).json({ error: 'Failed to verify checkout session' });
+  }
+});
+
+/**
+ * @route   POST /api/subscription/apply-demo-coupon
+ * @desc    Upgrades user to PRO for free using a demo coupon code
+ * @access  Private
+ */
+router.post('/apply-demo-coupon', auth, async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (code !== '18473') {
+      return res.status(400).json({ error: 'Invalid coupon code' });
+    }
+
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    user.isPro = true;
+    user.subscriptionPlan = 'pro_monthly';
+    user.$skipPasswordHash = true;
+    await user.save();
+
+    // Create a mock subscription record
+    const subscriptionData = {
+      userId: req.userId,
+      stripeCustomerId: 'demo_cust_' + Math.random().toString(36).substring(7),
+      stripeSubscriptionId: null, // intentionally null so cancel auto-heal handles it
+      status: 'active',
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      autoRenew: false,
+      cancelAtPeriodEnd: true, // Will automatically expire
+      paymentMethodBrand: 'Demo',
+      paymentMethodLast4: '0000',
+    };
+
+    await Subscription.findOneAndUpdate(
+      { userId: req.userId },
+      subscriptionData,
+      { upsert: true, new: true }
+    );
+
+    res.json({
+      success: true,
+      message: 'Demo PRO activated successfully!',
+    });
+  } catch (error) {
+    console.error('Demo coupon error:', error);
+    res.status(500).json({ error: 'Failed to apply demo coupon' });
   }
 });
 

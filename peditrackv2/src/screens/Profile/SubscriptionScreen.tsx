@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,8 +31,26 @@ const FEATURES = [
 
 export default function SubscriptionScreen() {
   const router = useRouter();
-  const { user, createCheckoutSession, verifyCheckoutSession, isLoading } = useAuth();
+  const { user, createCheckoutSession, verifyCheckoutSession, applyDemoCoupon, isLoading } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [couponCode, setCouponCode] = useState('');
+  const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+
+  const handleApplyCoupon = async () => {
+    try {
+      setIsApplyingCoupon(true);
+      const res = await applyDemoCoupon(couponCode);
+      if (res.success) {
+        Alert.alert('Demo PRO Activated!', res.message, [
+          { text: 'Awesome!', onPress: () => router.back() }
+        ]);
+      }
+    } catch (err: any) {
+      Alert.alert('Invalid Code', err?.message || 'Failed to apply coupon.');
+    } finally {
+      setIsApplyingCoupon(false);
+    }
+  };
 
   const handleSubscribe = useCallback(async () => {
     try {
@@ -156,6 +175,33 @@ export default function SubscriptionScreen() {
           ))}
         </View>
 
+        {/* Coupon Code Section */}
+        <View style={styles.couponContainer}>
+          <Text style={styles.couponLabel}>Have a promo code?</Text>
+          <View style={styles.couponRow}>
+            <TextInput
+              style={styles.couponInput}
+              placeholder="Enter code"
+              value={couponCode}
+              onChangeText={setCouponCode}
+              placeholderTextColor="#9CA3AF"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <TouchableOpacity 
+              style={styles.couponBtn}
+              onPress={handleApplyCoupon}
+              disabled={!couponCode.trim() || isApplyingCoupon || busy}
+            >
+              {isApplyingCoupon ? (
+                <ActivityIndicator color="#fff" size="small" />
+              ) : (
+                <Text style={styles.couponBtnText}>Apply</Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* CTA Button */}
         <TouchableOpacity style={styles.subscribeBtnOuter} onPress={handleSubscribe} disabled={busy} activeOpacity={0.85}>
           <LinearGradient
@@ -218,6 +264,13 @@ const styles = StyleSheet.create({
   featureText: { fontSize: 13, color: '#374151', paddingLeft: 16 },
   centerIcon: { alignItems: 'center', justifyContent: 'center' },
   dash: { color: '#D1D5DB', fontSize: 16 },
+
+  couponContainer: { marginTop: 4, paddingHorizontal: 4 },
+  couponLabel: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  couponRow: { flexDirection: 'row', gap: 8 },
+  couponInput: { flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: '#D1D5DB', borderRadius: 12, paddingHorizontal: 16, fontSize: 15, color: '#1F2937' },
+  couponBtn: { backgroundColor: '#4F46E5', paddingHorizontal: 20, justifyContent: 'center', alignItems: 'center', borderRadius: 12 },
+  couponBtnText: { color: '#fff', fontSize: 15, fontWeight: '600' },
 
   subscribeBtnOuter: { marginTop: 8 },
   subscribeBtnGradient: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 18, borderRadius: 16 },
