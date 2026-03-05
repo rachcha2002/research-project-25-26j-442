@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,17 +10,31 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../../src/contexts/AuthContext';
-import { APP_CONFIG } from '../../src/config/config';
+import { APP_CONFIG, GOOGLE_CONFIG } from '../../src/config/config';
+import { Ionicons } from '@expo/vector-icons';
+
+// Safely try to import Google Sign-In (not available in Expo Go)
+let GoogleSignin: any = null;
+let statusCodes: any = {};
+try {
+  const googleSignInModule = require('@react-native-google-signin/google-signin');
+  GoogleSignin = googleSignInModule.GoogleSignin;
+  statusCodes = googleSignInModule.statusCodes;
+} catch (e) {
+  // Native module not available (running in Expo Go)
+  console.log('[Register] Google Sign-In native module not available (Expo Go)');
+}
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const { register, error, clearError } = useAuth();
-  
+  const { register, googleSignIn, error, clearError } = useAuth();
+
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -29,6 +43,16 @@ export default function RegisterScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  // Configure Google Sign-In on mount (only if native module is available)
+  useEffect(() => {
+    if (GoogleSignin) {
+      GoogleSignin.configure({
+        webClientId: GOOGLE_CONFIG.WEB_CLIENT_ID,
+        offlineAccess: false,
+      });
+    }
+  }, []);
 
   const validateForm = (): string | null => {
     if (!name.trim()) {
@@ -77,8 +101,42 @@ export default function RegisterScreen() {
     }
   };
 
-  const handleGoogleSignUp = () => {
-    Alert.alert('Coming Soon', 'Google Sign-Up will be available soon!');
+  const handleGoogleSignUp = async () => {
+    if (!GoogleSignin) {
+      Alert.alert(
+        'Development Build Required',
+        'Google Sign-In requires a development build. Please run "npx expo run:android" or "npx expo run:ios" instead of Expo Go.'
+      );
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      clearError();
+
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+
+      const idToken = response?.data?.idToken;
+      if (!idToken) {
+        throw new Error('Failed to get Google ID token');
+      }
+
+      await googleSignIn(idToken);
+      router.replace('/(tabs)');
+    } catch (err: any) {
+      if (err.code === statusCodes.SIGN_IN_CANCELLED) {
+        // User cancelled — do nothing
+      } else if (err.code === statusCodes.IN_PROGRESS) {
+        // Sign-in in progress
+      } else if (err.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert('Error', 'Google Play Services is not available on this device');
+      } else {
+        Alert.alert('Google Sign-Up Failed', err.message || 'An error occurred');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getPasswordStrength = (): string => {
@@ -98,9 +156,9 @@ export default function RegisterScreen() {
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-      
+
       <LinearGradient
-        colors={['#667eea', '#764ba2']}
+        colors={['#7C3AED', '#6D28D9', '#5B21B6']}
         style={styles.gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -115,8 +173,12 @@ export default function RegisterScreen() {
           >
             {/* Header */}
             <View style={styles.header}>
-              <Text style={styles.title}>Create Account</Text>
-              <Text style={styles.subtitle}>Join PediTrack today</Text>
+              <Image
+                source={require('../../assets/peditrack_logo/peditrackfull-removebg-preview.png')}
+                style={styles.headerLogo}
+                resizeMode="contain"
+              />
+              <Text style={styles.subtitle}>Create your account to get started</Text>
             </View>
 
             {/* Form */}
@@ -225,7 +287,7 @@ export default function RegisterScreen() {
                 activeOpacity={0.9}
               >
                 {isLoading ? (
-                  <ActivityIndicator color="#667eea" />
+                  <ActivityIndicator color="#7C3AED" />
                 ) : (
                   <Text style={styles.registerButtonText}>Create Account</Text>
                 )}
@@ -280,6 +342,11 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 30,
     paddingVertical: 40,
+  },
+  headerLogo: {
+    width: 260,
+    height: 80,
+    marginBottom: 16,
   },
   header: {
     marginBottom: 30,
@@ -373,7 +440,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   checkmark: {
-    color: '#667eea',
+    color: '#7C3AED',
     fontSize: 16,
     fontWeight: 'bold',
   },
@@ -401,7 +468,7 @@ const styles = StyleSheet.create({
   registerButtonText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#667eea',
+    color: '#7C3AED',
   },
   divider: {
     flexDirection: 'row',
@@ -433,7 +500,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginRight: 12,
     fontWeight: 'bold',
-    color: '#667eea',
+    color: '#7C3AED',
   },
   googleButtonText: {
     fontSize: 16,

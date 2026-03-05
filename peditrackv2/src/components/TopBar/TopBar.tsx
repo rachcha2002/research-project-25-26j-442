@@ -59,9 +59,15 @@ export const TopBar: React.FC<TopBarProps> = ({
           <View style={styles.container}>
             {/* Left Section - Logo and App Name */}
             <View style={styles.leftSection}>
+
               <View style={styles.logoContainer}>
-                <Text style={styles.logoEmoji}>👣</Text>
+                <Image
+                  source={require('../../../assets/peditrack_logo/peditrack-white-nobg.png')}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
               </View>
+
               <View style={styles.brandContainer}>
                 <Text style={styles.appName}>PediTrack</Text>
                 <Text style={styles.tagline}>Baby Health Care Tracking App</Text>
@@ -160,8 +166,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
-  logoEmoji: {
-    fontSize: 32,
+  logoImage: {
+    width: 40,
+    height: 40,
   },
   brandContainer: {
     flex: 1,
