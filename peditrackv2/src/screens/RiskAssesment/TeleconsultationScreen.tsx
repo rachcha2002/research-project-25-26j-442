@@ -6,17 +6,21 @@ import {
   TouchableOpacity,
   ScrollView,
   Switch,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { SecondaryTopBar } from "@/components/SecondaryTopBar";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { getTeleconsultationRequest, getQueuePosition, getVideoToken } from "@/services/teleconsultationService";
+import { cancelTeleconsultationRequest, getTeleconsultationRequest, getQueuePosition, getVideoToken } from "@/services/teleconsultationService";
 import { getAssessments } from "@/services/riskAssessmentService";
+import { useBaby } from "@/contexts/BabyContext";
+import { EXPO_PUBLIC_LIVEKIT_URL } from "@/config/config";
 
 export const TeleconsultationScreen: React.FC = () => {
   const params = useLocalSearchParams();
   const router = useRouter();
+  const { selectedBaby } = useBaby();
   const requestId = params.requestId as string | undefined;
   const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
   const [queuePosition, setQueuePosition] = React.useState<number | null>(null);
@@ -24,12 +28,101 @@ export const TeleconsultationScreen: React.FC = () => {
   const [status, setStatus] = React.useState<string>("pending");
   const [videoRoom, setVideoRoom] = React.useState<string | null>(null);
   const [joining, setJoining] = React.useState(false);
+  const [cancelling, setCancelling] = React.useState(false);
   const [request, setRequest] = React.useState<any>(null);
   const [assessment, setAssessment] = React.useState<any>(null);
+  const autoJoinAttemptedRef = React.useRef(false);
+
+  const handleJoinCall = React.useCallback(async () => {
+    if (joining) return;
+    if (!requestId) {
+      Alert.alert('Unable to join', 'Missing request details. Please retry from the assessment result screen.');
+      return;
+    }
+    if (status !== 'accepted' || !videoRoom) {
+      Alert.alert('Not ready yet', 'A doctor has not accepted this request yet. Please wait in queue.');
+      return;
+    }
+
+    setJoining(true);
+    try {
+      const identity = request?.patient?.userId || requestId;
+      const { token, url } = await getVideoToken(identity, videoRoom);
+      const resolvedServerUrl = url || process.env.EXPO_PUBLIC_LIVEKIT_URL || '';
+
+      if (!token || !resolvedServerUrl) {
+        throw new Error('Missing token or LiveKit server URL');
+      }
+
+      router.push({
+        pathname: "/emergency-response/videocall-screen",
+        params: { token, roomName: videoRoom, identity, serverUrl: resolvedServerUrl, requestId },
+      });
+    } catch (err: any) {
+      const message = String(err?.message || '');
+      if (message.includes('403')) {
+        Alert.alert('Call not authorized', 'The call room is not ready for this participant yet. Please wait for doctor acceptance.');
+      } else {
+        Alert.alert('Join failed', 'Failed to join video call. Please try again.');
+      }
+    } finally {
+      setJoining(false);
+    }
+  }, [joining, requestId, status, videoRoom, request, router]);
+
+  const handleCancelRequest = React.useCallback(() => {
+    if (!requestId || cancelling) return;
+
+    Alert.alert(
+      'Cancel Request',
+      'Are you sure you want to cancel this teleconsultation request?',
+      [
+        { text: 'No', style: 'cancel' },
+        {
+          text: 'Yes, Cancel',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setCancelling(true);
+              const updated = await cancelTeleconsultationRequest(requestId);
+              setRequest(updated);
+              setStatus(updated.status);
+              setQueuePosition(null);
+              setEstWait(null);
+              setVideoRoom(null);
+              Alert.alert('Request Cancelled', 'Your teleconsultation request has been cancelled.');
+            } catch (err) {
+              Alert.alert('Cancel Failed', 'Unable to cancel the request right now. Please try again.');
+            } finally {
+              setCancelling(false);
+            }
+          },
+        },
+      ]
+    );
+  }, [requestId, cancelling]);
+
+  const calculateAgeMonths = (dateOfBirth?: string): number | null => {
+    if (!dateOfBirth) return null;
+    const birthDate = new Date(dateOfBirth);
+    if (Number.isNaN(birthDate.getTime())) return null;
+
+    const now = new Date();
+    const yearsDiff = now.getFullYear() - birthDate.getFullYear();
+    const monthsDiff = now.getMonth() - birthDate.getMonth();
+    const dayAdjustment = now.getDate() < birthDate.getDate() ? -1 : 0;
+
+    return Math.max(0, yearsDiff * 12 + monthsDiff + dayAdjustment);
+  };
+
+  const childName = selectedBaby?.name || "";
+  const ageMonths = calculateAgeMonths(selectedBaby?.dateOfBirth);
+
+  const resolvedChildName = request?.patient?.name || childName || 'Unknown';
 
   React.useEffect(() => {
     if (!requestId) return;
-    let interval: NodeJS.Timeout;
+    let interval: ReturnType<typeof setInterval>;
     const poll = async () => {
       try {
         const req = await getTeleconsultationRequest(requestId);
@@ -50,6 +143,9 @@ export const TeleconsultationScreen: React.FC = () => {
           const pos = await getQueuePosition(requestId);
           setQueuePosition(pos.position);
           setEstWait(pos.estWait);
+        } else {
+          setQueuePosition(null);
+          setEstWait(null);
         }
       } catch (err) {
         // handle error
@@ -60,6 +156,20 @@ export const TeleconsultationScreen: React.FC = () => {
     return () => clearInterval(interval);
   }, [requestId]);
 
+  React.useEffect(() => {
+    if (!requestId) return;
+
+    if (status === 'pending' || status === 'cancelled' || status === 'completed') {
+      autoJoinAttemptedRef.current = false;
+      return;
+    }
+
+    if (status === 'accepted' && videoRoom && !joining && !autoJoinAttemptedRef.current) {
+      autoJoinAttemptedRef.current = true;
+      handleJoinCall();
+    }
+  }, [status, videoRoom, joining, requestId, handleJoinCall]);
+
   return (
     <View style={styles.container}>
       <ScrollView  showsVerticalScrollIndicator={false}>
@@ -68,7 +178,7 @@ export const TeleconsultationScreen: React.FC = () => {
         <Text style={styles.headerTitle}>Teleconsultation</Text>
         {/* Queue Banner */}
         <View style={styles.queueBanner}>
-          <Text style={styles.queueStatus}>{status === "pending" ? "WAITING IN QUEUE" : status === "accepted" ? "DOCTOR READY" : "COMPLETED"}</Text>
+          <Text style={styles.queueStatus}>{status === "pending" ? "WAITING IN QUEUE" : status === "accepted" ? "DOCTOR READY" : status === "cancelled" ? "CANCELLED" : "COMPLETED"}</Text>
           <Text style={styles.queueLabel}>Position in Queue</Text>
           <Text style={styles.queueNumber}>{queuePosition !== null ? `#${queuePosition}` : "-"}</Text>
           <Text style={styles.queueWait}>Est. wait: {estWait !== null ? `${estWait} minutes` : "-"}</Text>
@@ -78,20 +188,17 @@ export const TeleconsultationScreen: React.FC = () => {
           <View style={styles.requestCard}>
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
               <Text style={styles.requestTitle}>Consultation Request For</Text>
-              <View style={styles.avatar}><Text style={styles.avatarText}>{request.patient?.name?.[0]?.toUpperCase() || 'T'}</Text></View>
+              <View style={styles.avatar}><Text style={styles.avatarText}>{resolvedChildName?.[0]?.toUpperCase() || '?'}</Text></View>
             </View>
-            <Text style={styles.patientName}>{request.patient?.name || 'Thisal'}, Age {request.patient?.age_months ? (request.patient.age_months / 12).toFixed(1) : '1.2'} yrs
+            <Text style={styles.patientName}>{resolvedChildName}, Age {ageMonths !== null && ageMonths !== undefined ? (ageMonths / 12).toFixed(1) : '-'} yrs
               {assessment && assessment.risk_level && (
                 <Text style={{ color: assessment.risk_level === 'high' ? '#DC2626' : assessment.risk_level === 'medium' ? '#EA580C' : '#16A34A', fontWeight: '700' }}>
-                  {`  (${assessment.risk_level.toUpperCase()} RISK)`}
+                  {`  (${assessment.risk_level.toUpperCase()} Priority)`}
                 </Text>
               )}
             </Text>
             <View style={styles.requestRow}><Ionicons name="calendar" size={16} color="#6366F1" style={{ marginRight: 6 }} /><Text style={styles.requestInfo}>Requested: {request.requestedAt ? new Date(request.requestedAt).toLocaleString() : '-'}</Text></View>
-            <View style={styles.requestRow}><Ionicons name="warning" size={16} color="#DC2626" style={{ marginRight: 6 }} /><Text style={styles.requestInfo}>Risk Level: <Text style={styles.highRisk}>{request.risk_level?.toUpperCase() || '?'}</Text></Text></View>
-            {assessment && (
-              <View style={styles.requestRow}><Ionicons name="document-text" size={16} color="#6366F1" style={{ marginRight: 6 }} /><Text style={styles.requestInfo}>Assessment Score: {assessment.risk_score}</Text></View>
-            )}
+            <View style={styles.requestRow}><Ionicons name="warning" size={16} color="#DC2626" style={{ marginRight: 6 }} /><Text style={styles.requestInfo}>Priority Level: <Text style={styles.highRisk}>{request.risk_level?.toUpperCase() || '?'}</Text></Text></View>
           </View>
         )}
         {/* High Priority Banner */}
@@ -118,6 +225,7 @@ export const TeleconsultationScreen: React.FC = () => {
             Doctor Assignment
             {status === 'pending' && <Text style={styles.expectSubBlue}> In progress…</Text>}
             {status === 'accepted' && <Text style={styles.expectSubBlue}> Assigned</Text>}
+            {status === 'cancelled' && <Text style={styles.expectSubBlue}> Cancelled</Text>}
             {status === 'completed' && <Text style={styles.expectSubBlue}> Completed</Text>}
           </Text>
         </View>
@@ -127,11 +235,12 @@ export const TeleconsultationScreen: React.FC = () => {
             Video Consultation
             {status === 'pending' && <Text style={styles.expectSub}> You'll be notified</Text>}
             {status === 'accepted' && <Text style={styles.expectSubBlue}> Ready to join</Text>}
+            {status === 'cancelled' && <Text style={styles.expectSubBlue}> Not started</Text>}
             {status === 'completed' && <Text style={styles.expectSubBlue}> Finished</Text>}
           </Text>
         </View>
         {/* Immediate Help - dynamic (show only if status is not completed) */}
-        {status !== 'completed' && (
+        {status !== 'completed' && status !== 'cancelled' && (
           <>
             <Text style={styles.sectionTitle}>Need Immediate Help?</Text>
             <View style={styles.helpRow}>
@@ -154,44 +263,37 @@ export const TeleconsultationScreen: React.FC = () => {
         {status === "accepted" && videoRoom && (
           <View style={{ marginVertical: 20 }}>
             <Text style={{ color: '#16A34A', fontWeight: '700', fontSize: 16, textAlign: 'center' }}>Doctor is ready! Join the video call below:</Text>
-            <TouchableOpacity
-              style={[styles.helpBtn, { backgroundColor: '#6366F1', marginTop: 12 }]}
-              disabled={joining}
-              onPress={async () => {
-                if (!requestId || !videoRoom) return;
-                setJoining(true);
-                try {
-                  // Use requestId as identity for now
-                  const identity = requestId;
-                  const { token } = await getVideoToken(identity, videoRoom);
-                  router.push({
-                    pathname: "/videocall-screen",
-                    params: { token, roomName: videoRoom, identity },
-                  });
-                } catch (err) {
-                  alert("Failed to join video call. Please try again.");
-                } finally {
-                  setJoining(false);
-                }
-              }}
-            >
-              <Ionicons name="videocam" size={22} color="#fff" />
-              <Text style={{ color: '#fff', fontWeight: '700', marginLeft: 8 }}>{joining ? "Joining..." : "Join Video Call"}</Text>
-            </TouchableOpacity>
+            {joining && (
+              <Text style={styles.autoConnectText}>Auto-connecting to doctor…</Text>
+            )}
+            {!joining && (
+              <TouchableOpacity
+                style={[styles.helpBtn, { backgroundColor: '#6366F1', marginTop: 12 }]}
+                onPress={handleJoinCall}
+              >
+                <Ionicons name="videocam" size={22} color="#fff" />
+                <Text style={{ color: '#fff', fontWeight: '700', marginLeft: 8 }}>Join Video Call</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
         {/* Footer Buttons - dynamic */}
         <View style={styles.footerRow}>
-          {status !== 'completed' && (
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => {/* TODO: implement cancel request */}}>
-              <Text style={styles.cancelBtnText}>Cancel Request</Text>
+          {status === 'pending' && (
+            <TouchableOpacity style={styles.cancelBtn} onPress={handleCancelRequest} disabled={cancelling}>
+              <Text style={styles.cancelBtnText}>{cancelling ? 'Cancelling...' : 'Cancel Request'}</Text>
             </TouchableOpacity>
           )}
           {status === 'accepted' && (
-            <TouchableOpacity style={styles.contactBtn} onPress={() => router.push('/videocall-screen')}>
-              <Ionicons name="call" size={18} color="#fff" />
-              <Text style={styles.contactBtnText}>Contact Doctor</Text>
-            </TouchableOpacity>
+            !joining ? (
+              <TouchableOpacity
+                style={styles.contactBtn}
+                onPress={handleJoinCall}
+              >
+                <Ionicons name="call" size={18} color="#fff" />
+                <Text style={styles.contactBtnText}>Contact Doctor</Text>
+              </TouchableOpacity>
+            ) : null
           )}
         </View>
       </ScrollView>
@@ -455,5 +557,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 15,
     marginLeft: 8,
+  },
+  autoConnectText: {
+    color: '#4338CA',
+    fontSize: 13,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginTop: 8,
   },
 });

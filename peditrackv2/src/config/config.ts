@@ -9,9 +9,7 @@
 // For Physical Device: use your computer's IP address
 
 // Get your computer's IP by running 'ipconfig' (Windows) or 'ifconfig' (Mac/Linux)
-
-
-const COMPUTER_IP = '192.168.1.179'; // Update this with your actual IP
+const COMPUTER_IP = '172.20.10.2'; // Update this with your actual IP
 
 // Detect if running in Expo Go vs production
 const __DEV__ = process.env.NODE_ENV !== 'production';
@@ -26,6 +24,26 @@ export const API_CONFIG = {
   HEALTH_SERVICE_URL: __DEV__
     ? `http://${COMPUTER_IP}:5001/api`
     : 'https://your-production-health-service.com/api',
+
+  // Risk Assessment Service API (port 4000)
+  RISK_ASSESSMENT_URL: __DEV__
+    ? `http://${COMPUTER_IP}:4000/api`
+    : 'https://your-production-risk-assessment.com/api',
+
+  // Teleconsultation Service API (port 4001)
+  TELECONSULTATION_URL: __DEV__
+    ? `http://${COMPUTER_IP}:4001/api/teleconsultation`
+    : 'https://your-production-teleconsultation.com/api',
+
+  // Places Proxy API (port 4002)
+  PLACES_PROXY_URL: __DEV__
+    ? `http://${COMPUTER_IP}:4002/api`
+    : 'https://your-production-places-proxy.com/api',
+
+  // Admin Service API (port 3012)
+  AUTH_USER_URL: __DEV__
+    ? `http://${COMPUTER_IP}:3012/api/doctors`
+    : 'https://your-production-admin-service.com/api',
 
   // Meal Recommendation Service API (port 5050)
   MEAL_RECOMMENDATION_SERVICE_URL: __DEV__
@@ -48,6 +66,16 @@ export const GOOGLE_CONFIG = {
   IOS_CLIENT_ID: '', // Set if you have a separate iOS client ID
   ANDROID_CLIENT_ID: '', // Set if you have a separate Android client ID
 };
+
+// Google Places API Configuration
+export const GOOGLE_PLACES_API_KEY = {
+  GOOGLE_PLACES_API_KEY: 'AIzaSyDOP3Wpo_qanxpa3xJe-q2O6DoehNreuQw', 
+};
+
+// LiveKit Configuration
+export const EXPO_PUBLIC_LIVEKIT_URL={
+  EXPO_PUBLIC_LIVEKIT_URL:'wss://peditrack-r6dlgmxt.livekit.cloud'
+}
 
 // App Configuration
 export const APP_CONFIG = {
@@ -82,5 +110,7 @@ export default {
   API_CONFIG,
   GOOGLE_CONFIG,
   APP_CONFIG,
+  GOOGLE_PLACES_API_KEY,
+  EXPO_PUBLIC_LIVEKIT_URL,
   getApiUrl,
 };

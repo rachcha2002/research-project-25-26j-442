@@ -5,7 +5,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 
 const assessmentRoutes = require('./routes/assessmentRoutes');
-const teleconsultationRoutes = require('./routes/teleconsultationRoutes');
+global.sharedMongoose = mongoose;
+const teleconsultationRoutes = require('../peditrack-teleconsultation-service/routes/teleconsultationRoutes');
 
 const app = express();
 const port = process.env.PORT || 4000;

@@ -1,6 +1,10 @@
-const API_BASE_URL = 'http://192.168.1.179:4000/api';
+import * as SecureStore from 'expo-secure-store';
+import { API_CONFIG, APP_CONFIG } from '@/config/config';
+
+const API_BASE_URL = API_CONFIG.RISK_ASSESSMENT_URL;
 
 export interface AssessmentPayload {
+  userId?: string | null;
   child: {
     name: string | null;
     age_months: number | null;
@@ -53,6 +57,49 @@ export interface BackendResponse {
   timestamp?: string;
 }
 
+export interface AssessmentReportResponse {
+  assessment_id: string;
+  userId?: string | null;
+  child: {
+    name: string | null;
+    age_months: number | null;
+    weight_kg: number | null;
+  };
+  assessment: {
+    date: string;
+    risk: 'Low' | 'Medium' | 'High';
+    score: number;
+    summary: string;
+    dangerSigns: string[];
+    symptoms: Array<{ label: string; severity: string }>;
+    vitals: {
+      temperature: number | null;
+      heartRate: number | null;
+      respRate: number | null;
+      spo2: number | null;
+      avpu: string | null;
+      pain: number | null;
+    };
+    feeding: {
+      feedingNormally: string;
+      drinkingNormally: string;
+      urineOutput: string;
+    };
+    context: {
+      chronicConditions: string;
+      medications: string;
+      recentTravel: string;
+      exposures: string;
+      onset: string;
+      trend: string;
+    };
+    reasons: string[];
+    recommendations: BackendRecommendation[];
+  };
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 /**
  * Submit a risk assessment to the backend
  */
@@ -60,10 +107,12 @@ export const submitAssessment = async (
   payload: AssessmentPayload
 ): Promise<BackendResponse> => {
   try {
+    const token = await SecureStore.getItemAsync(APP_CONFIG.ACCESS_TOKEN_KEY);
     const response = await fetch(`${API_BASE_URL}/risk-score`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify(payload),
     });
@@ -82,13 +131,75 @@ export const submitAssessment = async (
  */
 export const getAssessments = async (): Promise<BackendResponse[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/assessments`);
+    const token = await SecureStore.getItemAsync(APP_CONFIG.ACCESS_TOKEN_KEY);
+    const response = await fetch(`${API_BASE_URL}/assessments`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     return await response.json();
   } catch (error) {
     console.error('Error fetching assessments:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get a persisted assessment report by assessment id
+ */
+export const getAssessmentReportById = async (
+  assessmentId: string
+): Promise<AssessmentReportResponse> => {
+  try {
+    const token = await SecureStore.getItemAsync(APP_CONFIG.ACCESS_TOKEN_KEY);
+    const response = await fetch(`${API_BASE_URL}/assessment-reports/${assessmentId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching assessment report:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get latest persisted assessment report, optionally by user id
+ */
+export const getLatestAssessmentReport = async (
+  userId?: string
+): Promise<AssessmentReportResponse> => {
+  try {
+    const token = await SecureStore.getItemAsync(APP_CONFIG.ACCESS_TOKEN_KEY);
+    const query = userId ? `?userId=${encodeURIComponent(userId)}` : '';
+    const response = await fetch(`${API_BASE_URL}/assessment-reports/latest${query}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching latest assessment report:', error);
     throw error;
   }
 };

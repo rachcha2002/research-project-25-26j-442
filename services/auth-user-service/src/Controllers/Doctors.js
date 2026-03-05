@@ -217,3 +217,25 @@ exports.getDoctorFile = async (req, res) => {
     res.status(500).json({ message: "Error downloading file from R2" });
   }
 };
+
+// Public doctor profile lookup by doctor_id (minimal fields only)
+exports.getDoctorPublicProfile = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    if (!doctorId) {
+      return res.status(400).json({ message: 'doctorId is required' });
+    }
+
+    const doctor = await Doctor.findOne({ doctor_id: doctorId }).select(
+      'doctor_id first_name last_name profile_photo_url specialization availability_status'
+    );
+
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    res.json({ doctor });
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to fetch doctor profile', error: error.message });
+  }
+};
