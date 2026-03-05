@@ -102,6 +102,15 @@ export const ModelPerformanceScreen: React.FC = () => {
 
           {/* Models */}
           <Text style={styles.sectionTitle}>Our AI Models</Text>
+
+          {/* Data Quality Note */}
+          <View style={[styles.modelCard, { backgroundColor: '#FEF3C7', borderLeftColor: '#F59E0B', flexDirection: 'row', alignItems: 'center' }]}>
+            <Ionicons name="bulb-outline" size={24} color="#D97706" />
+            <Text style={{ flex: 1, fontSize: 13, color: '#92400E', lineHeight: 20 }}>
+              <Text style={{ fontWeight: '700' }}>Pro Tip: </Text>
+              The AI models require data to function optimally. By accurately logging your child's measurements, sleep patterns, and daily habits in the app, you provide the context needed for highly personalized and precise AI insights!
+            </Text>
+          </View>
           {MODELS.map((m) => (
             <View key={m.name} style={[styles.modelCard, { borderLeftColor: m.color }]}>
               <View style={styles.modelTopRow}>

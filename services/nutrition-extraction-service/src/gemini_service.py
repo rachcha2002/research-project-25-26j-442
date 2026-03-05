@@ -14,7 +14,7 @@ class GeminiClinicalService:
         if not api_key:
             print("❌ ERROR: GEMINI_API_KEY missing in .env")
         genai.configure(api_key=api_key)
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
 
     def _clean_json_response(self, response_text: str) -> dict:
         """Helper to safely parse Gemini's strict JSON output."""

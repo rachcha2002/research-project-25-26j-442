@@ -23,10 +23,19 @@ export const ProfileStats: React.FC<ProfileStatsProps> = ({
   onFollowersPress,
   onFollowingPress,
 }) => {
+  const hasAvatar = Boolean(user.avatar);
+  const profileInitial = (user.name?.trim()?.charAt(0) || '?').toUpperCase();
+
   return (
     <View style={styles.container}>
       <View style={styles.headerContent}>
-        <Image source={{ uri: user.avatar }} style={styles.avatar} />
+        {hasAvatar ? (
+          <Image source={{ uri: user.avatar }} style={styles.avatar} />
+        ) : (
+          <View style={styles.avatarFallback}>
+            <Text style={styles.avatarFallbackText}>{profileInitial}</Text>
+          </View>
+        )}
         
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
@@ -72,6 +81,20 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 40,
     marginRight: 24,
+  },
+  avatarFallback: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    marginRight: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: `${Colors.primary.DEFAULT}20`,
+  },
+  avatarFallbackText: {
+    fontSize: 30,
+    fontWeight: '700',
+    color: Colors.primary.DEFAULT,
   },
   statsContainer: {
     flex: 1,

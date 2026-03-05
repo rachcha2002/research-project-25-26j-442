@@ -3,6 +3,7 @@ const Post = require('../models/Post'); // <- make sure this path/name matches y
 const PostEngagement = require('../models/PostEngagement');
 const PostComment = require('../models/PostComments');
 const SavedPosts = require('../models/SavedPosts');
+const { fetchUserProfilesMap, getUserMeta } = require('../utils/userProfileClient');
 
 // helper to build comment tree (same as in postController)
 const buildCommentTree = (comments) => {
@@ -24,6 +25,19 @@ const buildCommentTree = (comments) => {
 
     return roots;
 };
+
+const enrichCommentTreeWithUserMeta = (comments, userMap) =>
+    comments.map((comment) => {
+        const replies = Array.isArray(comment?.replies)
+            ? enrichCommentTreeWithUserMeta(comment.replies, userMap)
+            : [];
+
+        return {
+            ...comment,
+            userMeta: getUserMeta(comment.CommenterID, userMap),
+            replies,
+        };
+    });
 
 // Follow a user
 exports.followUser = async (req, res) => {
@@ -75,12 +89,22 @@ exports.getFollowers = async (req, res) => {
             .select('followerId followedAt -_id');
 
         const total = await Follow.countDocuments({ followingId: userId });
+        const userMap = await fetchUserProfilesMap(followers.map((f) => f.followerId));
+        const enrichedFollowers = followers.map((follower) => {
+            const userMeta = getUserMeta(follower.followerId, userMap);
+            return {
+                ...follower.toObject(),
+                followerName: userMeta?.name || null,
+                followerProfilePicture: userMeta?.profilePicture || null,
+                followerMeta: userMeta,
+            };
+        });
 
         res.status(200).json({
             total,
             page,
             limit,
-            followers
+            followers: enrichedFollowers
         });
     } catch (error) {
         res.status(500).json({ message: 'Server error.', error: error.message });
@@ -101,12 +125,22 @@ exports.getFollowing = async (req, res) => {
             .select('followingId followedAt -_id');
 
         const total = await Follow.countDocuments({ followerId: userId });
+        const userMap = await fetchUserProfilesMap(following.map((f) => f.followingId));
+        const enrichedFollowing = following.map((row) => {
+            const userMeta = getUserMeta(row.followingId, userMap);
+            return {
+                ...row.toObject(),
+                followingName: userMeta?.name || null,
+                followingProfilePicture: userMeta?.profilePicture || null,
+                followingMeta: userMeta,
+            };
+        });
 
         res.status(200).json({
             total,
             page,
             limit,
-            following
+            following: enrichedFollowing
         });
     } catch (error) {
         res.status(500).json({ message: 'Server error.', error: error.message });
@@ -157,6 +191,15 @@ exports.getUserOverview = async (req, res) => {
             commentsByPost[c.PostID].push(c);
         });
 
+        const userIdSet = new Set([String(userId)]);
+        rawPosts.forEach((post) => userIdSet.add(String(post.UserID)));
+        comments.forEach((comment) => {
+            if (comment?.CommenterID) {
+                userIdSet.add(String(comment.CommenterID));
+            }
+        });
+        const userMap = await fetchUserProfilesMap([...userIdSet]);
+
         // optional: saved posts for this same user
         let savedSet = new Set();
         const saved = await SavedPosts.findOne({ UserId: userId }).lean();
@@ -165,14 +208,18 @@ exports.getUserOverview = async (req, res) => {
         }
 
         const posts = rawPosts.map(post => ({
-            post,
+            post: {
+                ...post,
+                userMeta: getUserMeta(post.UserID, userMap),
+            },
             engagement: engagementMap[post.PostID] || { PostID: post.PostID, LikedBy: [], DislikedBy: [] },
-            comments: buildCommentTree(commentsByPost[post.PostID] || []),
+            comments: enrichCommentTreeWithUserMeta(buildCommentTree(commentsByPost[post.PostID] || []), userMap),
             isSaved: savedSet.has(String(post._id)),
         }));
 
         return res.status(200).json({
             userId,
+            userMeta: getUserMeta(userId, userMap),
             followersCount,
             followingCount,
             postCount,

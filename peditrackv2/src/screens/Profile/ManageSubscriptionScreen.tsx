@@ -102,6 +102,7 @@ export default function ManageSubscriptionScreen() {
       if (result.needsCheckout) {
         // No saved card, open fresh checkout
         setIsPayingNow(false);
+        
         const checkoutUrl = await createCheckoutSession();
         const res = await WebBrowser.openAuthSessionAsync(checkoutUrl, 'peditrack://');
 

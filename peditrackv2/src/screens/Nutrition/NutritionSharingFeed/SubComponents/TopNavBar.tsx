@@ -3,6 +3,7 @@ import { View, TouchableOpacity, Image, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../../constants/Colors';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 interface TopNavBarProps {
   onBackPress: () => void;
@@ -23,6 +24,11 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
   showLogo = true,
   showRightSection = true,
 }) => {
+  const { user } = useAuth();
+  const resolvedProfileImage = profileImage || user?.profilePicture || '';
+  const hasProfileImage = Boolean(resolvedProfileImage);
+  const profileInitial = (user?.name?.trim()?.charAt(0) || '?').toUpperCase();
+
   return (
     <SafeAreaView edges={['top']} style={styles.safeArea}>
       <View style={styles.container}>
@@ -70,11 +76,17 @@ export const TopNavBar: React.FC<TopNavBarProps> = ({
               style={styles.profileButton}
               onPress={onProfilePress}
             >
-              <Image 
-                source={{ uri: profileImage }} 
-                style={styles.profileImage} 
-                resizeMode="cover"
-              />
+              {hasProfileImage ? (
+                <Image
+                  source={{ uri: resolvedProfileImage }}
+                  style={styles.profileImage}
+                  resizeMode="cover"
+                />
+              ) : (
+                <View style={styles.profileInitialContainer}>
+                  <Text style={styles.profileInitialText}>{profileInitial}</Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
         )}
@@ -177,5 +189,17 @@ const styles = StyleSheet.create({
   profileImage: {
     width: '100%',
     height: '100%',
+  },
+  profileInitialContainer: {
+    width: '100%',
+    height: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: `${Colors.primary.DEFAULT}20`,
+  },
+  profileInitialText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.primary.DEFAULT,
   },
 });

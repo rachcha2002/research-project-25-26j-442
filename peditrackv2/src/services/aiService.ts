@@ -7,7 +7,7 @@
 import * as SecureStore from 'expo-secure-store';
 import { APP_CONFIG } from '../config/config';
 
-const API_BASE_URL = 'http://10.174.51.59:5001/api';
+const API_BASE_URL = 'http://192.168.1.179:5001/api';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared auth helper (same pattern as healthAnalyticsService.ts)

@@ -66,12 +66,15 @@ export const RiskAssessmentScreen: React.FC = () => {
   const [error, setError]   = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!selectedBaby) return;
+    if (!user?.isPro || !selectedBaby) {
+      setLoad(false);
+      return;
+    }
     setLoad(true); setError(null);
     try { setData(await getRiskAssessment(selectedBaby._id)); }
     catch (e: any) { setError(e.message || 'Failed to load risk assessment'); }
     finally { setLoad(false); }
-  }, [selectedBaby]);
+  }, [selectedBaby, user?.isPro]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
@@ -117,6 +120,17 @@ export const RiskAssessmentScreen: React.FC = () => {
         ) : !data ? null : (
           <ScrollView style={styles.scroll} contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}>
+
+            {/* Data Quality Note */}
+            <View style={[styles.riskCard, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A', borderWidth: 1, paddingVertical: 12 }]}>
+              <Ionicons name="bulb-outline" size={20} color="#D97706" />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 13, color: '#92400E', lineHeight: 18 }}>
+                  <Text style={{ fontWeight: '700' }}>Pro Tip: </Text>
+                  The AI risk assessment relies on the data you provide. Consistently record your child's measurements, sleep, and developmental milestones in the app to get the most precise insights.
+                </Text>
+              </View>
+            </View>
 
             {/* Overall Health Risk */}
             <View style={[styles.overallCard, { borderColor: overallColor }]}>

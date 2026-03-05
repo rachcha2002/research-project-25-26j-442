@@ -4,6 +4,7 @@ const PostComment = require('../models/PostComments');
 const SavedPosts = require('../models/SavedPosts');
 const mongoose = require('mongoose');
 const { uploadToR2, deleteFromR2 } = require('./uploadController');
+const { fetchUserProfilesMap, getUserMeta } = require('../utils/userProfileClient');
 
 // helper to build comment tree (same logic as getPostWithEngagement)
 const buildCommentTree = (comments) => {
@@ -25,6 +26,35 @@ const buildCommentTree = (comments) => {
 
     return roots;
 };
+
+const collectCommenterIdsFromTree = (comments, idSet) => {
+    comments.forEach((comment) => {
+        if (comment?.CommenterID) {
+            idSet.add(String(comment.CommenterID));
+        }
+        if (Array.isArray(comment?.replies) && comment.replies.length > 0) {
+            collectCommenterIdsFromTree(comment.replies, idSet);
+        }
+    });
+};
+
+const enrichCommentTreeWithUserMeta = (comments, userMap) =>
+    comments.map((comment) => {
+        const replies = Array.isArray(comment?.replies)
+            ? enrichCommentTreeWithUserMeta(comment.replies, userMap)
+            : [];
+
+        return {
+            ...comment,
+            userMeta: getUserMeta(comment.CommenterID, userMap),
+            replies,
+        };
+    });
+
+const enrichPostWithUserMeta = (post, userMap) => ({
+    ...post,
+    userMeta: getUserMeta(post.UserID, userMap),
+});
 
 exports.createPost = async (req, res) => {
     try {
@@ -91,9 +121,12 @@ exports.createPost = async (req, res) => {
 
         await newPost.save();
 
+        const userMap = await fetchUserProfilesMap([UserID]);
+        const postWithMeta = enrichPostWithUserMeta(newPost.toObject(), userMap);
+
         res.status(201).json({
             message: "Post created successfully",
-            post: newPost
+            post: postWithMeta
         });
 
     } catch (error) {
@@ -178,9 +211,12 @@ exports.updatePost = async (req, res) => {
 
         await post.save();
 
+        const userMap = await fetchUserProfilesMap([post.UserID]);
+        const postWithMeta = enrichPostWithUserMeta(post.toObject(), userMap);
+
         return res.status(200).json({
             message: "Post updated successfully",
-            post,
+            post: postWithMeta,
         });
     } catch (error) {
         console.error("Error updating post:", error);
@@ -229,11 +265,22 @@ exports.getAllPosts = async (req, res) => {
             }
         }
 
+        const userIdSet = new Set();
+        posts.forEach((post) => userIdSet.add(String(post.UserID)));
+        Object.values(commentsByPost).forEach((commentList) => {
+            commentList.forEach((comment) => {
+                if (comment?.CommenterID) {
+                    userIdSet.add(String(comment.CommenterID));
+                }
+            });
+        });
+        const userMap = await fetchUserProfilesMap([...userIdSet]);
+
         // 4. Build response array with post + engagement + comment tree + isSaved
         const result = posts.map(post => ({
-            post,
+            post: enrichPostWithUserMeta(post, userMap),
             engagement: engagementMap[post.PostID] || { PostID: post.PostID, LikedBy: [], DislikedBy: [] },
-            comments: buildCommentTree(commentsByPost[post.PostID] || []),
+            comments: enrichCommentTreeWithUserMeta(buildCommentTree(commentsByPost[post.PostID] || []), userMap),
             isSaved: savedSet.has(String(post._id)),   // <-- NEW
         }));
 
@@ -382,10 +429,14 @@ exports.getPostWithEngagement = async (req, res) => {
             }
         });
 
+        const userIdSet = new Set([String(post.UserID)]);
+        collectCommenterIdsFromTree(commentTree, userIdSet);
+        const userMap = await fetchUserProfilesMap([...userIdSet]);
+
         res.status(200).json({
-            post,
+            post: enrichPostWithUserMeta(post.toObject(), userMap),
             engagement: engagement || { LikedBy: [], DislikedBy: [] },
-            comments: commentTree
+            comments: enrichCommentTreeWithUserMeta(commentTree, userMap)
         });
     } catch (error) {
         console.error("Error fetching post with engagement and comments:", error);
@@ -441,10 +492,16 @@ exports.addComment = async (req, res) => {
 
         await newComment.save();
 
+        const userMap = await fetchUserProfilesMap([userId]);
+        const commentWithMeta = {
+            ...newComment.toObject(),
+            userMeta: getUserMeta(userId, userMap),
+        };
+
         return res.status(201).json({
             success: true,
             message: 'Comment added successfully.',
-            comment: newComment
+            comment: commentWithMeta
         });
     } catch (error) {
         return res.status(500).json({ success: false, message: 'Server error.', error: error.message });
@@ -476,10 +533,16 @@ exports.updateComment = async (req, res) => {
         existingComment.Comment = comment;
         await existingComment.save();
 
+        const userMap = await fetchUserProfilesMap([existingComment.CommenterID]);
+        const commentWithMeta = {
+            ...existingComment.toObject(),
+            userMeta: getUserMeta(existingComment.CommenterID, userMap),
+        };
+
         return res.status(200).json({
             success: true,
             message: 'Comment updated successfully.',
-            comment: existingComment
+            comment: commentWithMeta
         });
     } catch (error) {
         return res.status(500).json({ success: false, message: 'Server error.', error: error.message });
@@ -649,11 +712,20 @@ exports.getSavedPostsByUser = async (req, res) => {
             commentsByPost[c.PostID].push(c);
         });
 
+        const userIdSet = new Set();
+        posts.forEach((post) => userIdSet.add(String(post.UserID)));
+        comments.forEach((comment) => {
+            if (comment?.CommenterID) {
+                userIdSet.add(String(comment.CommenterID));
+            }
+        });
+        const userMap = await fetchUserProfilesMap([...userIdSet]);
+
         // 4. Build response (same shape as getAllPosts)
         const result = posts.map(post => ({
-            post,
+            post: enrichPostWithUserMeta(post, userMap),
             engagement: engagementMap[post.PostID] || { PostID: post.PostID, LikedBy: [], DislikedBy: [] },
-            comments: buildCommentTree(commentsByPost[post.PostID] || []),
+            comments: enrichCommentTreeWithUserMeta(buildCommentTree(commentsByPost[post.PostID] || []), userMap),
             isSaved: true,
         }));
 
@@ -710,11 +782,20 @@ exports.getPostsRequiringApproval = async (req, res) => {
             commentsByPost[c.PostID].push(c);
         });
 
+        const userIdSet = new Set();
+        posts.forEach((post) => userIdSet.add(String(post.UserID)));
+        comments.forEach((comment) => {
+            if (comment?.CommenterID) {
+                userIdSet.add(String(comment.CommenterID));
+            }
+        });
+        const userMap = await fetchUserProfilesMap([...userIdSet]);
+
         // Build response
         const result = posts.map(post => ({
-            post,
+            post: enrichPostWithUserMeta(post, userMap),
             engagement: engagementMap[post.PostID] || { PostID: post.PostID, LikedBy: [], DislikedBy: [] },
-            comments: buildCommentTree(commentsByPost[post.PostID] || []),
+            comments: enrichCommentTreeWithUserMeta(buildCommentTree(commentsByPost[post.PostID] || []), userMap),
         }));
 
         return res.status(200).json(result);

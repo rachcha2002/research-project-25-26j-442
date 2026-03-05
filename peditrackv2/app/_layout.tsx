@@ -4,6 +4,12 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '../src/contexts/AuthContext';
 import { BabyProvider } from '../src/contexts/BabyContext';
 import { requestPushPermissionsAsync } from '../src/services/pushNotificationService';
+import { LogBox } from 'react-native';
+
+LogBox.ignoreLogs([
+  'expo-notifications: Android Push notifications',
+  'expo-notifications: Android Push notifications (remote notifications) functionality provided by expo-notifications was removed from Expo Go'
+]);
 
 export default function RootLayout() {
   React.useEffect(() => {
