@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Pressable,
   TextInput,
   Image,
   Alert,
@@ -115,6 +116,25 @@ export default function NutritionTrackerScreen() {
     [safetyStatus],
   );
 
+  const simpleReason = useMemo(() => {
+    const normalized = analysisSummary.replace(/\s+/g, ' ').trim();
+
+    if (normalized) {
+      const firstSentence = normalized.split(/(?<=[.!?])\s+/)[0]?.trim() || normalized;
+      return /[.!?]$/.test(firstSentence) ? firstSentence : `${firstSentence}.`;
+    }
+
+    if (isSafeForChild) {
+      return 'This meal is good for your child because no direct risk was found in the given details.';
+    }
+
+    if (safetyStatus) {
+      return 'This meal is not good for your child because it may conflict with their allergies or health needs.';
+    }
+
+    return 'Could not determine safety clearly from the current meal details.';
+  }, [analysisSummary, isSafeForChild, safetyStatus]);
+
   const handleCloseModal = () => {
     setAnalysisDone(false);
     setImageUri(null);
@@ -192,57 +212,78 @@ export default function NutritionTrackerScreen() {
       <Modal
         visible={analysisDone}
         transparent
-        animationType="fade"
-        onRequestClose={() => {}}
+        animationType="slide"
+        onRequestClose={handleCloseModal}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalCard}>
-            <View style={styles.modalHeaderRow}>
-              <Text style={styles.sectionTitle}>Nutrition</Text>
-              <TouchableOpacity
-                style={styles.closeIconButton}
-                activeOpacity={0.8}
-                onPress={handleCloseModal}
-              >
-                <Ionicons name="close" size={20} color={Colors.dark} />
+          <Pressable style={styles.modalBackdrop} onPress={handleCloseModal} />
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHandle} />
+            <View style={styles.modalCard}>
+              <View style={styles.modalHeaderRow}>
+                <View>
+                  <Text style={styles.sectionTitle}>Nutrition Result</Text>
+                  <Text style={styles.modalSubTitle}>Quick check for your child</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.closeIconButton}
+                  activeOpacity={0.8}
+                  onPress={handleCloseModal}
+                >
+                  <Ionicons name="close" size={20} color={Colors.dark} />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.modalBody}>
+                {!!foodIdentified && (
+                  <View style={styles.infoRow}>
+                    <Ionicons name="restaurant-outline" size={16} color={Colors.primary.DEFAULT} />
+                    <Text style={styles.infoRowText}>Detected meal: {foodIdentified}</Text>
+                  </View>
+                )}
+
+                {!!safetyStatus && (
+                  <View style={styles.resultCard}>
+                    <View style={[styles.safetyBadge, isSafeForChild ? styles.safeBadge : styles.unsafeBadge]}>
+                      <Ionicons
+                        name={isSafeForChild ? 'checkmark-circle' : 'alert-circle'}
+                        size={16}
+                        color={isSafeForChild ? Colors.success.DEFAULT : Colors.error}
+                      />
+                      <Text style={[styles.safetyBadgeText, isSafeForChild ? styles.safeText : styles.unsafeText]}>
+                        {isSafeForChild ? 'Good to give' : 'Not good to give'}
+                      </Text>
+                    </View>
+                    <Text style={styles.reasonText}>{simpleReason}</Text>
+                  </View>
+                )}
+
+                <Text style={styles.modalSectionLabel}>Main nutrients</Text>
+                {nutrients.length > 0 ? (
+                  <View style={styles.nutrientChipsRow}>
+                    {nutrients.map((item) => (
+                      <View key={item} style={styles.nutrientChip}>
+                        <Ionicons
+                          name="nutrition-outline"
+                          size={16}
+                          color={Colors.primary.DEFAULT}
+                          style={styles.nutrientChipIcon}
+                        />
+                        <Text style={styles.nutrientChipText}>{item}</Text>
+                      </View>
+                    ))}
+                  </View>
+                ) : (
+                  <Text style={styles.helperText}>No nutrients were returned by the analysis.</Text>
+                )}
+
+                {!safetyStatus && !!analysisSummary && <Text style={styles.helperText}>{analysisSummary}</Text>}
+              </ScrollView>
+
+              <TouchableOpacity style={styles.modalPrimaryButton} activeOpacity={0.85} onPress={handleCloseModal}>
+                <Text style={styles.modalPrimaryButtonText}>Done</Text>
               </TouchableOpacity>
             </View>
-            {!!foodIdentified && (
-              <Text style={styles.helperText}>Detected meal: {foodIdentified}</Text>
-            )}
-
-            {!!safetyStatus && (
-              <View style={[styles.safetyBadge, isSafeForChild ? styles.safeBadge : styles.unsafeBadge]}>
-                <Ionicons
-                  name={isSafeForChild ? 'checkmark-circle' : 'alert-circle'}
-                  size={16}
-                  color={isSafeForChild ? Colors.success.DEFAULT : Colors.error}
-                />
-                <Text style={[styles.safetyBadgeText, isSafeForChild ? styles.safeText : styles.unsafeText]}>
-                  {isSafeForChild ? 'Safe to give' : 'Not safe to give'}
-                </Text>
-              </View>
-            )}
-
-            {nutrients.length > 0 ? (
-              <View style={styles.nutrientChipsRow}>
-                {nutrients.map((item) => (
-                  <View key={item} style={styles.nutrientChip}>
-                    <Ionicons
-                      name="nutrition-outline"
-                      size={16}
-                      color={Colors.primary.DEFAULT}
-                      style={styles.nutrientChipIcon}
-                    />
-                    <Text style={styles.nutrientChipText}>{item}</Text>
-                  </View>
-                ))}
-              </View>
-            ) : (
-              <Text style={styles.helperText}>No nutrients were returned by the analysis.</Text>
-            )}
-
-            {!!analysisSummary && <Text style={styles.helperText}>{analysisSummary}</Text>}
           </View>
         </View>
       </Modal>
@@ -341,8 +382,13 @@ const styles = StyleSheet.create({
     color: Colors.gray.DEFAULT,
     marginTop: 4,
   },
-  safetyBadge: {
+  reasonText: {
     marginTop: 10,
+    fontSize: 14,
+    lineHeight: 20,
+    color: Colors.dark,
+  },
+  safetyBadge: {
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -395,18 +441,85 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.45)',
-    justifyContent: 'center',
-    paddingHorizontal: 20,
+    justifyContent: 'flex-end',
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  modalSheet: {
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    backgroundColor: Colors.white,
+    maxHeight: '82%',
+    paddingBottom: 18,
+  },
+  modalHandle: {
+    width: 46,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: Colors.gray.DEFAULT,
+    opacity: 0.5,
+    alignSelf: 'center',
+    marginTop: 10,
+    marginBottom: 8,
   },
   modalCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 16,
-    padding: 16,
+    paddingHorizontal: 16,
   },
   modalHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  modalSubTitle: {
+    fontSize: 13,
+    color: Colors.inactive,
+    marginTop: 2,
+  },
+  modalBody: {
+    paddingBottom: 10,
+    gap: 10,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.gray.light,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  infoRowText: {
+    flex: 1,
+    fontSize: 13,
+    color: Colors.dark,
+    fontWeight: '500',
+  },
+  resultCard: {
+    borderWidth: 1,
+    borderColor: Colors.gray.light,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
+  modalSectionLabel: {
+    marginTop: 4,
+    fontSize: 14,
+    fontWeight: '600',
+    color: Colors.dark,
+  },
+  modalPrimaryButton: {
+    marginTop: 8,
+    borderRadius: 12,
+    paddingVertical: 12,
+    backgroundColor: Colors.primary.DEFAULT,
+    alignItems: 'center',
+  },
+  modalPrimaryButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: Colors.white,
   },
   closeIconButton: {
     width: 32,

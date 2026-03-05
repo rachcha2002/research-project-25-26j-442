@@ -72,13 +72,18 @@ export const FollowListScreen: React.FC<FollowListScreenProps> = ({
     }
   };
 
-  const mapFollowerToUserItem = (rel: { followerId: string }) => {
+  const mapFollowerToUserItem = (rel: {
+    followerId: string;
+    followerName?: string | null;
+    followerProfilePicture?: string | null;
+  }) => {
     const isSelf = rel.followerId === currentUserId;
+    const displayName = rel.followerName || 'User';
     return {
       id: rel.followerId,
-      name: rel.followerId,
-      handle: `@${rel.followerId}`,
-      avatar: undefined, // avoid empty uri warning
+      name: displayName,
+      handle: undefined,
+      avatar: rel.followerProfilePicture || undefined,
       role: 'Parent',
       bio: '',
       canFollow: !isSelf, // <-- viewer row: no follow button
@@ -87,13 +92,18 @@ export const FollowListScreen: React.FC<FollowListScreenProps> = ({
     };
   };
 
-  const mapFollowingToUserItem = (rel: { followingId: string }) => {
+  const mapFollowingToUserItem = (rel: {
+    followingId: string;
+    followingName?: string | null;
+    followingProfilePicture?: string | null;
+  }) => {
     const isSelf = rel.followingId === currentUserId;
+    const displayName = rel.followingName || 'User';
     return {
       id: rel.followingId,
-      name: rel.followingId,
-      handle: `@${rel.followingId}`,
-      avatar: undefined,
+      name: displayName,
+      handle: undefined,
+      avatar: rel.followingProfilePicture || undefined,
       role: 'Parent',
       bio: '',
       canFollow: !isSelf, // <-- viewer row: no follow button
