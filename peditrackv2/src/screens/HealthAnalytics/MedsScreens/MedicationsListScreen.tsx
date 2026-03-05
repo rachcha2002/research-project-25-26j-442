@@ -184,12 +184,12 @@ export const MedicationsListScreen: React.FC = () => {
                         <View
                           style={[
                             styles.statusBadge,
-                            { backgroundColor: getStatusColor(medication.status) },
+                            { backgroundColor: getStatusColor(medication.status ?? '') },
                           ]}
                         >
                           <Text style={styles.statusText}>
-                            {medication.status.charAt(0).toUpperCase() +
-                              medication.status.slice(1)}
+                            {(medication.status ?? '').charAt(0).toUpperCase() +
+                              (medication.status ?? '').slice(1)}
                           </Text>
                         </View>
                         {medication.reminderEnabled && (
@@ -206,7 +206,7 @@ export const MedicationsListScreen: React.FC = () => {
                     </View>
                   </View>
                   <TouchableOpacity
-                    onPress={() => handleDelete(medication._id!, medication.name)}
+                    onPress={() => handleDelete(medication._id ?? '', medication.name)}
                     style={styles.deleteButton}
                   >
                     <Ionicons name="trash-outline" size={20} color="#EF4444" />
@@ -223,7 +223,7 @@ export const MedicationsListScreen: React.FC = () => {
           )}
         </ScrollView>
 
-        {/* Add Button */}
+        {/* Add Button — sits above the safe-area bottom edge */}
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => router.push('/health-analytics/medications/add' as any)}
@@ -414,10 +414,9 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   addButton: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    marginTop: 8,
     backgroundColor: Colors.primary.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',

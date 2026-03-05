@@ -3,6 +3,7 @@ const router = express.Router();
 const Measurement = require('../models/Measurement');
 const { calculateGrowthVelocity, estimatePercentile, generatePredictions } = require('../utils/calculations');
 const Baby = require('../models/Baby');
+const { invalidateCache } = require('../services/mlService');
 
 /**
  * Calculate age in months between two dates with decimal precision
@@ -30,6 +31,8 @@ router.post('/', async (req, res, next) => {
 
     const measurement = new Measurement(measurementData);
     await measurement.save();
+    // Invalidate ML prediction cache so the next AI request uses this new data
+    if (measurementData.babyId) invalidateCache(measurementData.babyId).catch(() => {});
     res.status(201).json(measurement);
   } catch (error) {
     next(error);
@@ -146,6 +149,8 @@ router.put('/:id', async (req, res, next) => {
       return res.status(404).json({ error: 'Measurement not found' });
     }
     
+    // Invalidate ML prediction cache for this baby
+    if (measurement.babyId) invalidateCache(String(measurement.babyId)).catch(() => {});
     res.json(measurement);
   } catch (error) {
     next(error);
@@ -161,6 +166,8 @@ router.delete('/:id', async (req, res, next) => {
       return res.status(404).json({ error: 'Measurement not found' });
     }
     
+    // Invalidate ML prediction cache for this baby
+    if (measurement.babyId) invalidateCache(String(measurement.babyId)).catch(() => {});
     res.json({ message: 'Measurement deleted successfully' });
   } catch (error) {
     next(error);

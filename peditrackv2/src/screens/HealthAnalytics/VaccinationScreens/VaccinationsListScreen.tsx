@@ -8,7 +8,7 @@ import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { getVaccinations, deleteVaccination, Vaccination } from '@/services/healthAnalyticsService';
 import { useBaby } from '@/contexts/BabyContext';
 
-type TabType = 'all' | 'completed' | 'upcoming' | 'overdue';
+type TabType = 'all' | 'completed' | 'scheduled' | 'overdue';
 
 export const VaccinationsListScreen: React.FC = () => {
   const router = useRouter();
@@ -89,7 +89,7 @@ export const VaccinationsListScreen: React.FC = () => {
   const tabs = [
     { id: 'all' as TabType, label: 'All' },
     { id: 'completed' as TabType, label: 'Completed' },
-    { id: 'upcoming' as TabType, label: 'Upcoming' },
+    { id: 'scheduled' as TabType, label: 'Upcoming' },
     { id: 'overdue' as TabType, label: 'Overdue' },
   ];
 
@@ -200,7 +200,7 @@ export const VaccinationsListScreen: React.FC = () => {
                     </View>
                   </View>
                   <TouchableOpacity
-                    onPress={() => handleDelete(vaccination._id!, vaccination.vaccineName)}
+                    onPress={() => handleDelete(vaccination._id ?? '', vaccination.vaccineName)}
                     style={styles.deleteButton}
                   >
                     <Ionicons name="trash-outline" size={20} color="#EF4444" />
@@ -345,7 +345,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   vaccinationLeft: {
-flexDirection: 'row',
+    flexDirection: 'row',
     flex: 1,
     gap: 12,
   },
@@ -393,10 +393,9 @@ flexDirection: 'row',
     lineHeight: 18,
   },
   addButton: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    marginTop: 8,
     backgroundColor: Colors.primary.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',

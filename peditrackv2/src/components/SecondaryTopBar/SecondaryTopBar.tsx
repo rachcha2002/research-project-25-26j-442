@@ -4,13 +4,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface SecondaryTopBarProps {
   showBackButton?: boolean;
   onBackPress?: () => void;
   onNotificationPress?: () => void;
+  /** Override profile press — defaults to navigating to the profile tab */
   onProfilePress?: () => void;
-  profileImage?: string;
+  /** Override logo press — defaults to navigating to the home tab */
+  onLogoPress?: () => void;
   title?: string;
   rightIcon?: keyof typeof Ionicons.glyphMap;
   onRightPress?: () => void;
@@ -21,18 +24,35 @@ export const SecondaryTopBar: React.FC<SecondaryTopBarProps> = ({
   onBackPress,
   onNotificationPress,
   onProfilePress,
-  profileImage,
+  onLogoPress,
   title,
   rightIcon,
   onRightPress,
 }) => {
   const router = useRouter();
+  const { user } = useAuth();
 
   const handleBackPress = () => {
     if (onBackPress) {
       onBackPress();
     } else {
       router.back();
+    }
+  };
+
+  const handleLogoPress = () => {
+    if (onLogoPress) {
+      onLogoPress();
+    } else {
+      router.push('/(tabs)/' as any);
+    }
+  };
+
+  const handleProfilePress = () => {
+    if (onProfilePress) {
+      onProfilePress();
+    } else {
+      router.push('/profile' as any);
     }
   };
 
@@ -52,7 +72,13 @@ export const SecondaryTopBar: React.FC<SecondaryTopBarProps> = ({
         )}
 
         {/* Center Section - Logo and Brand OR Title */}
-        <View style={styles.centerSection}>
+        <TouchableOpacity
+          style={styles.centerSection}
+          onPress={handleLogoPress}
+          activeOpacity={0.7}
+          accessibilityLabel="Go to home"
+          accessibilityRole="button"
+        >
           {title ? (
             <Text style={styles.titleText}>{title}</Text>
           ) : (
@@ -66,7 +92,7 @@ export const SecondaryTopBar: React.FC<SecondaryTopBarProps> = ({
               </View>
             </>
           )}
-        </View>
+        </TouchableOpacity>
 
         {/* Right Section - Notification and Profile OR Action Icon */}
         <View style={styles.rightSection}>
@@ -90,14 +116,14 @@ export const SecondaryTopBar: React.FC<SecondaryTopBarProps> = ({
               </TouchableOpacity>
 
               <TouchableOpacity
-                onPress={onProfilePress}
+                onPress={handleProfilePress}
                 style={styles.profileButton}
                 accessibilityLabel="Profile"
                 accessibilityRole="button"
               >
-                {profileImage ? (
+                {user?.profilePicture ? (
                   <Image
-                    source={{ uri: profileImage }}
+                    source={{ uri: user.profilePicture }}
                     style={styles.profileImage}
                     resizeMode="cover"
                   />
