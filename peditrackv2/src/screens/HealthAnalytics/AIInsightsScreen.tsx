@@ -137,6 +137,15 @@ export const AIInsightsScreen: React.FC = () => {
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
           >
+            {/* Data Quality Note */}
+            <View style={{ backgroundColor: '#FEF3C7', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#FDE68A', flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Ionicons name="bulb-outline" size={24} color="#D97706" />
+              <Text style={{ flex: 1, fontSize: 13, color: '#92400E', lineHeight: 18 }}>
+                <Text style={{ fontWeight: '700' }}>Pro Tip: </Text>
+                Consistently log your child's measurements, sleep, and feeding to get the most accurate and precise AI insights!
+              </Text>
+            </View>
+
             {/* Health Score Card */}
             <LinearGradient
               colors={scoreGradient}
