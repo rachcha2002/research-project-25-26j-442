@@ -5,7 +5,7 @@ import { Colors } from '../../../../constants/Colors';
 import { Layout } from '../../../../constants/Layout';
 
 interface CommentItemProps {
-  avatar: string;
+  avatar?: string;
   name: string;
   role?: string;
   time: string;
@@ -34,6 +34,8 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   isReply,                        // <-- NEW
 }) => {
   const isNutritionist = role === 'Nutritionist';
+  const hasAvatar = Boolean(avatar?.trim());
+  const profileInitial = (name?.trim()?.charAt(0) || '?').toUpperCase();
 
   return (
     <View style={[
@@ -43,7 +45,13 @@ export const CommentItem: React.FC<CommentItemProps> = ({
     ]}>
       <View style={styles.header}>
         <View style={styles.userInfo}>
-          <Image source={{ uri: avatar }} style={styles.avatar} />
+          {hasAvatar ? (
+            <Image source={{ uri: avatar }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatarFallback}>
+              <Text style={styles.avatarFallbackText}>{profileInitial}</Text>
+            </View>
+          )}
           {isVerified && (
             <Ionicons 
               name="checkmark-circle" 
@@ -122,6 +130,19 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
+  },
+  avatarFallback: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: `${Colors.primary.DEFAULT}20`,
+  },
+  avatarFallbackText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: Colors.primary.DEFAULT,
   },
   verifiedBadge: {
     position: 'absolute',

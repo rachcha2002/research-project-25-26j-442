@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const BabyProfile = require('../models/BabyProfile');
 const { auth } = require('../middleware/auth');
@@ -235,6 +236,44 @@ router.put('/me/cancel-subscription', auth, async (req, res) => {
   } catch (error) {
     console.error('Cancel subscription error:', error);
     res.status(500).json({ error: 'Failed to cancel subscription' });
+  }
+});
+
+/**
+ * @route   POST /api/users/public/batch
+ * @desc    Get public user profiles in batch (safe fields only)
+ * @access  Public (intended for internal service-to-service usage)
+ */
+router.post('/public/batch', async (req, res) => {
+  try {
+    const { userIds } = req.body || {};
+
+    if (!Array.isArray(userIds)) {
+      return res.status(400).json({ error: 'userIds must be an array' });
+    }
+
+    // De-duplicate and hard-cap to avoid abusive payload sizes.
+    const uniqueIds = [...new Set(userIds.map((id) => String(id).trim()).filter(Boolean))].slice(0, 500);
+
+    const validObjectIds = uniqueIds.filter((id) => mongoose.Types.ObjectId.isValid(id));
+    if (validObjectIds.length === 0) {
+      return res.json({ users: [] });
+    }
+
+    const users = await User.find({ _id: { $in: validObjectIds } })
+      .select('_id name profilePicture')
+      .lean();
+
+    return res.json({
+      users: users.map((user) => ({
+        _id: String(user._id),
+        name: user.name || null,
+        profilePicture: user.profilePicture || null,
+      })),
+    });
+  } catch (error) {
+    console.error('Batch public profile lookup error:', error);
+    return res.status(500).json({ error: 'Failed to fetch public user profiles' });
   }
 });
 

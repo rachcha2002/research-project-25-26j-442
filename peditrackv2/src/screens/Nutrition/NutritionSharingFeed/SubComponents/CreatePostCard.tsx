@@ -14,6 +14,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../../constants/Colors';
 import { Layout } from '../../../../constants/Layout';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 type UploadFile = { uri: string; type: string; name: string };
 
@@ -34,6 +35,10 @@ interface CreatePostCardProps {
 }
 
 export const CreatePostCard: React.FC<CreatePostCardProps> = ({ visible, onClose, initialPost, onSubmit }) => {
+  const { user } = useAuth();
+  const displayName = user?.name?.trim() || 'User';
+  const displayAvatar = user?.profilePicture || '';
+  const profileInitial = displayName.charAt(0).toUpperCase() || '?';
   const [content, setContent] = useState(initialPost?.content || '');
   const [allowRecommendations, setAllowRecommendations] = useState(true);
   const [selectedTags, setSelectedTags] = useState<string[]>(initialPost?.tags || []);
@@ -114,12 +119,15 @@ export const CreatePostCard: React.FC<CreatePostCardProps> = ({ visible, onClose
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* User Info */}
           <View style={styles.userInfo}>
-            <Image
-              source={{ uri: 'https://randomuser.me/api/portraits/women/44.jpg' }}
-              style={styles.avatar}
-            />
+            {displayAvatar ? (
+              <Image source={{ uri: displayAvatar }} style={styles.avatar} />
+            ) : (
+              <View style={styles.avatarFallback}>
+                <Text style={styles.avatarFallbackText}>{profileInitial}</Text>
+              </View>
+            )}
             <View>
-              <Text style={styles.userName}>Jessica Miller</Text>
+              <Text style={styles.userName}>{displayName}</Text>
               <Text style={styles.userRole}>Sharing to Community Feed</Text>
             </View>
           </View>
@@ -244,6 +252,20 @@ const styles = StyleSheet.create({
     height: 48,
     borderRadius: 24,
     marginRight: Layout.spacing.md,
+  },
+  avatarFallback: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    marginRight: Layout.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: `${Colors.primary.DEFAULT}20`,
+  },
+  avatarFallbackText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: Colors.primary.DEFAULT,
   },
   userName: {
     fontSize: 16,

@@ -1,6 +1,7 @@
 const { Upload } = require('@aws-sdk/lib-storage');
 const { GetObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const { s3Client } = require('../db/Driveconfig');
+const { fetchUserProfilesMap, getUserMeta } = require('../utils/userProfileClient');
 
 const BUCKET_NAME = process.env.R2_BUCKET_NAME;
 
@@ -37,9 +38,13 @@ exports.uploadFileHandler = async (req, res) => {
 
     try {
         const result = await uploadToR2(req.file);
+        const uploaderId = req.body?.userId || req.body?.UserID || null;
+        const userMap = uploaderId ? await fetchUserProfilesMap([uploaderId]) : new Map();
         res.status(200).json({
             message: "File uploaded successfully",
-            ...result
+            ...result,
+            uploadedById: uploaderId,
+            uploadedBy: uploaderId ? getUserMeta(uploaderId, userMap) : null,
         });
 
     } catch (error) {
