@@ -6,6 +6,7 @@ import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { getMedications, deleteMedication, Medication } from '@/services/healthAnalyticsService';
+import { cancelMedicationReminders } from '@/services/pushNotificationService';
 import { useBaby } from '@/contexts/BabyContext';
 
 type TabType = 'all' | 'active' | 'completed' | 'discontinued';
@@ -45,10 +46,10 @@ export const MedicationsListScreen: React.FC = () => {
     }
   };
 
-  const handleDelete = (medicationId: string, medicationName: string) => {
+  const handleDelete = (medication: Medication) => {
     Alert.alert(
       'Delete Medication',
-      `Are you sure you want to delete "${medicationName}"?`,
+      `Are you sure you want to delete "${medication.name}"?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -56,7 +57,12 @@ export const MedicationsListScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteMedication(medicationId);
+              if (medication._id) {
+                await deleteMedication(medication._id);
+                if (medication.reminderEnabled && medication.reminderTimes) {
+                  await cancelMedicationReminders(medication._id, medication.reminderTimes);
+                }
+              }
               Alert.alert('Success', 'Medication deleted successfully');
               loadMedications();
             } catch (error) {
@@ -206,7 +212,7 @@ export const MedicationsListScreen: React.FC = () => {
                     </View>
                   </View>
                   <TouchableOpacity
-                    onPress={() => handleDelete(medication._id ?? '', medication.name)}
+                    onPress={() => handleDelete(medication)}
                     style={styles.deleteButton}
                   >
                     <Ionicons name="trash-outline" size={20} color="#EF4444" />
