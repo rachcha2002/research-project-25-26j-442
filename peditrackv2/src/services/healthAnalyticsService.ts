@@ -177,6 +177,8 @@ export interface Vaccination {
   scheduledDate?: string;
   administeredDate?: string;
   status: 'scheduled' | 'completed' | 'overdue' | 'skipped';
+  reminderEnabled?: boolean;
+  reminderOffsetDays?: number;
   location?: {
     clinic?: string;
     address?: string;

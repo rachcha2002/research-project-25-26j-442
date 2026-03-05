@@ -26,6 +26,10 @@ const limiter = rateLimit({
 // Middleware
 app.use(helmet()); // Security headers
 app.use(cors()); // Enable CORS for all routes
+
+// Stripe webhook needs raw body - must be BEFORE express.json()
+app.use('/api/subscription/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use(morgan('dev')); // HTTP request logging
@@ -47,6 +51,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/babies', require('./routes/babies'));
 app.use('/api/upload', require('./routes/upload'));
+app.use('/api/subscription', require('./routes/subscription'));
 
 // 404 handler
 app.use((req, res) => {
@@ -179,6 +184,13 @@ connectDB().then(() => {
     console.log('  POST   /api/upload/baby-photo/:babyId');
     console.log('  DELETE /api/upload/profile-picture');
     console.log('  DELETE /api/upload/baby-photo/:babyId');
+    console.log('  POST   /api/subscription/create-checkout');
+    console.log('  GET    /api/subscription/status');
+    console.log('  PUT    /api/subscription/auto-renew');
+    console.log('  POST   /api/subscription/pay-now');
+    console.log('  POST   /api/subscription/cancel');
+    console.log('  POST   /api/subscription/webhook');
+    console.log('  POST   /api/subscription/verify-session');
     console.log('═══════════════════════════════════════════════');
     console.log('');
   });

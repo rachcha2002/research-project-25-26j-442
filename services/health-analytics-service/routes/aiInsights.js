@@ -1,73 +1,132 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose');
 const AIInsight = require('../models/AIInsight');
 const Measurement = require('../models/Measurement');
-const { generatePredictions } = require('../utils/calculations');
-const Baby = require('../models/Baby');
+const HealthRecord = require('../models/HealthRecord');
+const Medication = require('../models/Medication');
+const FeedingLog = require('../models/FeedingLog');
+const SleepLog = require('../models/SleepLog');
+const mlSvc = require('../services/mlService');
 
-// Generate AI insights for a baby
+// Generate AI insights for a baby (uses the real ML neural-network service)
 router.post('/generate/:babyId', async (req, res, next) => {
   try {
-    const baby = await Baby.findById(req.params.babyId);
-    if (!baby) {
+    const babyId = req.params.babyId;
+
+    // Verify baby exists and resolve profile
+    const usersDb = mongoose.connection.useDb('peditrack_users');
+    const babyProfile = await usersDb.collection('babyprofiles').findOne(
+      { _id: new mongoose.Types.ObjectId(babyId) }
+    );
+    if (!babyProfile) {
       return res.status(404).json({ error: 'Baby not found' });
     }
 
-    // Get measurements
-    const measurements = await Measurement.find({ babyId: req.params.babyId })
-      .sort({ measurementDate: -1 })
-      .limit(20);
+    const measurements = await Measurement.find({ babyId })
+      .sort({ measurementDate: 1 })
+      .lean();
 
-    if (measurements.length < 3) {
-      return res.status(400).json({ 
-        error: 'Need at least 3 measurements to generate insights' 
+    if (measurements.length < 2) {
+      return res.status(400).json({
+        error: 'Need at least 2 measurements to generate insights',
       });
     }
 
+    const healthRecords = await HealthRecord.find({ babyId, status: 'Active' }).lean();
+    const medications = await Medication.find({ babyId, status: 'Active' }).lean();
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const feedingLogs = await FeedingLog.find({ babyId, date: { $gte: thirtyDaysAgo } }).sort({ date: -1 }).lean();
+    const sleepLogs  = await SleepLog.find({ babyId, date: { $gte: thirtyDaysAgo } }).sort({ date: -1 }).lean();
+
+    // Build a minimal babyData payload (mirrors runPrediction in routes/ai.js)
+    const has_asthma = healthRecords.some(r => r.conditionName?.toLowerCase().includes('asthma')) ? 1 : 0;
+    const chronic_conditions_count = healthRecords.filter(r => r.conditionType === 'chronic').length;
+    let takes_supplements = medications.some(
+      m => m.medicationName?.toLowerCase().includes('vitamin') || m.medicationName?.toLowerCase().includes('supplement')
+    ) ? 1 : 0;
+    if (!takes_supplements && feedingLogs.length > 0) {
+      takes_supplements = feedingLogs.some(log => log.supplements && log.supplements.length > 0) ? 1 : 0;
+    }
+    const has_food_allergies = healthRecords.some(r => r.conditionName?.toLowerCase().includes('allerg')) ? 1 : 0;
+    const was_premature    = babyProfile.birthDetails?.wasPremature ? 1 : 0;
+    const birth_weight_kg  = babyProfile.birthDetails?.weightAtBirth || 3.0;
+    const adequate_sleep   = sleepLogs.length > 0 ? (sleepLogs[0].hours >= 10 ? 1 : 0) : 1;
+    const poor_sleep_quality = sleepLogs.length > 0
+      ? (['wakesFrequently', 'difficultyFallingAsleep', 'restless'].includes(sleepLogs[0].quality) ? 1 : 0)
+      : 0;
+
+    const formattedMeasurements = measurements.map(m => ({
+      age_months: m.ageInMonths || 0,
+      height_cm:  m.height?.value ?? m.height,
+      weight_kg:  m.weight?.value ?? m.weight,
+      bmi:        m.bmi || ((m.weight?.value ?? m.weight) / Math.pow((m.height?.value ?? m.height) / 100, 2)),
+      gender:     babyProfile.gender === 'male' ? 1 : 0,
+      has_asthma,
+      chronic_conditions_count,
+      food_security: 1,
+      data_type:  1,
+      takes_supplements,
+    }));
+
+    const babyData = {
+      measurements: formattedMeasurements,
+      has_food_allergies, birth_weight_kg, was_premature,
+      immunization_complete: 1, delayed_walking: 0,
+      takes_supplements, adequate_sleep, poor_sleep_quality,
+      hospitalizations_count: 0, doctor_concern_any: 0,
+      rice_adequate: 0, carbs_adequate: 0, protein_adequate: 0,
+      eggs_adequate: 0, dhal_adequate: 0, milk_adequate: 0,
+      dairy_adequate: 0, fruits_adequate: 0, vegetables_adequate: 0,
+    };
+
+    const mlResult = await mlSvc.predict(babyId, babyData);
     const insights = [];
 
-    // Generate growth prediction insight
-    const prediction6m = generatePredictions(measurements, 6, baby);
-    if (prediction6m) {
+    // Growth insight (requires ≥ 3 measurements)
+    if (mlResult.growth_forecast) {
+      const latest = measurements[measurements.length - 1];
+      const h0 = latest.height?.value ?? latest.height;
+      const w0 = latest.weight?.value ?? latest.weight;
+      const h3 = mlResult.growth_forecast.next_height <= h0 ? h0 + 1.5 : mlResult.growth_forecast.next_height;
+      const w3 = mlResult.growth_forecast.next_weight <= w0 ? w0 + 0.4 : mlResult.growth_forecast.next_weight;
+
       const growthInsight = new AIInsight({
-        babyId: req.params.babyId,
+        babyId,
         insightType: 'growth_prediction',
-        title: '6-Month Growth Forecast',
-        description: `Based on ${measurements.length} measurements, we predict your baby will be approximately ${prediction6m.metrics.height.predicted} cm tall and weigh ${prediction6m.metrics.weight.predicted} kg in 6 months.`,
-        confidenceScore: prediction6m.confidence,
+        title: '3-Month Growth Forecast',
+        description: `Based on ${measurements.length} measurements, we predict your baby will be approximately ${h3.toFixed(1)} cm tall and weigh ${w3.toFixed(1)} kg in 3 months.`,
+        confidenceScore: 90,
         severity: 'info',
-        predictions: prediction6m,
-        influenceFactors: prediction6m.influenceFactors,
-        expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-        relatedMeasurementIds: measurements.slice(0, 5).map(m => m._id),
+        predictions: { next_height: h3, next_weight: w3, next_bmi: mlResult.growth_forecast.next_bmi },
+        expiryDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        relatedMeasurementIds: measurements.slice(-5).map(m => m._id),
       });
       await growthInsight.save();
       insights.push(growthInsight);
     }
 
-    // Check for potential growth alerts
-    const latest = measurements[0];
-    const heightPercentile = latest.percentiles?.height;
-    
-    if (heightPercentile && (heightPercentile < 5 || heightPercentile > 95)) {
-      const alertInsight = new AIInsight({
-        babyId: req.params.babyId,
-        insightType: 'health_alert',
-        title: 'Growth Percentile Alert',
-        description: `Current height is at the ${heightPercentile}th percentile. Consider consulting with a pediatrician to ensure healthy growth.`,
-        confidenceScore: 85,
-        severity: heightPercentile < 5 ? 'medium' : 'low',
-        status: 'active',
-        recommendations: [
-          {
-            type: 'Schedule a pediatrician appointment',
-            priority: 'medium',
-          },
-        ],
-        relatedMeasurementIds: [latest._id],
-      });
-      await alertInsight.save();
-      insights.push(alertInsight);
+    // Risk insight (requires ≥ 2 measurements)
+    if (mlResult.risk_assessment) {
+      const ra = mlResult.risk_assessment;
+      const highRisks = Object.entries(ra)
+        .filter(([, v]) => v > 0.6)
+        .map(([k]) => k.replace(/_/g, ' '));
+
+      if (highRisks.length > 0) {
+        const riskInsight = new AIInsight({
+          babyId,
+          insightType: 'health_alert',
+          title: 'Health Risk Alert',
+          description: `Elevated risk detected: ${highRisks.join(', ')}. Consider consulting a pediatrician.`,
+          confidenceScore: Math.round(mlResult.health_score),
+          severity: 'warning',
+          status: 'active',
+          relatedMeasurementIds: measurements.slice(-3).map(m => m._id),
+        });
+        await riskInsight.save();
+        insights.push(riskInsight);
+      }
     }
 
     res.status(201).json(insights);

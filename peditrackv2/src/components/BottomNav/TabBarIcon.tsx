@@ -17,7 +17,7 @@ export const TabBarIcon: React.FC<TabBarIconProps> = ({
 }) => {
   const color = focused ? Colors.primary.DEFAULT : Colors.inactive;
 
-  const iconMap: Record<IconName, JSX.Element> = {
+  const iconMap: Record<IconName, React.ReactNode> = {
     home: <Ionicons name={focused ? 'home' : 'home-outline'} size={size} color={color} />,
     health: <Ionicons name={focused ? 'heart' : 'heart-outline'} size={size} color={color} />,
     // "feeding" tab (MomHub) icon

@@ -23,7 +23,7 @@ export const SleepTrackerScreen: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [hours, setHours] = useState(12);
-  const [quality, setQuality] = useState<'good' | 'fair' | 'poor'>('good');
+  const [quality, setQuality] = useState<SleepLog['quality']>('sleepsWell');
   const [notes, setNotes] = useState('');
   const [currentLogId, setCurrentLogId] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
@@ -53,9 +53,9 @@ export const SleepTrackerScreen: React.FC = () => {
     const marks: any = {};
     data.forEach(log => {
       const dateStr = new Date(log.date).toISOString().split('T')[0];
-      let color = '#10B981'; // Good - Green
-      if (log.quality === 'fair') color = '#F59E0B'; // Fair - Amber
-      if (log.quality === 'poor') color = '#EF4444'; // Poor - Red
+      let color = '#EF4444'; // restless / other - Red
+      if (log.quality === 'sleepsWell') color = '#10B981'; // Good - Green
+      else if (log.quality === 'wakes1-2times') color = '#F59E0B'; // Fair - Amber
       
       marks[dateStr] = {
         customStyles: {
@@ -81,7 +81,7 @@ export const SleepTrackerScreen: React.FC = () => {
       setCurrentLogId(existingLog._id);
     } else {
       setHours(12); // Default
-      setQuality('good');
+      setQuality('sleepsWell');
       setNotes('');
       setCurrentLogId(undefined);
     }
@@ -225,19 +225,19 @@ export const SleepTrackerScreen: React.FC = () => {
                     <View style={styles.section}>
                         <Text style={styles.label}>Quality</Text>
                         <View style={styles.qualityRow}>
-                            {(['good', 'fair', 'poor'] as const).map(q => (
+                            {(['sleepsWell', 'wakes1-2times', 'restless'] as const).map(q => (
                                 <TouchableOpacity
                                     key={q}
                                     style={[
                                         styles.qualityBtn,
                                         quality === q && styles.qualityBtnActive,
-                                        {borderColor: q === 'good' ? '#10B981' : q === 'fair' ? '#F59E0B' : '#EF4444'}
+                                        {borderColor: q === 'sleepsWell' ? '#10B981' : q === 'wakes1-2times' ? '#F59E0B' : '#EF4444'}
                                     ]}
                                     onPress={() => setQuality(q)}
                                 >
-                                    <Text style={{fontSize: 28, marginBottom: 4}}>{q === 'good' ? '😊' : q === 'fair' ? '😐' : '😫'}</Text>
+                                    <Text style={{fontSize: 28, marginBottom: 4}}>{q === 'sleepsWell' ? '😊' : q === 'wakes1-2times' ? '😐' : '😫'}</Text>
                                     <Text style={[styles.qualityText, {fontWeight: quality === q ? '700' : '400'}]}>
-                                        {q.charAt(0).toUpperCase() + q.slice(1)}
+                                        {q === 'sleepsWell' ? 'Good' : q === 'wakes1-2times' ? 'Fair' : 'Poor'}
                                     </Text>
                                 </TouchableOpacity>
                             ))}

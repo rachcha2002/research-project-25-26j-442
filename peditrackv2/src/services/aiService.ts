@@ -113,7 +113,7 @@ export interface PredictionsResponse {
     twelveMonths: MonthPoint | null;
   };
   trajectory: {
-    months: (number | string)[];
+    months: (number | string | null)[];
     heights: number[];
     weights: number[];
     confidences: number[];

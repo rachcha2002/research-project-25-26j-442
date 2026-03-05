@@ -7,6 +7,7 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useBaby } from '@/contexts/BabyContext';
 import { addMedication, updateMedication, getMedicationById, Medication } from '@/services/healthAnalyticsService';
+import { scheduleMedicationReminders, cancelMedicationReminders } from '@/services/pushNotificationService';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 
 // Updated: 2026-02-18
@@ -43,6 +44,7 @@ export const AddMedicationScreen: React.FC = () => {
   // Reminder fields
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderTimes, setReminderTimes] = useState<string[]>(['08:00']);
+  const [initialReminderTimes, setInitialReminderTimes] = useState<string[]>([]);
   
   // UI state
   const [showUnitDropdown, setShowUnitDropdown] = useState(false);
@@ -89,7 +91,9 @@ export const AddMedicationScreen: React.FC = () => {
       
       setPrescriptionNumber(medication.prescriptionNumber || '');
       setReminderEnabled(medication.reminderEnabled || false);
-      setReminderTimes(medication.reminderTimes && medication.reminderTimes.length > 0 ? medication.reminderTimes : ['08:00']);
+      const initialTimes = medication.reminderTimes && medication.reminderTimes.length > 0 ? medication.reminderTimes : ['08:00'];
+      setReminderTimes(initialTimes);
+      setInitialReminderTimes(initialTimes);
       
     } catch (error) {
       console.error('Error loading medication:', error);
@@ -137,10 +141,10 @@ export const AddMedicationScreen: React.FC = () => {
         purpose: purpose.trim() || undefined,
         notes: notes.trim() || undefined,
         prescribedBy: (doctorName || clinicName || contactNumber) ? {
-          doctorName: doctorName.trim() || undefined,
+          doctorName: doctorName.trim() || '',
           clinicName: clinicName.trim() || undefined,
           contactNumber: contactNumber.trim() || undefined,
-        } : undefined,
+        } as { doctorName: string; clinicName?: string; contactNumber?: string } : undefined,
         prescriptionNumber: prescriptionNumber.trim() || undefined,
         reminderEnabled,
         reminderTimes: reminderEnabled ? reminderTimes : [],
@@ -149,14 +153,17 @@ export const AddMedicationScreen: React.FC = () => {
 
       let result;
       if (editMode && medicationId) {
+        // Cancel old ones strictly before re-saving scheduling
+        await cancelMedicationReminders(medicationId, initialReminderTimes);
         result = await updateMedication(medicationId, medicationData);
       } else {
         result = await addMedication(medicationData);
       }
 
-      // TODO: Schedule notifications if reminderEnabled
-      // This requires the notification packages to be installed successfully
-      // await scheduleMedicationReminder(result);
+      // Schedule new pushes if enabled
+      if (result.reminderEnabled) {
+        await scheduleMedicationReminders(result);
+      }
 
       Alert.alert(
         'Success',

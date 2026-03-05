@@ -20,7 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout, uploadProfilePicture, upgradeToPro } = useAuth();
+  const { user, logout, uploadProfilePicture } = useAuth();
   const { babies } = useBaby();
   const [isUploading, setIsUploading] = useState(false);
 
@@ -34,8 +34,12 @@ export default function ProfileScreen() {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
-            await logout();
-            router.replace('/auth/onboarding');
+            try {
+              await logout();
+            } catch (e) {
+              console.log('Logout error (navigating anyway):', e);
+            }
+            router.replace('/auth/login');
           },
         },
       ]
@@ -90,8 +94,8 @@ export default function ProfileScreen() {
         showBackButton={true}
         onBackPress={() => router.back()}
       />
-      
-      <ScrollView>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
         {/* Profile Picture */}
         <View style={styles.profileSection}>
           <TouchableOpacity onPress={handleUploadPhoto} disabled={isUploading}>
@@ -113,7 +117,7 @@ export default function ProfileScreen() {
               </View>
             </View>
           </TouchableOpacity>
-          
+
           <View style={styles.nameRow}>
             <Text style={styles.name}>{user.name}</Text>
             {user.isPro && (
@@ -143,9 +147,9 @@ export default function ProfileScreen() {
             <Text style={styles.statValue}>
               {user.createdAt
                 ? new Date(user.createdAt).toLocaleDateString('en-US', {
-                    month: 'short',
-                    year: 'numeric',
-                  })
+                  month: 'short',
+                  year: 'numeric',
+                })
                 : 'N/A'}
             </Text>
             <Text style={styles.statLabel}>Member Since</Text>

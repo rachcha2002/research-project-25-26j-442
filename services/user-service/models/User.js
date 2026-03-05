@@ -54,6 +54,12 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  stripeCustomerId: {
+    type: String,
+    unique: true,
+    sparse: true,
+    default: null
+  },
   defaultBabyProfile: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'BabyProfile',
@@ -76,7 +82,7 @@ const userSchema = new mongoose.Schema({
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
+  if (!this.isModified('password') || this.$skipPasswordHash) {
     return next();
   }
   

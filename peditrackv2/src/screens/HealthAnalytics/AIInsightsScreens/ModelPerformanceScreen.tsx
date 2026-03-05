@@ -1,179 +1,183 @@
 import React from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, TouchableOpacity, Linking,
+  View, Text, ScrollView, StyleSheet, TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/Colors';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { useAuth } from '../../../contexts/AuthContext';
 
 // ─── Static Info Data ─────────────────────────────────────────────────────────
 const MODELS = [
   {
     icon: '🔬',
-    name: 'Growth Snapshot Model (DNN)',
-    subtitle: 'Used when < 4 measurements available',
-    accuracy: '77%',
-    accuracyLabel: 'AUC Score',
+    name: 'Risk Classification Model (DNN)',
+    subtitle: 'Fallback when < 3 measurements available',
+    accuracy: '94.2%',
+    accuracyLabel: 'Avg AUC',
     color: '#3B82F6',
     details: [
-      'Analyses a single measurement with 15 health factors',
-      'Considers birth data, allergies & vaccination status',
-      'Accuracy: MAPE 25.7% on growth trajectory prediction',
+      'Growth Disorder AUC: 0.988 · Dev Delay AUC: 0.912',
+      'Nutritional Deficiency AUC: 0.928',
+      'Analyses 19 clinical features — no time-series data required',
     ],
   },
   {
     icon: '🧬',
     name: 'Growth Timeline Model (LSTM)',
-    subtitle: 'Used when ≥ 4 measurements available',
-    accuracy: '94%',
-    accuracyLabel: 'AUC Score',
+    subtitle: 'Used when ≥ 3 measurements available',
+    accuracy: '97.5%',
+    accuracyLabel: 'Avg AUC',
     color: '#8B5CF6',
     details: [
-      'Analyses patterns across your last 3 measurements',
-      'Understands growth velocity and trajectory trends',
-      'Higher accuracy — improves as more data is added',
+      'Height: MAPE 3.18%, MAE 2.74 cm, R² 0.931',
+      'Weight: MAPE 8.42%, MAE 0.97 kg, R² 0.837',
+      'Risk AUC — Growth 0.90 · Dev 1.00 · Nutrition 1.00 · Behaviour 1.00',
     ],
   },
 ];
 
 const HOW_IT_WORKS = [
-  { step: '1', text: 'We collect your child\'s measurements, nutrition, sleep, and health records' },
+  { step: '1', text: "We collect your child's measurements, nutrition, sleep, and health records" },
   { step: '2', text: 'The AI selects the best model based on how much data is available' },
   { step: '3', text: 'Predictions are made and compared against WHO 2006 Growth Standards' },
   { step: '4', text: 'Results are expressed as plain risk levels and actionable recommendations' },
 ];
 
 const RISK_LEVELS = [
-  { label: 'Low Risk', color: '#10B981', desc: 'Growing as expected — keep going!' },
+  { label: 'Low Risk',      color: '#10B981', desc: 'Growing as expected — keep going!' },
   { label: 'Moderate Risk', color: '#F59E0B', desc: 'Worth monitoring — see recommendations' },
-  { label: 'High Risk', color: '#EF4444', desc: 'Consult your pediatrician soon' },
+  { label: 'High Risk',     color: '#EF4444', desc: 'Consult your pediatrician soon' },
 ];
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 export const ModelPerformanceScreen: React.FC = () => {
   const { user, upgradeToPro } = useAuth();
-  
+
   if (!user?.isPro) {
     return (
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-        <View style={styles.centerState}>
-          <Ionicons name="lock-closed-outline" size={64} color="#F59E0B" />
-          <Text style={styles.proTitle}>PRO Version Required</Text>
-          <Text style={styles.proDesc}>
-            Upgrade to PRO to learn about the AI models, validation metrics, and how our predictive engine works.
-          </Text>
-          <TouchableOpacity style={styles.upgradeBtn} onPress={upgradeToPro}>
-            <LinearGradient
-              colors={['#F59E0B', '#D97706']}
-              style={styles.upgradeBtnGradient}
-              start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
-            >
-              <Ionicons name="star" size={20} color="#fff" />
-              <Text style={styles.upgradeBtnText}>Upgrade to PRO</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
+      <>
+        <SecondaryTopBar />
+        <SafeAreaView style={styles.container} edges={['bottom']}>
+          <View style={styles.centerState}>
+            <Ionicons name="lock-closed-outline" size={64} color="#F59E0B" />
+            <Text style={styles.proTitle}>PRO Version Required</Text>
+            <Text style={styles.proDesc}>
+              Upgrade to PRO to learn about the AI models, validation metrics, and how our predictive engine works.
+            </Text>
+            <TouchableOpacity style={styles.upgradeBtn} onPress={() => upgradeToPro('pro')}>
+              <LinearGradient
+                colors={['#F59E0B', '#D97706']}
+                style={styles.upgradeBtnGradient}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              >
+                <Ionicons name="star" size={20} color="#fff" />
+                <Text style={styles.upgradeBtnText}>Upgrade to PRO</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </>
     );
   }
 
   return (
     <>
-      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <SecondaryTopBar />
+      <SafeAreaView style={styles.container} edges={['bottom']}>
         <ScrollView style={styles.scroll} contentContainerStyle={styles.content}
           showsVerticalScrollIndicator={false}>
 
-        {/* Hero */}
-        <LinearGradient colors={['#6366F1', '#8B5CF6']} style={styles.hero}
-          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
-          <Text style={styles.heroIcon}>🤖</Text>
-          <Text style={styles.heroTitle}>About Our AI</Text>
-          <Text style={styles.heroSub}>
-            PediTrack uses two machine learning models trained on over 50,000 pediatric
-            growth records to predict your child's health trajectory.
-          </Text>
-        </LinearGradient>
+          {/* Hero */}
+          <LinearGradient colors={['#6366F1', '#8B5CF6']} style={styles.hero}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+            <Text style={styles.heroIcon}>🤖</Text>
+            <Text style={styles.heroTitle}>About Our AI</Text>
+            <Text style={styles.heroSub}>
+              PediTrack uses two machine learning models trained on over 50,000 pediatric
+              growth records to predict your child's health trajectory.
+            </Text>
+          </LinearGradient>
 
-        {/* Models */}
-        <Text style={styles.sectionTitle}>Our AI Models</Text>
-        {MODELS.map((m) => (
-          <View key={m.name} style={[styles.modelCard, { borderLeftColor: m.color }]}>
-            <View style={styles.modelTopRow}>
-              <Text style={styles.modelIcon}>{m.icon}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.modelName}>{m.name}</Text>
-                <Text style={styles.modelSub}>{m.subtitle}</Text>
-              </View>
-              <View style={[styles.accBadge, { backgroundColor: m.color + '20', borderColor: m.color }]}>
-                <Text style={[styles.accScore, { color: m.color }]}>{m.accuracy}</Text>
-                <Text style={[styles.accLabel, { color: m.color }]}>{m.accuracyLabel}</Text>
-              </View>
-            </View>
-            <View style={styles.detailsList}>
-              {m.details.map((d, i) => (
-                <View key={i} style={styles.detailRow}>
-                  <Ionicons name="checkmark-circle" size={16} color={m.color} />
-                  <Text style={styles.detailText}>{d}</Text>
+          {/* Models */}
+          <Text style={styles.sectionTitle}>Our AI Models</Text>
+          {MODELS.map((m) => (
+            <View key={m.name} style={[styles.modelCard, { borderLeftColor: m.color }]}>
+              <View style={styles.modelTopRow}>
+                <Text style={styles.modelIcon}>{m.icon}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.modelName}>{m.name}</Text>
+                  <Text style={styles.modelSub}>{m.subtitle}</Text>
                 </View>
-              ))}
-            </View>
-          </View>
-        ))}
-
-        {/* How it works */}
-        <Text style={styles.sectionTitle}>How Predictions Work</Text>
-        <View style={styles.stepsCard}>
-          {HOW_IT_WORKS.map(({ step, text }) => (
-            <View key={step} style={styles.stepRow}>
-              <View style={styles.stepCircle}>
-                <Text style={styles.stepNum}>{step}</Text>
+                <View style={[styles.accBadge, { backgroundColor: m.color + '20', borderColor: m.color }]}>
+                  <Text style={[styles.accScore, { color: m.color }]}>{m.accuracy}</Text>
+                  <Text style={[styles.accLabel, { color: m.color }]}>{m.accuracyLabel}</Text>
+                </View>
               </View>
-              <Text style={styles.stepText}>{text}</Text>
+              <View style={styles.detailsList}>
+                {m.details.map((d, i) => (
+                  <View key={i} style={styles.detailRow}>
+                    <Ionicons name="checkmark-circle" size={16} color={m.color} />
+                    <Text style={styles.detailText}>{d}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
           ))}
-        </View>
 
-        {/* WHO Standards note */}
-        <View style={styles.whoCard}>
-          <Ionicons name="globe-outline" size={22} color="#3B82F6" />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.whoTitle}>WHO Growth Standards (2006)</Text>
-            <Text style={styles.whoDesc}>
-              All predictions are benchmarked against World Health Organization growth
-              standards for children aged 0–84 months. Percentiles and z-scores are
-              calculated per WHO's LMS method.
-            </Text>
+          {/* How it works */}
+          <Text style={styles.sectionTitle}>How Predictions Work</Text>
+          <View style={styles.stepsCard}>
+            {HOW_IT_WORKS.map(({ step, text }) => (
+              <View key={step} style={styles.stepRow}>
+                <View style={styles.stepCircle}>
+                  <Text style={styles.stepNum}>{step}</Text>
+                </View>
+                <Text style={styles.stepText}>{text}</Text>
+              </View>
+            ))}
           </View>
-        </View>
 
-        {/* Risk legend */}
-        <Text style={styles.sectionTitle}>Risk Levels Explained</Text>
-        {RISK_LEVELS.map(({ label, color, desc }) => (
-          <View key={label} style={styles.riskLegendRow}>
-            <View style={[styles.riskDot, { backgroundColor: color }]} />
-            <View>
-              <Text style={[styles.riskLegendLabel, { color }]}>{label}</Text>
-              <Text style={styles.riskLegendDesc}>{desc}</Text>
+          {/* WHO Standards note */}
+          <View style={styles.whoCard}>
+            <Ionicons name="globe-outline" size={22} color="#3B82F6" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.whoTitle}>WHO Growth Standards (2006)</Text>
+              <Text style={styles.whoDesc}>
+                All predictions are benchmarked against World Health Organization growth
+                standards for children aged 0–84 months. Percentiles and z-scores are
+                calculated per WHO's LMS method.
+              </Text>
             </View>
           </View>
-        ))}
 
-        {/* Disclaimer */}
-        <View style={styles.disclaimerCard}>
-          <Ionicons name="information-circle-outline" size={18} color="#6B7280" />
-          <Text style={styles.disclaimerText}>
-            AI predictions are for informational purposes only and do not replace
-            professional medical advice. Always consult your pediatrician for clinical decisions.
-          </Text>
-        </View>
+          {/* Risk legend */}
+          <Text style={styles.sectionTitle}>Risk Levels Explained</Text>
+          {RISK_LEVELS.map(({ label, color, desc }) => (
+            <View key={label} style={styles.riskLegendRow}>
+              <View style={[styles.riskDot, { backgroundColor: color }]} />
+              <View>
+                <Text style={[styles.riskLegendLabel, { color }]}>{label}</Text>
+                <Text style={styles.riskLegendDesc}>{desc}</Text>
+              </View>
+            </View>
+          ))}
 
-        {/* Version info */}
-        <Text style={styles.versionText}>PediTrack AI v1.0 · Models trained Feb 2026</Text>
-      </ScrollView>
-    </SafeAreaView>
-  </>
+          {/* Disclaimer */}
+          <View style={styles.disclaimerCard}>
+            <Ionicons name="information-circle-outline" size={18} color="#6B7280" />
+            <Text style={styles.disclaimerText}>
+              AI predictions are for informational purposes only and do not replace
+              professional medical advice. Always consult your pediatrician for clinical decisions.
+            </Text>
+          </View>
+
+          {/* Version info */}
+          <Text style={styles.versionText}>PediTrack AI v2.0 · LSTM retrained Mar 2026 · Validated on 13 samples</Text>
+        </ScrollView>
+      </SafeAreaView>
+    </>
   );
 };
 
@@ -237,8 +241,7 @@ const styles = StyleSheet.create({
   },
   disclaimerText: { flex: 1, fontSize: 12, color: '#6B7280', lineHeight: 18 },
   versionText: { textAlign: 'center', fontSize: 11, color: '#9CA3AF' },
-  
-  // States / PRO Lock
+
   centerState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 },
   proTitle: { fontSize: 24, fontWeight: '800', color: '#1F2937', marginTop: 8 },
   proDesc: { fontSize: 15, color: '#6B7280', textAlign: 'center', paddingHorizontal: 20, lineHeight: 22 },

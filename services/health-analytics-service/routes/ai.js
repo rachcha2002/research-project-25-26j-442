@@ -136,7 +136,7 @@ async function runPrediction(babyId, babyProfile) {
   const sleepLogs = await SleepLog.find({ babyId, date: { $gte: thirtyDaysAgo } }).sort({ date: -1 }).lean();
 
   const has_asthma = healthRecords.some(r => r.conditionName?.toLowerCase().includes('asthma')) ? 1 : 0;
-  const chronic_conditions_count = healthRecords.filter(r => r.severity === 'chronic' || r.severity === 'High').length;
+  const chronic_conditions_count = healthRecords.filter(r => r.conditionType === 'chronic').length;
   // Look at medications for supplements OR feeding logs
   let takes_supplements = medications.some(m => m.medicationName?.toLowerCase().includes('vitamin') || m.medicationName?.toLowerCase().includes('supplement')) ? 1 : 0;
   if (!takes_supplements && feedingLogs.length > 0) {
@@ -265,9 +265,9 @@ router.get('/predictions/:babyId', async (req, res) => {
 
     if (!result.growth_forecast) {
       return res.status(400).json({
-        error: 'Need 4+ measurements for growth predictions',
+        error: 'Need 3+ measurements for growth predictions',
         currentCount: measurements.length,
-        needed: 4,
+        needed: 3,
       });
     }
 
@@ -309,15 +309,16 @@ router.get('/predictions/:babyId', async (req, res) => {
 
       // Append up to 3 historical points for the chart context
       const history = measurements.slice(0, -1).slice(-3);
-      history.forEach((m, idx) => {
-        allMonths.push(`-` + (history.length - idx) + `m`); // e.g. -2m, -1m
+      history.forEach((m) => {
+        allMonths.push(m.measurementDate ? new Date(m.measurementDate).toISOString() : null);
         allHeights.push(m.height?.value ?? m.height);
         allWeights.push(m.weight?.value ?? m.weight);
         allConf.push(1.0);
       });
 
-      // Append current and future
-      allMonths.push('Now', '+3m', '+6m', '+9m', '+12m');
+      // Append current (real date) and future (+3m etc.)
+      const currentDateIso = latest.measurementDate ? new Date(latest.measurementDate).toISOString() : new Date().toISOString();
+      allMonths.push(currentDateIso, '+3m', '+6m', '+9m', '+12m');
       allHeights.push(h0, h3, h6, h9, h12);
       allWeights.push(w0, w3, w6, w9, w12);
       allConf.push(1.0, 0.90, 0.82, 0.75, 0.60);
