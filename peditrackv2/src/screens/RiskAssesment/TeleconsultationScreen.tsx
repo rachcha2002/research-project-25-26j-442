@@ -15,6 +15,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { cancelTeleconsultationRequest, getTeleconsultationRequest, getQueuePosition, getVideoToken } from "@/services/teleconsultationService";
 import { getAssessments } from "@/services/riskAssessmentService";
 import { useBaby } from "@/contexts/BabyContext";
+import { EXPO_PUBLIC_LIVEKIT_URL } from "@/config/config";
 
 export const TeleconsultationScreen: React.FC = () => {
   const params = useLocalSearchParams();

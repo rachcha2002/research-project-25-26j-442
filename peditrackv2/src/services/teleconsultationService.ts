@@ -1,11 +1,9 @@
 import * as SecureStore from 'expo-secure-store';
 import userService from '@/services/userService';
-import { APP_CONFIG } from '@/config/config';
+import { APP_CONFIG, API_CONFIG } from '@/config/config';
 
-const DEFAULT_TELECONSULTATION_API_URL = 'http://192.168.43.40:4001/api/teleconsultation';
-const API_BASE_URL = (process.env.EXPO_PUBLIC_TELECONSULTATION_API_URL || DEFAULT_TELECONSULTATION_API_URL).replace(/\/+$/, '');
-const DEFAULT_AUTH_USER_SERVICE_API_URL = 'http://192.168.43.40:3012/api/doctors';
-const AUTH_USER_API_BASE_URL = (process.env.EXPO_PUBLIC_AUTH_USER_SERVICE_URL || DEFAULT_AUTH_USER_SERVICE_API_URL).replace(/\/+$/, '');
+const API_BASE_URL = API_CONFIG.TELECONSULTATION_URL;
+const AUTH_USER_API_BASE_URL = API_CONFIG.AUTH_USER_URL;
 
 const buildHeaders = async (headers?: HeadersInit): Promise<Record<string, string>> => {
   const token = await SecureStore.getItemAsync(APP_CONFIG.ACCESS_TOKEN_KEY);
