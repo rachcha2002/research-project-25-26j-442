@@ -212,6 +212,47 @@ export interface MedicationNotification {
   body: string;
 }
 
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const DISMISSED_NOTIFICATIONS_KEY = '@peditrack_dismissed_notifications';
+
+const getDismissedNotifications = async (): Promise<{ date: string; ids: string[] }> => {
+  try {
+    const data = await AsyncStorage.getItem(DISMISSED_NOTIFICATIONS_KEY);
+    if (data) return JSON.parse(data);
+  } catch (e) {}
+  return { date: '', ids: [] };
+};
+
+export const dismissNotificationForToday = async (notificationId: string) => {
+  const today = new Date().toISOString().split('T')[0];
+  const { date, ids } = await getDismissedNotifications();
+  
+  let newIds = [];
+  if (date === today) {
+    if (!ids.includes(notificationId)) newIds = [...ids, notificationId];
+    else newIds = ids;
+  } else {
+    newIds = [notificationId];
+  }
+  
+  await AsyncStorage.setItem(DISMISSED_NOTIFICATIONS_KEY, JSON.stringify({ date: today, ids: newIds }));
+};
+
+export const dismissAllNotificationsForToday = async (notificationIds: string[]) => {
+  const today = new Date().toISOString().split('T')[0];
+  const { date, ids } = await getDismissedNotifications();
+  
+  let newIds = [];
+  if (date === today) {
+    newIds = [...new Set([...ids, ...notificationIds])];
+  } else {
+    newIds = notificationIds;
+  }
+  
+  await AsyncStorage.setItem(DISMISSED_NOTIFICATIONS_KEY, JSON.stringify({ date: today, ids: newIds }));
+};
+
 /**
  * Get today's medication reminders for a specific baby, parsed into UI-friendly format.
  */
@@ -219,16 +260,22 @@ export const getTodayReminders = async (
   babyId: string
 ): Promise<{ badgeCount: number; notifications: MedicationNotification[] }> => {
   try {
-    // We could fetch real medications from healthAnalyticsService here, 
-    // but to avoid circular dependencies or complex API calls, we'll parse the scheduled local notifications.
     const scheduled = await getScheduledMedicationReminders();
     
-    // Filter by babyId
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+    const { date: dismissedDate, ids: dismissedIds } = await getDismissedNotifications();
+    const activeDismissedIds = dismissedDate === todayStr ? dismissedIds : [];
+
+    // Filter by babyId and ignore dismissed notifications
     const babyNotifications = scheduled.filter(
-      (n) => n.content.data?.babyId === babyId || (n.content.data as any)?.type === 'medication_reminder'
+      (n) => {
+        const isBabyMatch = n.content.data?.babyId === babyId || (n.content.data as any)?.type === 'medication_reminder';
+        const isNotDismissed = !activeDismissedIds.includes(n.identifier);
+        return isBabyMatch && isNotDismissed;
+      }
     );
 
-    const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     const currentTimeMinutes = currentHour * 60 + currentMinute;
