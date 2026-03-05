@@ -10,6 +10,7 @@
 
 // Get your computer's IP by running 'ipconfig' (Windows) or 'ifconfig' (Mac/Linux)
 
+
 const COMPUTER_IP = '192.168.1.179'; // Update this with your actual IP
 
 // Detect if running in Expo Go vs production

@@ -56,10 +56,10 @@ export default function SubscriptionScreen() {
     try {
       setIsProcessing(true);
 
-      // 1. Get the Stripe Checkout URL from backend
+      // Get the Stripe Checkout URL from backend
       const checkoutUrl = await createCheckoutSession();
 
-      // 2. Open Stripe Checkout in the system browser
+      // Open Stripe Checkout in the system browser
       const result = await WebBrowser.openAuthSessionAsync(checkoutUrl, 'peditrack://');
 
       // 3. Handle success redirect
