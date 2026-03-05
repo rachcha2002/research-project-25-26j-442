@@ -1,0 +1,53 @@
+Item Name,Ideal_Meal_Time,Appetite_Role,Texture,Cost,Veg/Non-Veg,Allergies,Serving Size (Child),Calories (kcal),Protein (g),Fat (g),Calcium (mg),Sodium (mg),Health_Benefit
+Buffalo Curd (Plain),Lunch;Dinner,Calorie Boost,Creamy,Med,Veg,Dairy,0.25 cup,60,3.0,4.5,120,30,Probiotics; Bone Health
+Curd with Kithul Treacle,Snack;Dinner,Weight Gain,Smooth/Liquid,Med,Veg,Dairy,0.25 cup,95,3.0,4.5,120,35,Energy; Healthy Gut
+Set Yogurt (Natural),Breakfast;Snack,Easy Snack,Smooth,Med,Veg,Dairy,1 cup (80g),75,4.0,3.5,140,40,Calcium; Digestion
+Drinking Yogurt (Bottle),Snack;Lunchbox,Hydration,Liquid,Med,Veg,Dairy,1 bottle,120,5.0,4.0,160,50,Quick Energy
+Cheddar Cheese Cube,Snack;Lunchbox,Protein Boost,Firm,High,Veg,Dairy,20g cube,80,5.0,6.5,150,130,Teeth & Bone Growth
+Cheese Spread (Plain),Breakfast;Snack,Palatability,Creamy,High,Veg,Dairy,1 tbsp,50,2.5,4.0,90,120,Easy to eat with bread
+Paneer Cubes (Fresh),Lunch;Dinner,Protein Boost,Soft/Firm,High,Veg,Dairy,0.25 cup,120,7.0,9.0,180,15,Muscle Development
+Fried Paneer (Slightly Salted),Lunch;Snack,Weight Gain,Chewy/Firm,High,Veg,Dairy,0.25 cup,160,7.5,13.0,180,60,High Calorie (Low BMI fix)
+Full Cream Milk (Fresh),Breakfast;Dinner,Growth,Liquid,Low,Veg,Dairy,1 cup (150ml),100,5.0,5.5,180,60,Total Development
+Ghee (Cow Ghee),Breakfast;Lunch,Weight Gain,Oily,High,Veg,Dairy,1 tsp,45,0.0,5.0,1,0,Brain Fats; High Calorie
+Unsalted Butter,Breakfast;Lunch,Weight Gain,Creamy,Med,Veg,Dairy,1 tsp,35,0.1,4.0,1,0,Calorie stacking
+Margarine (Fortified),Breakfast;Lunch,Energy,Creamy,Low,Veg,None,1 tsp,35,0.0,4.0,0,30,Vitamin A & D added
+Papadam (Fried),Lunch;Dinner,Appetite Stimulant,Crunchy,Low,Veg,Gluten,2 small pieces,65,1.5,4.0,10,120,Encourages chewing
+Mini Papadam Bowls,Snack;Lunchbox,Fun Factor,Crunchy,Low,Veg,Gluten,5 pieces,80,2.0,5.0,15,140,Finger food appeal
+Fried Sprats (Whitebait),Lunch;Dinner,Calcium Boost,Crunchy,Low,Non-Veg,Fish,1 tbsp,90,10.0,5.0,220,90,Extreme Calcium
+Fried Sprats (Powdered),Lunch;Dinner,Hidden Nutrients,Gritty,Low,Non-Veg,Fish,1 tsp,30,3.5,1.5,70,30,Invisible nutrition
+Crispy Fried Anchovies,Snack;Lunchbox,Protein Crunch,Crunchy,Low,Non-Veg,Fish,1 tbsp,85,9.0,4.5,180,85,Healthy Snack
+Fried Cashew Nuts (Plain),Snack;Tea Time,Brain Fats,Crunchy/Firm,High,Veg,Nuts,5 nuts,110,3.5,9.0,15,5,Omega-3 & Energy
+Cashew Nut Paste,Breakfast;Snack,Easy Fat,Smooth,High,Veg,Nuts,1 tbsp,95,3.0,8.0,12,2,Safe for 2yo (No Choking)
+Peanut Butter (Natural),Breakfast;Snack,Weight Gain,Creamy,Med,Veg,Nuts,1 tbsp,95,4.0,8.0,10,5,High Energy Density
+Peanuts (Boiled),Snack;Tea Time,Protein,Soft/Chewy,Low,Veg,Nuts,0.25 cup,140,6.0,11.0,25,5,Affordable Protein
+Fried Tempeh Cubes,Lunch;Dinner,Protein Boost,Crunchy,High,Veg,Soy,0.25 cup,110,9.0,6.0,60,10,Gut Health (Fermented)
+Soy Milk (Vanilla),Breakfast;Snack,Dairy Substitute,Liquid,Med,Veg,Soy,150ml,90,4.5,3.0,120,40,Lactose-Free Growth
+Breadfruit Chips (Del),Snack;Tea Time,Appetite Stimulant,Crunchy,Low,Veg,None,0.25 cup,120,1.5,6.0,20,50,High Calorie Fiber
+Manioc Chips (Plain),Snack;Tea Time,Appetite Stimulant,Crunchy,Low,Veg,None,0.25 cup,130,1.0,7.0,15,60,Energy Boost
+Sweet Potato Crisps,Snack;Tea Time,Fun Fiber,Crunchy,Med,Veg,None,0.25 cup,110,1.2,5.5,25,45,Vitamin A Snack
+Murukku (Mini),Snack;Tea Time,Fun Factor,Crunchy,Low,Veg,Gluten,3 pieces,90,2.0,5.0,20,110,Appetite Stimulant
+Savoury Mixture (Mild),Snack;Tea Time,Fun Factor,Crunchy,Low,Veg,Nuts;Gluten,2 tbsp,120,3.0,8.0,30,150,Sensory Variety
+Tapioca Pearls (Sago),Snack;Breakfast,Cooling,Soft/Jelly,Low,Veg,Dairy,0.5 cup,140,1.0,2.0,60,15,Heat Stress Relief
+Boiled Egg White Strips,Lunch;Lunchbox,Lean Protein,Soft/Rubbery,Low,Non-Veg,Egg,2 whites,35,7.0,0.0,15,50,Pure Muscle Growth
+Kiri Toffee (Small),Tea Time;Snack,Weight Gain,Chewy/Hard,Low,Veg,Dairy,1 small piece,70,1.5,3.0,40,20,Calorie Boost
+Milk Powder (Fortified),Breakfast;Dinner,Growth,Liquid,Low,Veg,Dairy,1 glass,130,6.0,7.0,210,70,Vitamin D & Calcium
+Cheese Wedges (Soft),Breakfast;Snack,Calcium Boost,Creamy,High,Veg,Dairy,1 wedge,50,3.0,4.0,140,160,Kid-friendly texture
+Boiled Chickpeas (Fried),Snack;Lunchbox,Fiber Crunch,Crunchy,Low,Veg,None,2 tbsp,90,4.0,3.5,30,80,Protein Snacking
+Toasted Pumpkin Seeds,Snack;Lunchbox,Mineral Boost,Crunchy,Med,Veg,None,1 tbsp,60,3.0,5.0,10,2,Zinc for Immunity
+Coconut Slices (Fried),Snack;Lunch,Weight Gain,Crunchy/Oily,Low,Veg,None,1 tbsp,75,0.8,7.0,5,10,Healthy Lauric Acid
+Roasted Makhana (Foxnuts),Snack;Lunchbox,Light Snack,Crunchy/Airy,High,Veg,None,0.5 cup,60,2.0,0.5,40,2,Low Sodium Calcium
+Milk Bikis (Biscuits),Tea Time;Snack,Energy,Crunchy,Low,Veg,Gluten;Dairy,2 biscuits,90,1.5,3.5,40,60,Quick Preschool Snack
+Marie Biscuits,Tea Time;Snack,Easy Digestion,Crunchy/Soft,Low,Veg,Gluten,2 biscuits,60,1.0,2.0,10,50,Low Fat Snack
+Rice Crackers (Plain),Snack;Lunchbox,Fun Factor,Crunchy,Med,Veg,None,3 crackers,70,1.0,2.5,5,90,Gluten-Free Crunch
+Pork Scratchings (Small),Snack;Lunch,Weight Gain,Crunchy,Med,Non-Veg,None,1 tbsp,90,7.0,7.0,5,110,High Energy Density
+Sesame Balls (Thala Guli),Snack;Tea Time,Calcium Boost,Soft/Grainy,Low,Veg,Nuts,1 ball,110,3.0,7.0,160,5,Traditional Bone Health
+Jaggery Pieces (Hakuru),Tea Time;Snack,Iron Boost,Hard/Melting,Low,Veg,None,1 small cube,40,0.1,0.0,15,2,Natural Iron Sweetener
+Dried Apricots (Chopped),Snack;Lunchbox,Iron Boost,Chewy,High,Veg,None,2 pieces,40,0.5,0.1,10,1,Vitamin A & Iron
+Dates (Pitted),Snack;Lunchbox,Energy Boost,Chewy/Sticky,Med,Veg,None,1 date,65,0.4,0.1,15,2,Natural Sugar; Fiber
+Raisins (Sultanas),Snack;Lunchbox,Appetite Stimulant,Chewy,Med,Veg,None,1 tbsp,45,0.5,0.1,12,2,Potassium & Iron
+Almond Flakes,Snack;Breakfast,Brain Development,Crunchy,High,Veg,Nuts,1 tsp,40,1.5,3.5,20,1,Vitamin E & Fats
+Grated Coconut (Sweetened),Breakfast;Snack,Weight Gain,Soft/Fluffy,Low,Veg,None,2 tbsp,80,1.0,7.5,5,2,High Calorie Fiber
+Condensed Milk (Drizzle),Breakfast;Tea Time,Weight Gain,Liquid/Sticky,Low,Veg,Dairy,1 tsp,65,1.5,2.0,50,25,Severe Underweight fix
+Yogurt Melts (Home-made),Snack;Lunchbox,Fun Factor,Melting,Med,Veg,Dairy,5 drops,40,2.0,1.5,60,20,Probiotic treat
+Pea Snaps (Baked),Snack;Lunchbox,Hidden Veggies,Crunchy,High,Veg,None,10 pieces,70,3.0,3.0,20,90,Vegetable protein
+Cheese Puffs (Occasional),Snack;Lunchbox,Appetite Stimulant,Crunchy/Airy,Low,Veg,Dairy,0.25 cup,110,1.5,7.0,30,180,High Sodium Appetite Boost

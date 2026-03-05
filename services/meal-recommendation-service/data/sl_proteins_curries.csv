@@ -1,0 +1,81 @@
+Item Name,Ideal_Meal_Time,Spice_Level,Cost,Veg/Non-Veg,Allergies,Bone_Status,Pairing_Tag,Serving Size (Child),Calories (kcal),Protein (g),Carbs (g),Fat (g),Health_Benefit
+Creamy Dhal (Parippu Kirata),Breakfast;Lunch;Dinner,Mild,Low,Veg,None,NA,Rice;Bread;String Hoppers,0.5 cup,140,8,18,4,Easy Digestion
+Tempered Dhal (Badum),Lunch;Dinner,Mild,Low,Veg,None,NA,Rice;Roti,0.5 cup,160,8,16,7,High Energy
+Dhal with Spinach,Lunch;Dinner,Mild,Low,Veg,None,NA,Rice;Bread,0.5 cup,130,9,15,3.5,High Iron
+Chicken White Curry (Kiri Kukul Mas),Lunch;Dinner,Mild,Med,Non-Veg,None,Bone-in,Rice;String Hoppers,1 small piece+gravy,150,14,3,9,Muscle Growth
+Chicken Stew (Clear Broth),Lunch;Dinner,None,Med,Non-Veg,None,Bone-in,Bread;Rice,0.5 cup,120,12,5,5,Flu Recovery
+Shredded Chicken Breast,Lunch;Dinner,None,Med,Non-Veg,None,Boneless,Noodles;Pasta,0.5 cup,110,18,0,3,Lean Protein
+Chicken Meatballs (Home-made),Lunch;Dinner;Snack,Mild,Med,Non-Veg,Gluten,Boneless,Pasta;Rice,3 small balls,160,15,8,7,Picky Eater Friendly
+Pan-Fried Chicken Pieces,Lunch;Dinner,Mild,Med,Non-Veg,None,Boneless,Rice;Roti,2 small pieces,180,16,1,12,Calorie Boost
+Chicken Liver Curry,Lunch,Medium,Low,Non-Veg,None,Boneless,Rice,0.5 cup,140,12,4,8,Anemia Prevention
+Minced Chicken Curry,Lunch;Dinner,Mild,Med,Non-Veg,None,Boneless,Bread;Pasta,0.5 cup,150,15,2,9,Easy to Chew
+Chicken Sausage (Fried),Breakfast;Snack,Mild,Med,Non-Veg,None,Boneless,Bread;Noodles,1 sausage,130,7,2,10,Appetite Stimulant
+White Fish Curry (Kiri Malu),Lunch;Dinner,Mild,Med,Non-Veg,Fish,Bone-in,Rice;String Hoppers,1 piece+gravy,130,12,2,8,Brain Development
+Fish Ambul Thiyal (Dry),Lunch;Dinner,Mild,Med,Non-Veg,Fish,Bone-in,Rice;Milk Rice,1 small piece,110,14,1,5,Long Shelf Life
+Fried Fish (Thalapath/Seer),Lunch;Dinner,Mild,High,Non-Veg,Fish,Bone-in,Rice,1 small piece,170,15,0,11,Weight Gain
+Steamed Whitebait (Halmassa),Breakfast;Lunch,None,Low,Non-Veg,Fish,Boneless,Rice;Congee,0.5 cup,90,10,0,5,Calcium Boost
+Fried Sprats (Crunchy),Lunch;Dinner,Mild,Low,Non-Veg,Fish,Boneless,Rice,1 tbsp,80,9,0,5,Bone Density
+Canned Fish Sambol (Mild),Breakfast;Dinner,Mild,Low,Non-Veg,Fish,Boneless,Bread;Roti,2 tbsp,120,10,2,8,Quick Protein
+Baked Fish Cutlet,Lunch;Snack,Mild,Med,Non-Veg,Fish;Gluten,Boneless,Rice;Bread,1 cutlet,110,7,8,5,Hidden Veg/Protein
+Boiled Egg,Breakfast;Lunch;Snack,None,Low,Non-Veg,Egg,NA,String Hoppers;Rice,1 egg,70,6,0.5,5,Brain (Choline)
+Fried Egg (Bullseye),Breakfast;Dinner,None,Low,Non-Veg,Egg,NA,Bread;Rice,1 egg,90,6,0.5,7,High Fat
+Sri Lankan Omelette (Mild),Breakfast;Dinner,Mild,Low,Non-Veg,Egg,NA,Bread;Rice,1 egg omelette,110,7,1,8,Weight Gain
+Egg White Only (Boiled),Breakfast;Snack,None,Low,Non-Veg,Egg,NA,Bread;Congee,2 whites,35,7,0,0,Pure Protein
+Egg Kiri Hodi (Egg Curry),Breakfast;Dinner,Mild,Low,Non-Veg,Egg,NA,String Hoppers;Pittu,1 egg+gravy,130,7,3,10,Creamy Comfort Food
+Scrambled Eggs with Butter,Breakfast;Dinner,None,Low,Non-Veg,Egg;Dairy,Bread;Toast,1 egg scrambled,120,6,1,10,Calorie Boost,
+Tomato Egg Fry,Breakfast;Dinner,Mild,Low,Non-Veg,Egg,NA,Bread;Roti,0.5 cup,100,7,3,6,Vitamin C + Protein
+Soya Meat Kiri Curry,Lunch;Dinner,Mild,Low,Veg,Soy,NA,Rice;Bread,0.5 cup,110,10,7,4,Plant Protein
+Soya Meat Devilled (Sweet),Lunch;Dinner,Mild,Low,Veg,Soy,NA,Fried Rice;Noodles,0.5 cup,140,9,12,6,Kid Favorite
+Soya Chunks with Potato,Lunch;Dinner,Mild,Low,Veg,Soy,NA,Rice;Bread,0.5 cup,150,8,15,6,Filling Energy
+Mushroom Kiri Curry,Lunch;Dinner,Mild,Med,Veg,None,NA,Rice;String Hoppers,0.5 cup,80,3,5,5,Immune Support
+Garlic Butter Mushrooms,Dinner;Snack,None,Med,Veg,Dairy,NA,Pasta;Bread,0.5 cup,110,3,4,9,Gut Health
+Polos (Jackfruit) Curry,Lunch,Medium,Low,Veg,None,NA,Rice,0.5 cup,90,2,12,4,Digestive Fiber
+Tofu Mild Curry,Lunch;Dinner,Mild,High,Veg,Soy,NA,Rice;Noodles,0.5 cup,120,10,3,7,Vegan Protein
+Fried Tofu Cubes,Lunch;Snack,None,High,Veg,Soy,NA,Noodles;Rice,0.5 cup,140,11,2,9,Crunchy Texture
+Paneer Butter Masala (Mild),Dinner,Mild,High,Veg,Dairy,NA,Roti;Chapati,0.5 cup,180,8,6,14,High Calcium/Fat
+Cashew Nut Curry,Lunch;Dinner,Mild,High,Veg,Nuts,NA,Yellow Rice;Bread,0.25 cup,190,5,9,15,Brain Fats
+Green Pea Curry (Kiriata),Lunch;Dinner,Mild,Med,Veg,None,NA,Rice;Bread,0.5 cup,100,5,12,3.5,Fiber & Protein
+Mild Beef Curry,Lunch;Dinner,Medium,High,Non-Veg,None,Boneless,Rice;Bread,0.5 cup,160,18,2,8,Iron & Zinc
+Beef Stew with Carrots,Lunch;Dinner,None,High,Non-Veg,None,Boneless,Bread;Rice,0.5 cup,140,15,6,6,Growth Spurt Support
+Minced Beef Curry (Keema),Lunch;Dinner,Mild,High,Non-Veg,None,Boneless,Pasta;Bread,0.5 cup,170,16,3,10,Easy to Chew
+Beef Meatballs (Mild),Lunch;Dinner,Mild,High,Non-Veg,Gluten,Boneless,Spaghetti;Rice,3 balls,180,14,5,11,Appetite Stimulant
+Mutton Kiri Curry,Lunch,Mild,High,Non-Veg,None,Bone-in,Rice,0.5 cup,180,16,2,12,High Calorie/Iron
+Prawn Kiri Curry,Lunch;Dinner,Mild,High,Non-Veg,Shellfish,Boneless,Rice;Bread,0.5 cup,120,15,3,5,Omega-3 & Iodine
+Fried Prawns (Mild),Lunch;Snack,None,High,Non-Veg,Shellfish,Boneless,Fried Rice,4 medium prawns,140,14,4,7,Zinc for Immunity
+Crab Curry (Mild Broth),Lunch,Medium,High,Non-Veg,Shellfish,Bone-in,Rice;Bread,0.5 cup broth+meat,110,12,2,5,Trace Minerals
+Quail Eggs (Boiled),Breakfast;Snack,None,Med,Non-Veg,Egg,NA,Congee;Rice,2 eggs,30,2.5,0,2,Nutrient Dense
+Tempered Chickpeas,Breakfast;Tea Time,Mild,Low,Veg,None,NA,Plain,0.5 cup,140,7,18,4,Energy & Protein
+Cowpea Curry (Kiriata),Breakfast;Lunch,Mild,Low,Veg,None,NA,Bread;Rice,0.5 cup,130,8,16,3,Stamina
+Black Gram Curry (Undu),Lunch;Dinner,Mild,Low,Veg,None,NA,Rice;Roti,0.5 cup,135,9,15,3.5,Muscle Repair
+Mung Bean Curry (Sweet/Savory),Breakfast;Dinner,None,Low,Veg,None,NA,Rice;Bread,0.5 cup,120,7,18,2,Cooling Effect
+Cheese Slices (Melted over Base),Breakfast;Snack,None,High,Veg,Dairy,NA,Bread;Pasta,1 slice,60,4,1,5,Calcium Boost
+Fried Paneer Cubes,Lunch;Snack,Mild,High,Veg,Dairy,NA,Rice;Chapati,0.25 cup,150,7,2,12,Vegetarian Weight Gain
+Chicken Tikka (Non-Spicy),Dinner,Mild,High,Non-Veg,Dairy,Boneless,Chapati;Rice,2 pieces,140,16,2,7,Flavor Exploration
+Pork Curry (Mild/Kirata),Lunch,Medium,Med,Non-Veg,None,Boneless,Rice;Bread,0.5 cup,200,15,2,14,High Calorie
+Minced Pork with Potato,Dinner,Mild,Med,Non-Veg,None,Boneless,Bread;Rice,0.5 cup,180,14,8,10,Filling Dinner
+Canned Salmon (Local) Stew,Breakfast;Dinner,Mild,Med,Non-Veg,Fish,Boneless,Bread;String Hoppers,0.5 cup,130,12,3,7,Omega-3
+Tuna Cutlet (Baked),Snack;Lunch,Mild,Med,Non-Veg,Fish;Gluten,Boneless,Rice,1 cutlet,100,8,6,4,Lunchbox Friendly
+Maldive Fish Sambol (Mild),Lunch;Dinner,Medium,High,Non-Veg,Fish,Boneless,Rice;Hoppers,1 tbsp,45,6,1,1.5,Flavor Enhancer
+White Gravy (Kiri Hodi) Plain,Breakfast;Dinner,None,Low,Veg,None,NA,String Hoppers;Pittu,0.5 cup,80,1,2,7,Moistens Food
+Chicken Bone Broth,Breakfast;Snack,None,Low,Non-Veg,None,NA,Congee;Bread,1 cup,40,4,0,2,Gut Healing
+Fish Head Broth,Lunch;Dinner,None,Low,Non-Veg,Fish,Bone-in,Rice;Congee,1 cup,60,6,0,3,Joint Health (Collagen)
+Tempered Mackerel (Mild),Lunch;Dinner,Mild,Med,Non-Veg,Fish,Boneless,Rice;Bread,0.5 cup,140,13,2,8,DHA for Brain
+Lentil & Carrot Mash (Thick),Breakfast;Lunch,None,Low,Veg,None,NA,Bread;Rice,0.5 cup,120,7,16,3,Vitamin A + Protein
+Broad Bean (Dambala) Curry,Lunch,Mild,Low,Veg,None,NA,Rice,0.5 cup,90,4,10,4,Folate Rich
+Fried Soya Meat (Snack),Tea Time;Snack,Mild,Low,Veg,Soy,NA,Plain,0.5 cup,150,11,8,8,Crunchy Protein
+Mashed Egg & Potato,Lunch;Dinner,None,Low,Non-Veg,Egg,NA,Rice;Bread,0.5 cup,140,7,12,6,Comfort Food
+Steamed Fish Fillet (Garlic/Butter),Dinner,None,High,Non-Veg,Fish;Dairy,Boneless,Rice;Pasta,1 small fillet,130,16,0,7,Premium Protein
+Mild Crab Meat (Picked),Lunch,None,High,Non-Veg,Shellfish,Boneless,Fried Rice,0.25 cup,80,14,0,1.5,Luxury Zinc Source
+Chicken Soup Meat (Shredded),Dinner,None,Low,Non-Veg,None,Boneless,Congee;Noodles,0.5 cup,100,16,0,3,Hydration & Protein
+Quail Egg Curry (Kiriata),Lunch;Dinner,Mild,Med,Non-Veg,Egg,NA,String Hoppers;Rice,3 eggs+gravy,120,8,3,8,Novelty/Fun Food
+Sausage & Tomato Onion Fry,Breakfast;Dinner,Mild,Med,Non-Veg,None,Boneless,Bread;Roti,0.5 cup,150,8,6,10,Appetizing Smell
+Beef Bone Broth,Breakfast;Dinner,None,Low,Non-Veg,None,NA,Plain;Congee,1 cup,45,5,0,2.5,Immunity
+Tempered Soya with Leeks,Lunch;Dinner,Mild,Low,Veg,Soy,NA,Rice;Noodles,0.5 cup,130,9,10,5,Fiber + Plant Protein
+Fish Flakes with Coconut (Sambol),Breakfast;Lunch,Mild,Med,Non-Veg,Fish,Boneless,Bread;Rice,2 tbsp,100,8,3,6,Dry Protein Add-on
+Soya Mince (Keema style),Dinner,Mild,Low,Veg,Soy,NA,Pasta;Bread,0.5 cup,120,10,8,5,Bolognese Substitute
+Curd (Used as Savory Gravy),Lunch,None,Med,Veg,Dairy,NA,Rice,0.25 cup,60,3,4,3.5,Probiotic Gravy
+Fried Omelette Strips,Lunch;Dinner,None,Low,Non-Veg,Egg,NA,Noodles;Fried Rice,1 egg equivalent,100,6,1,8,Easy Finger Food
+Grilled Chicken Drumstick,Dinner,Mild,Med,Non-Veg,None,Bone-in,Rice;Bread,1 drumstick,160,14,0,11,Iron & Fat
+Lentil & Pumpkin Stew,Lunch;Dinner,None,Low,Veg,None,NA,Rice;Bread,0.5 cup,110,6,14,3,Beta-Carotene
+Tempered Whitebait (Halmassa),Lunch;Dinner,Mild,Low,Non-Veg,Fish,Boneless,Rice,2 tbsp,90,9,1,5,Crunchy Calcium
+Mushroom & Pea Kiri Curry,Lunch;Dinner,Mild,Med,Veg,None,NA,String Hoppers;Rice,0.5 cup,95,4,8,5,Vegetarian Medley

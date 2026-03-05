@@ -1,258 +1,163 @@
-import React, { useMemo, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { Colors } from '@/constants/Colors';
-import { SecondaryTopBar } from '@/components/SecondaryTopBar';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { DailyNutritionIntakeCard } from '@/screens/Nutrition/MealRecommondation/SubComponents/DailyNutritionIntakeCard';
+import { useRouter } from 'expo-router';
+import { SecondaryTopBar } from '@/components/SecondaryTopBar';
+import { Colors } from '@/constants/Colors';
+import { useBaby } from '@/contexts/BabyContext';
+import {
+  getAcceptedMeals,
+  getRejectedMeals,
+  removeBehavioralItems,
+} from '@/services/behavioralStateService';
 
-type MealId = 'breakfast' | 'morningSnack' | 'lunch' | 'afternoonSnack' | 'dinner';
-
-type PastMeal = {
-  id: MealId;
-  label: string;
-  timeLabel: string;
-  givenMeal: string;
-  completed: boolean;
-};
-
-type PastDay = {
-  offset: number; // 0 = yesterday, 1 = two days ago, etc.
-  meals: PastMeal[];
-};
-
-const PAST_DAYS: PastDay[] = [
-  {
-    offset: 0, // yesterday
-    meals: [
-      {
-        id: 'breakfast',
-        label: 'Breakfast',
-        timeLabel: '8:00 AM',
-        givenMeal: 'Oatmeal with banana and warm milk',
-        completed: true,
-      },
-      {
-        id: 'morningSnack',
-        label: 'Snack',
-        timeLabel: '10:00 AM',
-        givenMeal: 'Yogurt with soft fruit pieces',
-        completed: true,
-      },
-      {
-        id: 'lunch',
-        label: 'Lunch',
-        timeLabel: '1:00 PM',
-        givenMeal: 'Rice, steamed veggies, and shredded chicken',
-        completed: true,
-      },
-      {
-        id: 'afternoonSnack',
-        label: 'Snack',
-        timeLabel: '4:00 PM',
-        givenMeal: 'Mashed avocado on soft bread',
-        completed: true,
-      },
-      {
-        id: 'dinner',
-        label: 'Dinner',
-        timeLabel: '9:00 PM',
-        givenMeal: 'Mashed potatoes with lentils and carrots',
-        completed: true,
-      },
-    ],
-  },
-  {
-    offset: 1, // 1 day before yesterday
-    meals: [
-      {
-        id: 'breakfast',
-        label: 'Breakfast',
-        timeLabel: '8:10 AM',
-        givenMeal: 'Rice porridge with milk',
-        completed: true,
-      },
-      {
-        id: 'morningSnack',
-        label: 'Snack',
-        timeLabel: '10:05 AM',
-        givenMeal: 'Apple slices and yogurt',
-        completed: true,
-      },
-      {
-        id: 'lunch',
-        label: 'Lunch',
-        timeLabel: '12:50 PM',
-        givenMeal: 'Soft rice, dhal, and carrot curry',
-        completed: true,
-      },
-      {
-        id: 'afternoonSnack',
-        label: 'Snack',
-        timeLabel: '4:15 PM',
-        givenMeal: 'Milk and a small banana',
-        completed: true,
-      },
-      {
-        id: 'dinner',
-        label: 'Dinner',
-        timeLabel: '8:45 PM',
-        givenMeal: 'Vegetable soup with soft bread',
-        completed: true,
-      },
-    ],
-  },
-  {
-    offset: 2, // 2 days before yesterday
-    meals: [
-      {
-        id: 'breakfast',
-        label: 'Breakfast',
-        timeLabel: '7:50 AM',
-        givenMeal: 'Mashed sweet potato and egg',
-        completed: true,
-      },
-      {
-        id: 'morningSnack',
-        label: 'Snack',
-        timeLabel: '10:00 AM',
-        givenMeal: 'Fruit yogurt (no nuts)',
-        completed: true,
-      },
-      {
-        id: 'lunch',
-        label: 'Lunch',
-        timeLabel: '1:10 PM',
-        givenMeal: 'Rice with fish and steamed veggies',
-        completed: true,
-      },
-      {
-        id: 'afternoonSnack',
-        label: 'Snack',
-        timeLabel: '4:20 PM',
-        givenMeal: 'Cheese cubes and cucumber sticks',
-        completed: true,
-      },
-      {
-        id: 'dinner',
-        label: 'Dinner',
-        timeLabel: '9:05 PM',
-        givenMeal: 'Mashed lentils with rice and spinach',
-        completed: true,
-      },
-    ],
-  },
-];
+type TabType = 'accepted' | 'rejected';
 
 export default function PastDataScreen() {
-  const [dayIndex, setDayIndex] = useState(0); // 0 = yesterday, 1 = -1 day, 2 = -2 days
+  const router = useRouter();
+  const { selectedBaby } = useBaby();
 
-  const { displayDate, mealsForDay, completedMealIds } = useMemo(() => {
-    const today = new Date();
-    const base = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate() - 1, // yesterday
-    );
+  const [activeTab, setActiveTab] = useState<TabType>('accepted');
+  const [acceptedMeals, setAcceptedMeals] = useState<string[]>([]);
+  const [rejectedMeals, setRejectedMeals] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-    const selected = PAST_DAYS[dayIndex];
-    const dateForDay = new Date(
-      base.getFullYear(),
-      base.getMonth(),
-      base.getDate() - selected.offset,
-    );
+  const childId = selectedBaby?._id;
 
-    const displayDate = dateForDay.toLocaleDateString(undefined, {
-      weekday: 'short',
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+  const loadLists = useCallback(async () => {
+    if (!childId) {
+      setAcceptedMeals([]);
+      setRejectedMeals([]);
+      setIsLoading(false);
+      return;
+    }
 
-    const completedMealIds = selected.meals
-      .filter((m) => m.completed)
-      .map((m) => m.id as MealId);
+    try {
+      setIsLoading(true);
+      const [acceptedResponse, rejectedResponse] = await Promise.all([
+        getAcceptedMeals(childId),
+        getRejectedMeals(childId),
+      ]);
 
-    return {
-      displayDate,
-      mealsForDay: selected.meals,
-      completedMealIds,
-    };
-  }, [dayIndex]);
+      setAcceptedMeals(acceptedResponse.meals ?? []);
+      setRejectedMeals(rejectedResponse.meals ?? []);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to load past data.';
+      Alert.alert('Error', message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [childId]);
 
-  const canGoLeft = dayIndex < PAST_DAYS.length - 1;
-  const canGoRight = dayIndex > 0;
+  useEffect(() => {
+    loadLists();
+  }, [loadLists]);
+
+  const visibleItems = useMemo(
+    () => (activeTab === 'accepted' ? acceptedMeals : rejectedMeals),
+    [acceptedMeals, rejectedMeals, activeTab],
+  );
+
+  const handleDeleteItem = async (item: string) => {
+    if (!childId || isDeleting) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      const response = await removeBehavioralItems(childId, activeTab, [item]);
+
+      if (activeTab === 'accepted') {
+        setAcceptedMeals(response.meals ?? []);
+      } else {
+        setRejectedMeals(response.meals ?? []);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to delete item.';
+      Alert.alert('Error', message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
-    <>
-      <SecondaryTopBar />
-      <View style={styles.container}>
-        <View style={styles.dateRow}>
+    <View style={styles.container}>
+      <SecondaryTopBar
+        title="Past Meals"
+        showBackButton
+        onBackPress={() => router.back()}
+      />
+
+      <View style={styles.content}>
+        <View style={styles.tabRow}>
           <TouchableOpacity
-            style={[styles.navButton, !canGoLeft && styles.navButtonDisabled]}
-            disabled={!canGoLeft}
-            onPress={() => {
-              if (canGoLeft) {
-                setDayIndex((prev) => prev + 1);
-              }
-            }}
+            style={[styles.tabButton, activeTab === 'accepted' && styles.tabButtonActive]}
+            onPress={() => setActiveTab('accepted')}
+            activeOpacity={0.8}
           >
-            <Ionicons
-              name="chevron-back"
-              size={20}
-              color={canGoLeft ? Colors.dark : Colors.inactive}
-            />
+            <Text
+              style={[styles.tabText, activeTab === 'accepted' && styles.tabTextActive]}
+            >
+              Accepted Meals
+            </Text>
           </TouchableOpacity>
 
-          <Text style={styles.dateText}>{displayDate}</Text>
-
           <TouchableOpacity
-            style={[styles.navButton, !canGoRight && styles.navButtonDisabled]}
-            disabled={!canGoRight}
-            onPress={() => {
-              if (canGoRight) {
-                setDayIndex((prev) => prev - 1);
-              }
-            }}
+            style={[styles.tabButton, activeTab === 'rejected' && styles.tabButtonActive]}
+            onPress={() => setActiveTab('rejected')}
+            activeOpacity={0.8}
           >
-            <Ionicons
-              name="chevron-forward"
-              size={20}
-              color={canGoRight ? Colors.dark : Colors.inactive}
-            />
+            <Text
+              style={[styles.tabText, activeTab === 'rejected' && styles.tabTextActive]}
+            >
+              Rejected Meals
+            </Text>
           </TouchableOpacity>
         </View>
 
-        <ScrollView
-          style={styles.scroll}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.sectionHeaderRow}>
-            <Text style={styles.sectionTitle}>Meals of the day</Text>
-            <Text style={styles.sectionSubtitle}>Based on your plan</Text>
+        {isLoading ? (
+          <View style={styles.loadingWrap}>
+            <ActivityIndicator size="small" color={Colors.primary.DEFAULT} />
+            <Text style={styles.loadingText}>Loading meals...</Text>
           </View>
-
-          {mealsForDay.map((meal) => (
-            <View key={meal.id} style={styles.mealCard}>
-              <View style={styles.mealHeaderRow}>
-                <Text style={styles.mealLabel}>{meal.label}</Text>
-                <Text style={styles.mealTime}>{meal.timeLabel}</Text>
+        ) : (
+          <FlatList
+            data={visibleItems}
+            keyExtractor={(item, index) => `${item}-${index}`}
+            contentContainerStyle={
+              visibleItems.length === 0 ? styles.emptyListContainer : styles.listContainer
+            }
+            renderItem={({ item }) => (
+              <View style={styles.itemCard}>
+                <Text style={styles.itemText}>{item}</Text>
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => handleDeleteItem(item)}
+                  disabled={isDeleting}
+                  activeOpacity={0.8}
+                >
+                  <Ionicons name="trash-outline" size={18} color={Colors.error} />
+                </TouchableOpacity>
               </View>
-              <Text style={styles.mealGivenTitle}>What was given</Text>
-              <Text style={styles.mealGivenText}>{meal.givenMeal}</Text>
-            </View>
-          ))}
-
-          <View style={styles.nutritionCardWrapper}>
-            <DailyNutritionIntakeCard
-              completedMeals={completedMealIds.length}
-              totalMeals={5}
-              completedMealIds={completedMealIds}
-            />
-          </View>
-        </ScrollView>
+            )}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>
+                No {activeTab} meals found.
+              </Text>
+            }
+          />
+        )}
       </View>
-    </>
+    </View>
   );
 }
 
@@ -260,94 +165,80 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.background,
-    paddingHorizontal: 20,
-    paddingTop: 12,
   },
-  dateRow: {
+  content: {
+    flex: 1,
+    padding: 16,
+  },
+  tabRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 14,
+  },
+  tabButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: Colors.gray.light,
+    alignItems: 'center',
+  },
+  tabButtonActive: {
+    backgroundColor: Colors.primary.DEFAULT,
+  },
+  tabText: {
+    color: Colors.dark,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  tabTextActive: {
+    color: Colors.white,
+  },
+  loadingWrap: {
+    alignItems: 'center',
+    marginTop: 20,
+    gap: 8,
+  },
+  loadingText: {
+    color: Colors.inactive,
+    fontSize: 13,
+  },
+  listContainer: {
+    paddingBottom: 24,
+    gap: 10,
+  },
+  itemCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 12,
   },
-  navButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  itemText: {
+    flex: 1,
+    color: Colors.dark,
+    fontSize: 14,
+    fontWeight: '500',
+    marginRight: 8,
+  },
+  deleteButton: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: Colors.gray.light,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.white,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 3,
-    elevation: 1,
   },
-  navButtonDisabled: {
-    opacity: 0.5,
-  },
-  dateText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.dark,
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 24,
-    gap: 12,
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-  },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.dark,
-  },
-  sectionSubtitle: {
-    fontSize: 12,
-    color: Colors.inactive,
-  },
-  mealCard: {
-    marginTop: 8,
-    borderRadius: 16,
-    backgroundColor: Colors.white,
-    padding: 14,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  mealHeaderRow: {
-    flexDirection: 'row',
+  emptyListContainer: {
+    flexGrow: 1,
     alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
+    justifyContent: 'center',
+    paddingBottom: 40,
   },
-  mealLabel: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: Colors.dark,
-  },
-  mealTime: {
-    fontSize: 13,
+  emptyText: {
+    fontSize: 14,
     color: Colors.inactive,
-  },
-  mealGivenTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Colors.gray.DEFAULT,
-    marginBottom: 2,
-  },
-  mealGivenText: {
-    fontSize: 13,
-    color: Colors.dark,
-  },
-  nutritionCardWrapper: {
-    marginTop: 12,
+    textAlign: 'center',
   },
 });

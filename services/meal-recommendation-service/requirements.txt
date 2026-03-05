@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pandas
+pymongo
+motor
+python-dotenv
+google-genai
+pydantic
+pydantic-settings
