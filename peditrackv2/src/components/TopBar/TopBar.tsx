@@ -1,15 +1,19 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, Image, TouchableOpacity, StatusBar, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
+import { useBaby } from '@/contexts/BabyContext';
+import { getTodayReminders } from '@/services/notificationService';
+import { NotificationsPanel } from '@/components/SecondaryTopBar/NotificationsPanel';
 
 interface TopBarProps {
   username?: string;
   childName?: string;
   profileImage?: string;
   onProfilePress?: () => void;
+  /** Override notification press — defaults to opening in-app panel */
   onNotificationPress?: () => void;
   onChildNamePress?: () => void;
 }
@@ -22,6 +26,26 @@ export const TopBar: React.FC<TopBarProps> = ({
   onNotificationPress,
   onChildNamePress,
 }) => {
+  const { selectedBaby } = useBaby();
+  const [panelVisible, setPanelVisible] = useState(false);
+  const [badgeCount, setBadgeCount] = useState(0);
+
+  const refreshBadge = useCallback(async () => {
+    if (!selectedBaby) return;
+    const { badgeCount: count } = await getTodayReminders(selectedBaby._id);
+    setBadgeCount(count);
+  }, [selectedBaby]);
+
+  useEffect(() => { refreshBadge(); }, [refreshBadge]);
+
+  const handleBellPress = () => {
+    if (onNotificationPress) {
+      onNotificationPress();
+    } else {
+      setPanelVisible(true);
+    }
+  };
+
   return (
     <>
       <StatusBar barStyle="light-content" />
@@ -35,12 +59,9 @@ export const TopBar: React.FC<TopBarProps> = ({
           <View style={styles.container}>
             {/* Left Section - Logo and App Name */}
             <View style={styles.leftSection}>
-              {/* Logo - Replace this emoji with your actual logo image */}
               <View style={styles.logoContainer}>
                 <Text style={styles.logoEmoji}>👣</Text>
               </View>
-              
-              {/* App Name and Tagline */}
               <View style={styles.brandContainer}>
                 <Text style={styles.appName}>PediTrack</Text>
                 <Text style={styles.tagline}>Baby Health Care Tracking App</Text>
@@ -49,14 +70,21 @@ export const TopBar: React.FC<TopBarProps> = ({
 
             {/* Right Section - Notification and Profile */}
             <View style={styles.rightSection}>
-              {/* Notification Bell */}
+              {/* Notification Bell with badge */}
               <TouchableOpacity
-                onPress={onNotificationPress}
+                onPress={handleBellPress}
                 style={styles.notificationButton}
                 accessibilityLabel="Notifications"
                 accessibilityRole="button"
               >
                 <Ionicons name="notifications-outline" size={28} color={Colors.white} />
+                {badgeCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>
+                      {badgeCount > 9 ? '9+' : badgeCount}
+                    </Text>
+                  </View>
+                )}
               </TouchableOpacity>
 
               {/* Profile Picture */}
@@ -84,7 +112,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           {/* Bottom Section - Greeting */}
           <View style={styles.greetingSection}>
             <Text style={styles.greeting}>Hello {username || 'User'}!</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.childNameRow}
               onPress={onChildNamePress}
               activeOpacity={0.7}
@@ -95,6 +123,12 @@ export const TopBar: React.FC<TopBarProps> = ({
           </View>
         </SafeAreaView>
       </LinearGradient>
+
+      {/* Notifications panel */}
+      <NotificationsPanel
+        visible={panelVisible}
+        onClose={() => { setPanelVisible(false); refreshBadge(); }}
+      />
     </>
   );
 };
@@ -178,6 +212,26 @@ const styles = StyleSheet.create({
     height: 44,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  // Red badge dot
+  badge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    minWidth: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 3,
+    borderWidth: 1.5,
+    borderColor: Colors.primary.DEFAULT,
+  },
+  badgeText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#fff',
   },
   profileButton: {
     width: 52,
