@@ -130,7 +130,7 @@ export const AnimatedRobot: React.FC<AnimatedRobotProps> = ({ state, size = 180 
             {/* Main body - capsule shape like Minion */}
             <View style={styles.bodyWrapper}>
                 <LinearGradient
-                    colors={colors.body}
+                    colors={colors.body as [string, string, ...string[]]}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 0, y: 1 }}
                     style={styles.bodyGradient}

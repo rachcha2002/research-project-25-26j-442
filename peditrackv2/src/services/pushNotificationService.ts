@@ -1,7 +1,7 @@
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
-import { Medication } from './healthAnalyticsService';
+import { Medication, Vaccination } from './healthAnalyticsService';
 
 /**
  * Configure how notifications appear when the app is in the foreground.
@@ -114,5 +114,73 @@ export const scheduleMedicationReminders = async (medication: Medication) => {
     } catch (err) {
       console.error(`[Push] Error scheduling ${notificationId}:`, err);
     }
+  }
+};
+
+/**
+ * Cancel previously scheduled notification for a given vaccination.
+ */
+export const cancelVaccinationReminder = async (vaccinationId: string) => {
+  const notificationId = `vac_${vaccinationId}`;
+  try {
+    await Notifications.cancelScheduledNotificationAsync(notificationId);
+    console.log(`[Push] Cancelled vaccine reminder: ${notificationId}`);
+  } catch (err) {
+    console.log(`[Push] Failed to cancel vaccine reminder ${notificationId}:`, err);
+  }
+};
+
+/**
+ * Schedule a one-time push notification for 9:00 AM on the date of a scheduled vaccination.
+ */
+export const scheduleVaccinationReminder = async (vaccination: Vaccination) => {
+  // Only schedule if the status is strictly 'scheduled' and we have an ID + date
+  // Also skip if reminderEnabled is explicitly set to false
+  if (vaccination.status !== 'scheduled' || !vaccination._id || !vaccination.scheduledDate || vaccination.reminderEnabled === false) {
+    return;
+  }
+
+  const scheduledDate = new Date(vaccination.scheduledDate);
+  const now = new Date();
+  const offsetDays = vaccination.reminderOffsetDays ?? 1; // Default to 1 day before if not set
+
+  // Set the reminder time exactly to 9:00 AM on that date, minus offset days
+  const reminderDate = new Date(scheduledDate);
+  reminderDate.setDate(reminderDate.getDate() - offsetDays);
+  reminderDate.setHours(9, 0, 0, 0);
+
+  // If the reminder date is already in the past, do not schedule
+  if (reminderDate <= now) {
+    console.log(`[Push] Vaccine reminder for ${reminderDate.toISOString()} is in the past, skipping.`);
+    return;
+  }
+
+  // Format human-readable string for the message body
+  let dayString = 'today';
+  if (offsetDays === 1) dayString = 'tomorrow';
+  else if (offsetDays > 1) dayString = `in ${offsetDays} days`;
+
+  const hasPermission = await requestPushPermissionsAsync();
+  if (!hasPermission) return;
+
+  const notificationId = `vac_${vaccination._id}`;
+
+  try {
+    await Notifications.scheduleNotificationAsync({
+      identifier: notificationId,
+      content: {
+        title: `Vaccination Reminder: ${vaccination.vaccineName}`,
+        body: `Due ${dayString}! (Dose ${vaccination.doseNumber} of ${vaccination.totalDoses})`,
+        data: { vaccinationId: vaccination._id, type: 'vaccination_reminder' },
+        sound: true,
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
+        date: reminderDate,
+      } as Notifications.NotificationTriggerInput,
+    });
+    console.log(`[Push] Scheduled vaccine reminder ${notificationId} for ${reminderDate.toLocaleString()}`);
+  } catch (err) {
+    console.error(`[Push] Error scheduling vaccine reminder ${notificationId}:`, err);
   }
 };

@@ -1,0 +1,20 @@
+﻿src/components/AnimatedRobot.tsx(133,21): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: LinearGradientProps): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+  Overload 2 of 2, '(props: LinearGradientProps, context: any): LinearGradient', gave the following error.
+    Type 'string[]' is not assignable to type 'readonly [ColorValue, ColorValue, ...ColorValue[]]'.
+      Source provides no match for required element at position 0 in target.
+src/components/BottomNav/TabBarIcon.tsx(20,35): error TS2503: Cannot find namespace 'JSX'.
+src/hooks/useHealthAnalytics.ts(82,43): error TS2339: Property 'updateSymptom' does not exist on type 'typeof import("D:/Research Project/Repors/research-project-development/peditrackv2/src/services/healthAnalyticsService")'.
+src/hooks/useHealthAnalytics.ts(84,43): error TS2339: Property 'deleteSymptom' does not exist on type 'typeof import("D:/Research Project/Repors/research-project-development/peditrackv2/src/services/healthAnalyticsService")'.
+src/hooks/useHealthAnalytics.ts(86,52): error TS2339: Property 'getSymptomsByCondition' does not exist on type 'typeof import("D:/Research Project/Repors/research-project-development/peditrackv2/src/services/healthAnalyticsService")'.
+src/hooks/useHealthAnalytics.ts(118,30): error TS2551: Property 'getVaccinationSchedule' does not exist on type 'typeof import("D:/Research Project/Repors/research-project-development/peditrackv2/src/services/healthAnalyticsService")'. Did you mean 'getVaccinations'?
+src/hooks/useHealthAnalytics.ts(121,30): error TS2551: Property 'getUpcomingVaccinations' does not exist on type 'typeof import("D:/Research Project/Repors/research-project-development/peditrackv2/src/services/healthAnalyticsService")'. Did you mean 'getUpcomingVaccines'?
+src/screens/HealthAnalytics/SleepScreens/SleepTrackerScreen.tsx(57,11): error TS2367: This comparison appears to be unintentional because the types '"sleepsWell" | "wakes1-2times" | "wakesFrequently" | "difficultyFallingAsleep" | "restless"' and '"fair"' have no overlap.
+src/screens/HealthAnalytics/SleepScreens/SleepTrackerScreen.tsx(58,11): error TS2367: This comparison appears to be unintentional because the types '"sleepsWell" | "wakes1-2times" | "wakesFrequently" | "difficultyFallingAsleep" | "restless"' and '"poor"' have no overlap.
+src/screens/HealthAnalytics/SleepScreens/SleepTrackerScreen.tsx(79,18): error TS2345: Argument of type '"sleepsWell" | "wakes1-2times" | "wakesFrequently" | "difficultyFallingAsleep" | "restless"' is not assignable to parameter of type 'SetStateAction<"good" | "fair" | "poor">'.
+  Type '"sleepsWell"' is not assignable to type 'SetStateAction<"good" | "fair" | "poor">'.
+src/screens/HealthAnalytics/SleepScreens/SleepTrackerScreen.tsx(100,9): error TS2322: Type '"good" | "fair" | "poor"' is not assignable to type '"sleepsWell" | "wakes1-2times" | "wakesFrequently" | "difficultyFallingAsleep" | "restless" | undefined'.
+  Type '"good"' is not assignable to type '"sleepsWell" | "wakes1-2times" | "wakesFrequently" | "difficultyFallingAsleep" | "restless" | undefined'.
+src/screens/RiskAssesment/TeleconsultationScreen.tsx(59,5): error TS2322: Type 'number' is not assignable to type 'Timeout'.

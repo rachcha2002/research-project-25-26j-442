@@ -7,6 +7,7 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { getVaccinations, deleteVaccination, Vaccination } from '@/services/healthAnalyticsService';
 import { useBaby } from '@/contexts/BabyContext';
+import { cancelVaccinationReminder } from '@/services/pushNotificationService';
 
 type TabType = 'all' | 'completed' | 'scheduled' | 'overdue';
 
@@ -58,9 +59,11 @@ export const VaccinationsListScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             try {
+              setLoading(true);
               await deleteVaccination(vaccinationId);
-              Alert.alert('Success', 'Vaccination deleted successfully');
-              loadVaccinations();
+              // Cancel any scheduled push notifications
+              await cancelVaccinationReminder(vaccinationId);
+              await loadVaccinations();
             } catch (error) {
               Alert.alert('Error', 'Failed to delete vaccination');
             }
