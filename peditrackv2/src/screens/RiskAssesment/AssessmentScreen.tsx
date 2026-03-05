@@ -14,6 +14,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { SecondaryTopBar } from "@/components/SecondaryTopBar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useBaby } from "@/contexts/BabyContext";
 
 const Colors = {
   background: "#FAFAFF",
@@ -36,11 +38,25 @@ type Symptom = {
 
 export const EmergencyAssessmentScreen: React.FC = () => {
   const router = useRouter();
+  const { user } = useAuth();
+  const { selectedBaby } = useBaby();
 
-  // Demographics (mock data for now, fetched from profile in future)
-  const childName = "Thisal";
-  const ageMonths = "24";
-  const weightKg = "12.5";
+  const calculateAgeMonths = (dateOfBirth?: string): number | null => {
+    if (!dateOfBirth) return null;
+    const birthDate = new Date(dateOfBirth);
+    if (Number.isNaN(birthDate.getTime())) return null;
+
+    const now = new Date();
+    const yearsDiff = now.getFullYear() - birthDate.getFullYear();
+    const monthsDiff = now.getMonth() - birthDate.getMonth();
+    const dayAdjustment = now.getDate() < birthDate.getDate() ? -1 : 0;
+
+    return Math.max(0, yearsDiff * 12 + monthsDiff + dayAdjustment);
+  };
+
+  const childName = selectedBaby?.name || "";
+  const ageMonths = calculateAgeMonths(selectedBaby?.dateOfBirth);
+  const weightKg = selectedBaby?.birthWeight ?? null;
 
   // Vitals (ED-PEWS)
   const [temperature, setTemperature] = useState(""); 
@@ -158,6 +174,11 @@ export const EmergencyAssessmentScreen: React.FC = () => {
 
   // Basic validation & submit
   const handleSubmit = async () => {
+    if (!selectedBaby) {
+      Alert.alert("No baby profile", "Please select or create a baby profile first.");
+      return;
+    }
+
     // Basic required fields: age or name, at least one symptom or vitals
     if (!ageMonths && !childName) {
       Alert.alert("Missing info", "Please enter child's age (months) or name.");
@@ -175,10 +196,11 @@ export const EmergencyAssessmentScreen: React.FC = () => {
     const hasImmediateFlag = dangerSigns.length > 0 || avpu === "Unresponsive" || selectedSymptoms.some(s=>s.key==="seizure");
 
     const payload = {
+      userId: user?._id || null,
       child: {
         name: childName || null,
-        age_months: ageMonths ? Number(ageMonths) : null,
-        weight_kg: weightKg ? Number(weightKg) : null,
+        age_months: ageMonths,
+        weight_kg: weightKg,
       },
       vitals: {
         temperature_c: temperature ? Number(temperature) : null,
@@ -213,16 +235,16 @@ export const EmergencyAssessmentScreen: React.FC = () => {
 
     try {
       const result = await submitAssessment(payload);
-      // Navigate directly to result screen (ResultScreen will display the result)
+      // Navigate directly to result screen
       router.push({
-        pathname: "/assessment-result" as any,
+        pathname: "/emergency-response/assessment-result",
         params: { result: JSON.stringify(result) },
       });
     } catch (err) {
       console.warn("submit error", err);
       // For development, navigate to result screen with simulated result
       router.push({
-        pathname: "/assessment-result" as any,
+        pathname: "/emergency-response/assessment-result",
         params: { result: JSON.stringify({ risk: "medium", payload }) },
       });
     }
@@ -250,8 +272,8 @@ export const EmergencyAssessmentScreen: React.FC = () => {
             <Ionicons name="person-circle" size={44} color={Colors.primary} style={{ marginRight: 14 }} />
             <View>
               <Text style={styles.profileName}>{childName}</Text>
-              <Text style={styles.profileDetails}>Age: {ageMonths} months</Text>
-              <Text style={styles.profileDetails}>Weight: {weightKg} kg</Text>
+              <Text style={styles.profileDetails}>Age: {ageMonths ?? '-'} months</Text>
+              <Text style={styles.profileDetails}>Weight: {weightKg ?? '-'} kg</Text>
             </View>
           </View>
         </View>
@@ -262,6 +284,7 @@ export const EmergencyAssessmentScreen: React.FC = () => {
             <Ionicons name="pulse" size={20} color={Colors.danger} style={{ marginRight: 8 }} />
             <Text style={[styles.cardTitle, { color: Colors.danger }]}>Vital Signs</Text>
           </View>
+          <Text style={{ color: Colors.inactive, marginBottom: 6 }}>Temperature (°C)               SpO₂ (%) (optional)</Text>
           <View style={styles.row}>
             <TextInput
               style={[styles.input, { flex: 1, marginRight: 8 }]}
@@ -278,6 +301,7 @@ export const EmergencyAssessmentScreen: React.FC = () => {
               onChangeText={setSpo2}
             />
           </View>
+           <Text style={{ color: Colors.inactive, marginBottom: 6 }}>Heart rate (bpm)               Resp. rate (bpm)</Text>
           <View style={styles.row}>
             <TextInput
               style={[styles.input, { flex: 1, marginRight: 8 }]}
@@ -308,21 +332,6 @@ export const EmergencyAssessmentScreen: React.FC = () => {
                   </TouchableOpacity>
                 ))}
               </View>
-            </View>
-          </View>
-          {/* Pain */}
-          <View style={{ marginTop: 12 }}>
-            <Text style={{ color: Colors.inactive, marginBottom: 6 }}>Pain (0–10)</Text>
-            <View style={{ flexDirection: "row", justifyContent: "space-between", paddingHorizontal: 6 }}>
-              {Array.from({ length: 11 }).map((_, i) => (
-                <TouchableOpacity
-                  key={i}
-                  onPress={() => setPain(i)}
-                  style={[styles.painBtn, pain === i && { backgroundColor: Colors.primary }]}
-                >
-                  <Text style={{ color: pain === i ? "#fff" : Colors.dark }}>{i}</Text>
-                </TouchableOpacity>
-              ))}
             </View>
           </View>
         </View>

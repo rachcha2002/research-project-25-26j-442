@@ -218,7 +218,7 @@ export const HomeScreen: React.FC = () => {
             {/* Emergency Response */}
              <TouchableOpacity 
              style={[styles.actionCard, styles.card, styles.actionCardLeft]}
-             onPress={() => router.push ('/emergency-response')}
+             onPress={() => router.push('/emergency-response/emergency-response')}
              activeOpacity={0.8}
              >
            <View style={styles.actionIcon}>

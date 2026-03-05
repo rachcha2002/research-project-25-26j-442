@@ -27,8 +27,18 @@ const priorityExpression = {
 exports.getRequestById = async (req, res) => {
   try {
     const { id } = req.params;
+    const actorId = String(req.userId || '');
     const request = await TeleconsultationRequest.findById(id);
     if (!request) return res.status(404).json({ error: 'Request not found' });
+
+    const isParticipant =
+      (request.patient?.userId && String(request.patient.userId) === actorId) ||
+      (request.doctorId && String(request.doctorId) === actorId);
+
+    if (!isParticipant) {
+      return res.status(403).json({ error: 'Forbidden: cannot access this request' });
+    }
+
     res.json(request);
   } catch (err) {
     console.error('Get teleconsultation request by id error:', err);
@@ -40,8 +50,17 @@ exports.getRequestById = async (req, res) => {
 exports.getQueuePosition = async (req, res) => {
   try {
     const { id } = req.params;
+    const actorId = String(req.userId || '');
     const request = await TeleconsultationRequest.findById(id);
     if (!request) return res.status(404).json({ error: 'Request not found' });
+
+    const isParticipant =
+      (request.patient?.userId && String(request.patient.userId) === actorId) ||
+      (request.doctorId && String(request.doctorId) === actorId);
+
+    if (!isParticipant) {
+      return res.status(403).json({ error: 'Forbidden: cannot access queue position for this request' });
+    }
 
     const requestPriority = request.risk_priority ?? RISK_PRIORITY[request.risk_level] ?? 0;
 

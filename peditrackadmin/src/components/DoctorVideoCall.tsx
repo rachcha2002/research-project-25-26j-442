@@ -11,6 +11,7 @@ export default function DoctorVideoCall() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [ending, setEnding] = React.useState(false);
+  const [connectionStatus, setConnectionStatus] = React.useState<'connecting' | 'connected' | 'disconnected'>('connecting');
   const endedRef = React.useRef(false);
 
   const token = params.get('token') || '';
@@ -55,7 +56,14 @@ export default function DoctorVideoCall() {
   }
 
   return (
-    <div style={{ minHeight: 'calc(100vh - 64px)', background: '#0f172a', padding: 16 }}>
+    <div  
+      style={{
+       height: "calc(100vh - 64px)",
+       background: "#0f172a",
+       padding: 16,
+       display: "flex",
+       flexDirection: "column",
+      }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <h2 style={{ color: '#fff', margin: 0 }}>Consultation Room</h2>
         <Button danger onClick={endCall} disabled={ending}>
@@ -63,18 +71,35 @@ export default function DoctorVideoCall() {
         </Button>
       </div>
 
+      {connectionStatus !== 'connected' && (
+        <Alert
+          type={connectionStatus === 'disconnected' ? 'warning' : 'info'}
+          showIcon
+          style={{ marginBottom: 12 }}
+          message={connectionStatus === 'disconnected' ? 'Connection lost' : 'Connecting to consultation room...'}
+          description={
+            connectionStatus === 'disconnected'
+              ? 'The request is still active. You can stay on this screen and reconnect, or return to queue and rejoin.'
+              : 'Waiting to establish secure video connection.'
+          }
+        />
+      )}
+
       <LiveKitRoom
         token={token}
         serverUrl={serverUrl}
         connect={true}
         video={true}
         audio={true}
-        onDisconnected={() => {
-          endCall();
+        onConnected={() => {
+          setConnectionStatus('connected');
         }}
-        style={{ height: 'calc(100vh - 140px)' }}
+        onDisconnected={() => {
+          setConnectionStatus('disconnected');
+        }}
+        style={{ flex: 1, display: "flex" }}
       >
-        <VideoConference />
+        <VideoConference style={{ flex: 1 }} />
       </LiveKitRoom>
     </div>
   );

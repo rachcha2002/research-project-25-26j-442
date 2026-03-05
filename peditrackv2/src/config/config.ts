@@ -9,7 +9,7 @@
 // For Physical Device: use your computer's IP address
 
 // Get your computer's IP by running 'ipconfig' (Windows) or 'ifconfig' (Mac/Linux)
-const COMPUTER_IP = '192.168.1.179'; // Update this with your actual IP
+const COMPUTER_IP = '172.20.10.2'; // Update this with your actual IP
 
 // Detect if running in Expo Go vs production
 const __DEV__ = process.env.NODE_ENV !== 'production';
@@ -24,6 +24,16 @@ export const API_CONFIG = {
   HEALTH_SERVICE_URL: __DEV__
     ? `http://${COMPUTER_IP}:5001/api`
     : 'https://your-production-health-service.com/api',
+
+  // Risk Assessment Service API (port 4000)
+  RISK_ASSESSMENT_URL: __DEV__
+    ? `http://${COMPUTER_IP}:4000/api`
+    : 'https://your-production-risk-assessment.com/api',
+
+  // Places Proxy API (port 4002)
+  PLACES_PROXY_URL: __DEV__
+    ? `http://${COMPUTER_IP}:4002/api`
+    : 'https://your-production-places-proxy.com/api',
   
   // Request timeout in milliseconds
   REQUEST_TIMEOUT: 30000,

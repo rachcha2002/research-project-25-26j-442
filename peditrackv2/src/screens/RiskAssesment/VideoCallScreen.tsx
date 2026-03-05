@@ -1,24 +1,43 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, TextInput, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { Track } from 'livekit-client';
-import { completeTeleconsultationRequest } from '@/services/teleconsultationService';
+import {
+  completeTeleconsultationRequest,
+  getDoctorPublicProfile,
+  getTeleconsultationRequest,
+} from '@/services/teleconsultationService';
 import {
   LiveKitRoom,
   VideoTrack,
   registerGlobals,
   useTracks,
+  useChat,
 } from '@livekit/react-native';
 
 registerGlobals();
 
 const DEFAULT_LIVEKIT_URL = process.env.EXPO_PUBLIC_LIVEKIT_URL || '';
 
-const VideoTiles: React.FC = () => {
+const VideoTiles: React.FC<{ onRemoteNameChange: (name: string | null) => void }> = ({ onRemoteNameChange }) => {
   const cameraTracks = useTracks([Track.Source.Camera], { onlySubscribed: false });
   const remoteTrack = cameraTracks.find((trackRef) => !trackRef.participant.isLocal);
   const localTrack = cameraTracks.find((trackRef) => trackRef.participant.isLocal);
+
+  React.useEffect(() => {
+    if (!remoteTrack) {
+      onRemoteNameChange(null);
+      return;
+    }
+
+    const remoteName =
+      remoteTrack.participant.name ||
+      remoteTrack.participant.identity ||
+      null;
+
+    onRemoteNameChange(remoteName);
+  }, [remoteTrack, onRemoteNameChange]);
 
   return (
     <View style={styles.videoArea}>
@@ -43,6 +62,79 @@ const VideoTiles: React.FC = () => {
   );
 };
 
+const InCallChat: React.FC<{ onEndCall: () => void }> = ({ onEndCall }) => {
+  const { chatMessages, send, isSending } = useChat();
+  const [chatOpen, setChatOpen] = React.useState(false);
+  const [draft, setDraft] = React.useState('');
+
+  const handleSend = React.useCallback(async () => {
+    const message = draft.trim();
+    if (!message || isSending) return;
+
+    try {
+      await send(message);
+      setDraft('');
+    } catch (err) {
+      Alert.alert('Send failed', 'Unable to send chat message right now.');
+    }
+  }, [draft, isSending, send]);
+
+  return (
+    <>
+      {chatOpen && (
+        <View style={styles.chatPanel}>
+          <Text style={styles.chatTitle}>In-call Chat</Text>
+          <ScrollView style={styles.chatList} contentContainerStyle={{ paddingBottom: 6 }}>
+            {chatMessages.length === 0 ? (
+              <Text style={styles.chatEmpty}>No messages yet</Text>
+            ) : (
+              chatMessages.slice(-20).map((message, index) => {
+                const fromMe = message.from?.isLocal;
+                return (
+                  <View
+                    key={`${message.timestamp}-${index}`}
+                    style={[styles.chatBubble, fromMe ? styles.chatBubbleMine : styles.chatBubbleOther]}
+                  >
+                    <Text style={styles.chatSender}>{fromMe ? 'You' : message.from?.name || message.from?.identity || 'Doctor'}</Text>
+                    <Text style={styles.chatText}>{message.message}</Text>
+                  </View>
+                );
+              })
+            )}
+          </ScrollView>
+
+          <View style={styles.chatInputRow}>
+            <TextInput
+              style={styles.chatInput}
+              value={draft}
+              onChangeText={setDraft}
+              placeholder="Type a message"
+              placeholderTextColor="#94A3B8"
+              editable={!isSending}
+            />
+            <TouchableOpacity
+              style={[styles.chatSendBtn, (!draft.trim() || isSending) && { opacity: 0.6 }]}
+              onPress={handleSend}
+              disabled={!draft.trim() || isSending}
+            >
+              <Text style={styles.chatSendText}>{isSending ? '...' : 'Send'}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
+
+      <View style={styles.controls}>
+        <TouchableOpacity style={styles.controlBtn} onPress={() => setChatOpen((prev) => !prev)}>
+          <Ionicons name={chatOpen ? 'chatbubble' : 'chatbubble-outline'} size={24} color="#fff" />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.controlEndBtn} onPress={onEndCall}>
+          <Ionicons name="call" size={24} color="#fff" />
+        </TouchableOpacity>
+      </View>
+    </>
+  );
+};
+
 export const VideoCallScreen: React.FC = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{
@@ -57,6 +149,9 @@ export const VideoCallScreen: React.FC = () => {
   const roomName = params.roomName;
   const serverUrl = params.serverUrl || DEFAULT_LIVEKIT_URL;
   const requestId = params.requestId;
+  const [doctorDisplayName, setDoctorDisplayName] = React.useState<string | null>(null);
+  const [doctorSpecialization, setDoctorSpecialization] = React.useState<string | null>(null);
+  const [remoteDisplayName, setRemoteDisplayName] = React.useState<string | null>(null);
 
   const completedRef = React.useRef(false);
 
@@ -81,6 +176,40 @@ export const VideoCallScreen: React.FC = () => {
       ]);
     }
   }, [canConnect, router]);
+
+  React.useEffect(() => {
+    let active = true;
+
+    if (!requestId) {
+      return () => {
+        active = false;
+      };
+    }
+
+    (async () => {
+      try {
+        const consultation = await getTeleconsultationRequest(requestId);
+        if (!consultation?.doctorId) return;
+
+        const doctor = await getDoctorPublicProfile(consultation.doctorId);
+        if (!doctor || !active) return;
+
+        const fullName = [doctor.first_name, doctor.last_name].filter(Boolean).join(' ').trim();
+        if (fullName) {
+          setDoctorDisplayName(fullName);
+        }
+        if (doctor.specialization) {
+          setDoctorSpecialization(doctor.specialization);
+        }
+      } catch (error) {
+        // fallback to remote participant identity/name
+      }
+    })();
+
+    return () => {
+      active = false;
+    };
+  }, [requestId]);
 
   if (!canConnect) {
     return (
@@ -108,27 +237,19 @@ export const VideoCallScreen: React.FC = () => {
     >
       <View style={styles.container}>
         <View style={styles.topBar}>
-          <Text style={styles.title}>Video Call</Text>
-          <TouchableOpacity onPress={() => handleEndCall()} style={styles.endCallBtn}>
-            <Text style={styles.endCallText}>End</Text>
-          </TouchableOpacity>
         </View>
 
-        <VideoTiles />
+        <VideoTiles onRemoteNameChange={setRemoteDisplayName} />
 
         <View style={styles.doctorInfoOverlay}>
-          <Text style={styles.doctorName}>Consultation Room</Text>
+          <Text style={styles.doctorName}>Dr. {doctorDisplayName || remoteDisplayName || 'Doctor'}</Text>
+          {!!doctorSpecialization && (
+            <Text style={styles.doctorSpecialization}>{doctorSpecialization}</Text>
+          )}
           <Text style={styles.status}>Connected</Text>
         </View>
 
-        <View style={styles.controls}>
-          <TouchableOpacity style={styles.controlBtn} onPress={() => handleEndCall()}>
-            <Ionicons name="call" size={24} color="#fff" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.controlBtnMuted} onPress={() => handleEndCall()}>
-            <Ionicons name="call" size={24} color="#fff" />
-          </TouchableOpacity>
-        </View>
+        <InCallChat onEndCall={handleEndCall} />
       </View>
     </LiveKitRoom>
   );
@@ -198,8 +319,8 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   localVideo: {
-    width: 90,
-    height: 120,
+    width: 130,
+    height: 180,
     backgroundColor: '#6366F1',
     borderRadius: 12,
     justifyContent: 'center',
@@ -236,6 +357,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 16,
   },
+  doctorSpecialization: {
+    color: '#CBD5E1',
+    fontSize: 12,
+    marginTop: 2,
+  },
   status: {
     color: '#16A34A',
     fontWeight: '700',
@@ -256,12 +382,92 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
     elevation: 2,
   },
-  controlBtnMuted: {
+  controlEndBtn: {
     backgroundColor: '#DC2626',
     borderRadius: 32,
     padding: 16,
     marginHorizontal: 10,
     elevation: 2,
+  },
+  chatPanel: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 96,
+    maxHeight: '40%',
+    backgroundColor: 'rgba(15, 23, 42, 0.95)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+    padding: 10,
+  },
+  chatTitle: {
+    color: '#E2E8F0',
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  chatList: {
+    maxHeight: 180,
+    marginBottom: 8,
+  },
+  chatEmpty: {
+    color: '#94A3B8',
+    fontSize: 12,
+    textAlign: 'center',
+    paddingVertical: 12,
+  },
+  chatBubble: {
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+    marginBottom: 6,
+  },
+  chatBubbleMine: {
+    backgroundColor: '#1E3A8A',
+    alignSelf: 'flex-end',
+    maxWidth: '85%',
+  },
+  chatBubbleOther: {
+    backgroundColor: '#334155',
+    alignSelf: 'flex-start',
+    maxWidth: '85%',
+  },
+  chatSender: {
+    color: '#BFDBFE',
+    fontSize: 11,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  chatText: {
+    color: '#fff',
+    fontSize: 13,
+  },
+  chatInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  chatInput: {
+    flex: 1,
+    backgroundColor: '#0F172A',
+    borderWidth: 1,
+    borderColor: '#475569',
+    color: '#fff',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginRight: 8,
+    fontSize: 13,
+  },
+  chatSendBtn: {
+    backgroundColor: '#6366F1',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+  },
+  chatSendText: {
+    color: '#fff',
+    fontWeight: '700',
+    fontSize: 13,
   },
 });
 

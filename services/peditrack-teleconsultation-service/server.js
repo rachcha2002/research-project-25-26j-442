@@ -8,14 +8,26 @@ const teleconsultationRoutes = require('./routes/teleconsultationRoutes');
 
 const app = express();
 const port = process.env.PORT || 4001;
+global.sharedMongoose = mongoose;
+
+mongoose.set('bufferCommands', false);
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log('MongoDB connected'))
-.catch((err) => console.error('MongoDB connection error:', err));
+const startServer = async () => {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('MongoDB connected');
+
+    app.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    process.exit(1);
+  }
+};
 
 // Routes
 app.get('/', (req, res) => {
@@ -24,6 +36,4 @@ app.get('/', (req, res) => {
 
 app.use('/api/teleconsultation', teleconsultationRoutes);
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+startServer();

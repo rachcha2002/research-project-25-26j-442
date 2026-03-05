@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const AssessmentSchema = new mongoose.Schema({
+  userId: { type: String, default: null, index: true },
   child: {
     name: { type: String, default: null },
     age_months: { type: Number, default: null },

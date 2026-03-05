@@ -2,16 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Card, Button, Input, Tag, Row, Col, Avatar, Space, Spin, Alert, message, Drawer, Descriptions } from 'antd';
 import { VideoCameraOutlined, UserOutlined, ExclamationCircleOutlined, CheckCircleOutlined, ClockCircleOutlined, TeamOutlined, FileTextOutlined } from '@ant-design/icons';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import {
   acceptTeleconsultationRequest,
   getDoctorActiveRequest,
   getPendingQueue,
+  getTodayTeleconsultationStats,
   getVideoToken,
   type TeleconsultationRequest,
 } from '../services/teleconsultationService';
 
-const DUMMY_DOCTOR_ID = 'doctor-demo-1';
 type RiskFilter = 'all' | 'high' | 'medium' | 'low';
 type SortMode = 'priority' | 'longest-wait' | 'newest';
 
@@ -63,7 +64,9 @@ const statusTag = (riskLevel: string, isDark: boolean) => {
 const DoctorDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { theme } = useTheme();
+  const { doctor } = useAuth();
   const isDark = theme === 'dark';
+  const doctorId = doctor?.doctor_id;
   const [queue, setQueue] = useState<TeleconsultationRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [claimingRequestId, setClaimingRequestId] = useState<string | null>(null);
@@ -73,6 +76,7 @@ const DoctorDashboard: React.FC = () => {
   const [apiMessage, contextHolder] = message.useMessage();
   const [activeRequest, setActiveRequest] = useState<TeleconsultationRequest | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<TeleconsultationRequest | null>(null);
+  const [completedTodayCount, setCompletedTodayCount] = useState<number>(0);
 
   const palette = {
     pageBg: isDark ? '#111827' : '#f8fafc',
@@ -93,6 +97,13 @@ const DoctorDashboard: React.FC = () => {
     ? Math.round(queue.reduce((acc, item) => acc + getWaitMinutes(item.requestedAt), 0) / queue.length)
     : 0;
 
+  const formatMinutesAsHourMinute = (minutes: number) => {
+    const total = Math.max(0, minutes);
+    const hours = Math.floor(total / 60);
+    const mins = total % 60;
+    return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`;
+  };
+
   const summaryData = [
     {
       label: 'Patients in Queue',
@@ -108,13 +119,13 @@ const DoctorDashboard: React.FC = () => {
     },
     {
       label: 'Avg Wait Time',
-      value: `${averageWaitMinutes}m`,
+      value: formatMinutesAsHourMinute(averageWaitMinutes),
       icon: <ClockCircleOutlined style={{ fontSize: 28, color: '#f59e42' }} />,
       bg: isDark ? '#451a0366' : '#fffaf3',
     },
     {
       label: 'Completed Today',
-      value: '-',
+      value: completedTodayCount,
       icon: <CheckCircleOutlined style={{ fontSize: 28, color: '#22c55e' }} />,
       bg: isDark ? '#052e1666' : '#f3fdf6',
     },
@@ -125,7 +136,7 @@ const DoctorDashboard: React.FC = () => {
       throw new Error('Video room is missing for accepted request');
     }
 
-    const { token, url } = await getVideoToken(DUMMY_DOCTOR_ID, request.videoRoom);
+    const { token, url } = await getVideoToken(request.videoRoom);
     navigate(
       `/consultation/call?token=${encodeURIComponent(token)}&roomName=${encodeURIComponent(
         request.videoRoom
@@ -135,12 +146,32 @@ const DoctorDashboard: React.FC = () => {
 
   const refreshQueue = async (silent = false) => {
     try {
-      const [pendingQueue, active] = await Promise.all([
+      const [queueResult, statsResult] = await Promise.allSettled([
         getPendingQueue(),
-        getDoctorActiveRequest(DUMMY_DOCTOR_ID),
+        getTodayTeleconsultationStats(),
       ]);
-      setQueue(pendingQueue);
-      setActiveRequest(active);
+
+      if (queueResult.status === 'fulfilled') {
+        setQueue(queueResult.value);
+      } else {
+        throw queueResult.reason;
+      }
+
+      if (statsResult.status === 'fulfilled') {
+        setCompletedTodayCount(statsResult.value.completedToday ?? 0);
+      }
+
+      if (!doctorId) {
+        setActiveRequest(null);
+        return;
+      }
+
+      try {
+        const active = await getDoctorActiveRequest(doctorId);
+        setActiveRequest(active);
+      } catch {
+        setActiveRequest(null);
+      }
     } catch (error) {
       if (!silent) {
         apiMessage.error('Failed to fetch teleconsultation queue');
@@ -157,14 +188,14 @@ const DoctorDashboard: React.FC = () => {
     }, 7000);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [doctorId]);
 
   const handleConnect = async (request: TeleconsultationRequest) => {
     if (claimingRequestId) return;
     setClaimingRequestId(request._id);
 
     try {
-      const accepted = await acceptTeleconsultationRequest(request._id, DUMMY_DOCTOR_ID);
+      const accepted = await acceptTeleconsultationRequest(request._id);
       await openCall(accepted);
     } catch (error: any) {
       if (error?.status === 409) {

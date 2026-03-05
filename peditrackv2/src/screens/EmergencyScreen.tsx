@@ -4,45 +4,134 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { router } from 'expo-router';
-import { TopBar } from '@/components/TopBar';
+import { SecondaryTopBar } from "@/components/SecondaryTopBar";
+import { getMyTeleconsultationRequests } from '@/services/teleconsultationService';
+import { getAssessments } from '@/services/riskAssessmentService';
+import { useAuth } from '@/contexts/AuthContext';
 
-export const LocationScreen: React.FC = () => {
-  // Dummy recent activity data
+type RecentActivityItem = {
+  type: 'Assessment' | 'Teleconsultation';
+  date: string;
+  summary: string;
+  timestamp: number;
+  requestId?: string;
+  assessmentId?: string;
+};
 
-  const childName = "Thisal";
-  const childAge = 1.2; // in years
-  const childWeight = 3; // in kg
+const formatActivityDate = (isoDate?: string) => {
+  if (!isoDate) return '-';
+  const parsed = new Date(isoDate);
+  if (Number.isNaN(parsed.getTime())) return '-';
+  return parsed.toLocaleDateString('en-CA');
+};
 
-  const recentActivity = [
-    { type: 'Assessment', date: '2025-12-23', summary: 'Moderate risk, home care advised' },
-    { type: 'Teleconsultation', date: '2025-12-20', summary: 'Consulted Dr. Smith' },
-  ];
+const teleStatusText = (status: string) => {
+  if (status === 'accepted') return 'Accepted by doctor';
+  if (status === 'completed') return 'Consultation completed';
+  if (status === 'cancelled') return 'Consultation cancelled';
+  return 'Pending doctor response';
+};
 
-  const handleEmergencyCall = () => {
-    const phone = '119'; 
-    Linking.openURL(`tel:${phone}`).catch(() => {
-      Alert.alert('Error', 'Unable to initiate call');
-    });
+export const EmergencyScreen: React.FC = () => {
+  const { user } = useAuth();
+  const [recentActivity, setRecentActivity] = React.useState<RecentActivityItem[]>([]);
+
+  const handleOpenActivity = (item: RecentActivityItem) => {
+    if (item.type === 'Teleconsultation' && item.requestId) {
+      router.push({
+        pathname: '/emergency-response/teleconsultation' as any,
+        params: { requestId: item.requestId },
+      });
+      return;
+    }
+
+    if (item.type === 'Assessment' && item.assessmentId) {
+      router.push({
+        pathname: '/emergency-response/assesment-report' as any,
+        params: { assessmentId: item.assessmentId },
+      });
+      return;
+    }
   };
-  const handleSuwaseriyaCall = () => {
-    const phone = '1990';
-    Linking.openURL(`tel:${phone}`).catch(() => {
-      Alert.alert('Error', 'Unable to initiate call');
-    });
-  };
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    const loadRecentActivity = async () => {
+      try {
+        const [teleResult, assessmentResult] = await Promise.allSettled([
+          getMyTeleconsultationRequests(5),
+          getAssessments(),
+        ]);
+
+        const teleconsultations = teleResult.status === 'fulfilled' ? teleResult.value : [];
+        const assessments = assessmentResult.status === 'fulfilled' ? assessmentResult.value : [];
+
+        const teleEvents: RecentActivityItem[] = teleconsultations.map((request) => {
+          const requestedAt = request.requestedAt || '';
+          const requestedTime = new Date(requestedAt).getTime();
+          const doctorLabel = request.doctorName || request.doctorId;
+          return {
+            type: 'Teleconsultation',
+            date: formatActivityDate(requestedAt),
+            summary: `${teleStatusText(request.status)}${doctorLabel ? ` • Doctor: ${doctorLabel}` : ''}`,
+            timestamp: Number.isNaN(requestedTime) ? 0 : requestedTime,
+            requestId: request._id,
+            assessmentId: request.patient?.assessment_id,
+          };
+        });
+
+        const assessmentEvents: RecentActivityItem[] = assessments
+          .filter((assessment: any) => {
+            if (!user?._id) return true;
+            const owner = String(assessment.userId || '');
+            return owner === String(user._id);
+          })
+          .slice(0, 8)
+          .map((assessment: any) => {
+            const createdAt = assessment.createdAt || assessment.timestamp || '';
+            const createdTime = new Date(createdAt).getTime();
+            return {
+              type: 'Assessment',
+              date: formatActivityDate(createdAt),
+              summary: `Assessment report created • ${String(assessment.risk_level || 'unknown').toUpperCase()} priority`,
+              timestamp: Number.isNaN(createdTime) ? 0 : createdTime,
+              assessmentId: assessment.assessment_id,
+            };
+          });
+
+        const merged = [...assessmentEvents, ...teleEvents]
+          .sort((a, b) => b.timestamp - a.timestamp)
+          .slice(0, 6);
+
+        if (isMounted) {
+          setRecentActivity(merged);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setRecentActivity([]);
+        }
+      }
+    };
+
+    loadRecentActivity();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?._id]);
 
   return (
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <View >
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 120 }}
         >
-          <TopBar />
+          <SecondaryTopBar />
           {/* Main Actions */}
           <View style={styles.actionsWrap}>
             {/* ...existing code for action cards... */}
-            <TouchableOpacity style={[styles.actionCard, { borderLeftColor: Colors.primary.DEFAULT }]} onPress={() => router.push('/assessment')}>
+            <TouchableOpacity style={[styles.actionCard, { borderLeftColor: Colors.primary.DEFAULT }]} onPress={() => router.push('/emergency-response/assessment' as any)}>
               <View style={[styles.iconCircle, { backgroundColor: Colors.primary.DEFAULT + '22' }]}> 
                 <MaterialCommunityIcons name="clipboard-text-search-outline" size={32} color={Colors.primary.DEFAULT} />
               </View>
@@ -52,23 +141,24 @@ export const LocationScreen: React.FC = () => {
               </View>
               <Ionicons name="chevron-forward" size={22} color="#94A3B8" />
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionCard, { borderLeftColor: '#F43F5E' }]} onPress={() => router.push('/teleconsultation')}>
+            <View style={[styles.actionCard, { borderLeftColor: '#F43F5E' }]} >
               <View style={[styles.iconCircle, { backgroundColor: '#F43F5E22' }]}> 
                 <MaterialCommunityIcons name="video-account" size={32} color="#F43F5E" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.actionTitle, { color: '#F43F5E' }]}>Teleconsultation</Text>
                 <Text style={styles.actionDesc}>Connect instantly with a pediatrician</Text>
+                <Text style={[styles.actionDesc, { color: '#c19a1b' }]}>Premium Service</Text>
               </View>
               <Ionicons name="chevron-forward" size={22} color="#94A3B8" />
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.actionCard, { borderLeftColor: '#6366F1' }]} onPress={() => router.push('/nearby-hospitals')}>
+            </View>
+            <TouchableOpacity style={[styles.actionCard, { borderLeftColor: '#6366F1' }]} onPress={() => router.push('/emergency-response/nearby-hospitals' as any)}>
               <View style={[styles.iconCircle, { backgroundColor: '#6366F122' }]}> 
                 <Ionicons name="medkit" size={32} color="#6366F1" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.actionTitle, { color: '#6366F1' }]}>Nearby Hospitals</Text>
-                <Text style={styles.actionDesc}>Find the closest pediatric care centers</Text>
+                <Text style={styles.actionDesc}>Find the closest healthcare facilities</Text>
               </View>
               <Ionicons name="chevron-forward" size={22} color="#94A3B8" />
             </TouchableOpacity>
@@ -76,8 +166,11 @@ export const LocationScreen: React.FC = () => {
           {/* Recent Activity */}
           <View style={styles.recentActivityWrap}>
             <Text style={styles.recentActivityTitle}>Recent Activity</Text>
+            {recentActivity.length === 0 && (
+              <Text style={styles.recentEmpty}>No recent teleconsultations or assessment reports yet.</Text>
+            )}
             {recentActivity.map((item, idx) => (
-              <View key={idx} style={styles.recentItem}>
+              <TouchableOpacity key={idx} style={styles.recentItem} onPress={() => handleOpenActivity(item)}>
                 <Ionicons
                   name={item.type === 'Assessment' ? 'analytics' : 'chatbubbles'}
                   size={18}
@@ -89,21 +182,11 @@ export const LocationScreen: React.FC = () => {
                   <Text style={styles.recentSummary}>{item.summary}</Text>
                 </View>
                 <Text style={styles.recentDate}>{item.date}</Text>
-              </View>
+                <Ionicons name="chevron-forward" size={16} color="#94A3B8" style={{ marginLeft: 6 }} />
+              </TouchableOpacity>
             ))}
           </View>
         </ScrollView>
-        {/* Bottom Emergency Buttons - fixed at bottom */}
-        <View style={styles.bottomEmergencyWrap}>
-          <TouchableOpacity style={[styles.bottomEmergencyBtn, { backgroundColor: '#EF4444' }]} onPress={handleEmergencyCall}>
-            <Ionicons name="call" size={22} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={styles.bottomEmergencyText}>Emergency Call</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.bottomEmergencyBtn, { backgroundColor: '#0EA5E9' }]} onPress={handleSuwaseriyaCall}>
-            <MaterialCommunityIcons name="ambulance" size={22} color="#fff" style={{ marginRight: 8 }} />
-            <Text style={styles.bottomEmergencyText}>Suwaseriya 1990</Text>
-          </TouchableOpacity>
-        </View>
       </View>
     </SafeAreaView>
   );
@@ -257,6 +340,11 @@ const styles = StyleSheet.create({
       marginLeft: 8,
       minWidth: 70,
       textAlign: 'right',
+    },
+    recentEmpty: {
+      fontSize: 13,
+      color: Colors.inactive,
+      marginBottom: 6,
     },
   header: {
     fontSize: 26,
