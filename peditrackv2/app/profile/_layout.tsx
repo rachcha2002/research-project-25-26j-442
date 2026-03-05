@@ -10,6 +10,8 @@ export default function ProfileLayout() {
       <Stack.Screen name="baby-profiles" options={{ headerShown: false }} />
       <Stack.Screen name="add-baby" options={{ headerShown: false }} />
       <Stack.Screen name="edit-baby" options={{ headerShown: false }} />
+      <Stack.Screen name="subscription" options={{ headerShown: false }} />
+      <Stack.Screen name="manage-subscription" options={{ headerShown: false }} />
     </Stack>
   );
 }

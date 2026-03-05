@@ -11,6 +11,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width, height } = Dimensions.get('window');
 
@@ -28,42 +29,41 @@ export default function OnboardingScreen() {
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-      
+
       <LinearGradient
-        colors={['#667eea', '#764ba2', '#f093fb']}
+        colors={['#7C3AED', '#6D28D9', '#5B21B6']}
         style={styles.gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
         <View style={styles.content}>
-         
 
-          {/* Logo/Icon Area */}
+          {/* Logo Area */}
           <View style={styles.logoContainer}>
-            <View style={styles.logoCircle}>
-              <Text style={styles.logoText}>👣</Text>
-            </View>
-            <Text style={styles.appName}>PediTrack</Text>
-            <Text style={styles.tagline}>Your Baby's Health Companion</Text>
+            <Image
+              source={require('../../assets/peditrack_logo/peditrackfull-removebg-preview.png')}
+              style={styles.fullLogo}
+              resizeMode="contain"
+            />
           </View>
 
           {/* Features */}
           <View style={styles.featuresContainer}>
-            <FeatureItem 
-              icon="📊" 
-              text="Track growth and development" 
+            <FeatureItem
+              icon="📏"
+              text="Track growth milestones & development"
             />
-            <FeatureItem 
-              icon="🏥" 
-              text="Monitor health records" 
+            <FeatureItem
+              icon="🩺"
+              text="Monitor vaccination & health records"
             />
-            <FeatureItem 
-              icon="🤖" 
-              text="AI-powered insights" 
+            <FeatureItem
+              icon="🧒"
+              text="AI-powered pediatric insights"
             />
-            <FeatureItem 
-              icon="💊" 
-              text="Medication reminders" 
+            <FeatureItem
+              icon="🍼"
+              text="Feeding & nutrition tracking"
             />
           </View>
 
@@ -106,7 +106,9 @@ interface FeatureItemProps {
 
 const FeatureItem: React.FC<FeatureItemProps> = ({ icon, text }) => (
   <View style={styles.featureItem}>
-    <Text style={styles.featureIcon}>{icon}</Text>
+    <View style={styles.featureIconContainer}>
+      <Text style={styles.featureIcon}>{icon}</Text>
+    </View>
     <Text style={styles.featureText}>{text}</Text>
   </View>
 );
@@ -121,70 +123,51 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 30,
-    paddingTop: height * 0.1,
+    paddingTop: height * 0.08,
     paddingBottom: 40,
     justifyContent: 'space-between',
   },
   logoContainer: {
     alignItems: 'center',
-    marginTop: 40,
+    marginTop: 20,
   },
-  logoCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  logoText: {
-    fontSize: 60,
-  },
-  appName: {
-    fontSize: 42,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginBottom: 8,
-    textShadowColor: 'rgba(0, 0, 0, 0.3)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
-  },
-  tagline: {
-    fontSize: 18,
-    color: 'rgba(255, 255, 255, 0.9)',
-    textAlign: 'center',
+  fullLogo: {
+    width: 280,
+    height: 100,
   },
   featuresContainer: {
-    marginVertical: 20,
+    marginVertical: 16,
+    gap: 12,
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  featureIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 14,
   },
   featureIcon: {
-    fontSize: 32,
-    marginRight: 16,
+    fontSize: 24,
   },
   featureText: {
-    fontSize: 16,
+    fontSize: 15,
     color: '#fff',
     fontWeight: '600',
     flex: 1,
   },
   buttonContainer: {
-    gap: 16,
+    gap: 14,
   },
   primaryButton: {
     backgroundColor: '#fff',
@@ -193,24 +176,25 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 8,
   },
   primaryButtonText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#667eea',
+    color: '#7C3AED',
   },
   secondaryButton: {
-    paddingVertical: 18,
+    paddingVertical: 14,
     alignItems: 'center',
   },
   secondaryButtonText: {
     fontSize: 16,
-    color: '#fff',
+    color: 'rgba(255, 255, 255, 0.9)',
   },
   boldText: {
     fontWeight: 'bold',
+    color: '#fff',
   },
 });

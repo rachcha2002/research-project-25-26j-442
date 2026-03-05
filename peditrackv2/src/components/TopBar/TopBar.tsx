@@ -35,11 +35,15 @@ export const TopBar: React.FC<TopBarProps> = ({
           <View style={styles.container}>
             {/* Left Section - Logo and App Name */}
             <View style={styles.leftSection}>
-              {/* Logo - Replace this emoji with your actual logo image */}
+              {/* Logo */}
               <View style={styles.logoContainer}>
-                <Text style={styles.logoEmoji}>👣</Text>
+                <Image
+                  source={require('../../../assets/peditrack_logo/peditrack-white-nobg.png')}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
               </View>
-              
+
               {/* App Name and Tagline */}
               <View style={styles.brandContainer}>
                 <Text style={styles.appName}>PediTrack</Text>
@@ -84,7 +88,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           {/* Bottom Section - Greeting */}
           <View style={styles.greetingSection}>
             <Text style={styles.greeting}>Hello {username || 'User'}!</Text>
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.childNameRow}
               onPress={onChildNamePress}
               activeOpacity={0.7}
@@ -126,8 +130,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 12,
   },
-  logoEmoji: {
-    fontSize: 32,
+  logoImage: {
+    width: 40,
+    height: 40,
   },
   brandContainer: {
     flex: 1,
