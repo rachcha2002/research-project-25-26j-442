@@ -15,6 +15,9 @@ export interface User {
   email: string;
   profilePicture?: string;
   googleId?: string;
+  isPro?: boolean;
+  subscriptionPlan?: string;
+  subscriptionExpiry?: string;
   defaultBabyProfile?: string;
   createdAt: string;
   updatedAt: string;
@@ -60,6 +63,25 @@ export interface ApiResponse<T = any> {
   error?: string;
 }
 
+export interface SubscriptionStatus {
+  status: 'active' | 'canceled' | 'past_due' | 'expired' | 'incomplete' | 'trialing' | 'none';
+  isPro: boolean;
+  autoRenew: boolean;
+  paymentMethodLast4: string | null;
+  paymentMethodBrand: string | null;
+  currentPeriodStart: string | null;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  lastPaymentDate: string | null;
+  lastPaymentAmount: number | null;
+}
+
+export interface CheckoutSessionResponse {
+  success: boolean;
+  checkoutUrl: string;
+  sessionId: string;
+}
+
 // ==================== Axios Instance ====================
 
 class UserService {
@@ -80,11 +102,11 @@ class UserService {
     this.api.interceptors.request.use(
       async (config) => {
         // Skip adding auth headers for public endpoints
-        const isPublicEndpoint = 
+        const isPublicEndpoint =
           config.url?.includes('/auth/login') ||
           config.url?.includes('/auth/register') ||
           config.url?.includes('/auth/refresh');
-        
+
         if (!isPublicEndpoint) {
           const token = await this.getAccessToken();
           if (token) {
@@ -103,7 +125,7 @@ class UserService {
         const originalRequest: any = error.config;
 
         // Skip token refresh for public endpoints
-        const isPublicEndpoint = 
+        const isPublicEndpoint =
           originalRequest?.url?.includes('/auth/login') ||
           originalRequest?.url?.includes('/auth/register') ||
           originalRequest?.url?.includes('/auth/refresh');
@@ -134,7 +156,7 @@ class UserService {
             this.isRefreshing = false;
             this.onRefreshed(newToken);
             this.refreshSubscribers = [];
-            
+
             originalRequest.headers.Authorization = `Bearer ${newToken}`;
             return this.api(originalRequest);
           } catch (refreshError) {
@@ -181,19 +203,19 @@ class UserService {
       console.log('[UserService] Attempting to save tokens...');
       console.log('[UserService] accessToken type:', typeof accessToken, 'value:', accessToken);
       console.log('[UserService] refreshToken type:', typeof refreshToken, 'value:', refreshToken);
-      
+
       // Validate tokens are strings
       if (!accessToken || typeof accessToken !== 'string') {
         throw new Error('Invalid access token: must be a non-empty string');
       }
-      
+
       if (!refreshToken || typeof refreshToken !== 'string') {
         throw new Error('Invalid refresh token: must be a non-empty string');
       }
-      
+
       await SecureStore.setItemAsync(APP_CONFIG.ACCESS_TOKEN_KEY, accessToken);
       console.log('[UserService] Access token saved successfully');
-      
+
       await SecureStore.setItemAsync(APP_CONFIG.REFRESH_TOKEN_KEY, refreshToken);
       console.log('[UserService] Refresh token saved successfully');
     } catch (error) {
@@ -222,11 +244,11 @@ class UserService {
         email,
         password,
       });
-      
+
       console.log('[UserService] Register response:', JSON.stringify(response.data, null, 2));
       console.log('[UserService] accessToken type:', typeof response.data.accessToken);
       console.log('[UserService] refreshToken type:', typeof response.data.refreshToken);
-      
+
       await this.saveTokens(response.data.accessToken, response.data.refreshToken);
       return response.data;
     } catch (error) {
@@ -240,11 +262,11 @@ class UserService {
         email,
         password,
       });
-      
+
       console.log('[UserService] Login response:', JSON.stringify(response.data, null, 2));
       console.log('[UserService] accessToken type:', typeof response.data.accessToken);
       console.log('[UserService] refreshToken type:', typeof response.data.refreshToken);
-      
+
       await this.saveTokens(response.data.accessToken, response.data.refreshToken);
       return response.data;
     } catch (error) {
@@ -257,7 +279,7 @@ class UserService {
       const response = await this.api.post<AuthResponse>('/auth/google', {
         idToken: googleIdToken,
       });
-      
+
       await this.saveTokens(response.data.accessToken, response.data.refreshToken);
       return response.data;
     } catch (error) {
@@ -279,7 +301,7 @@ class UserService {
       // Only save the new access token, keep existing refresh token
       await SecureStore.setItemAsync(APP_CONFIG.ACCESS_TOKEN_KEY, response.data.accessToken);
       console.log('[UserService] New access token saved after refresh');
-      
+
       return response.data.accessToken;
     } catch (error) {
       await this.clearTokens();
@@ -291,10 +313,16 @@ class UserService {
     try {
       const refreshToken = await this.getRefreshToken();
       if (refreshToken) {
-        await this.api.post('/auth/logout', { refreshToken });
+        // Use a short timeout for logout - don't block the user
+        const logoutPromise = this.api.post('/auth/logout', { refreshToken });
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Logout request timeout')), 3000)
+        );
+        await Promise.race([logoutPromise, timeoutPromise]);
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      // Ignore errors - we still clear tokens locally
+      console.log('Logout API call skipped or failed (tokens cleared locally)');
     } finally {
       await this.clearTokens();
     }
@@ -347,6 +375,60 @@ class UserService {
       const response = await this.api.put<{ success: boolean; user: User }>(
         `/users/me/default-baby/${babyId}`
       );
+      return response.data.user;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  // ==================== Subscription Management ====================
+
+  async createCheckoutSession(): Promise<CheckoutSessionResponse> {
+    try {
+      const response = await this.api.post<CheckoutSessionResponse>('/subscription/create-checkout');
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async getSubscriptionStatus(): Promise<SubscriptionStatus> {
+    try {
+      const response = await this.api.get<{ success: boolean; subscription: SubscriptionStatus }>('/subscription/status');
+      return response.data.subscription;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async toggleAutoRenew(autoRenew: boolean): Promise<void> {
+    try {
+      await this.api.put('/subscription/auto-renew', { autoRenew });
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async payNowWithSavedCard(): Promise<{ success: boolean; message: string; needsCheckout?: boolean }> {
+    try {
+      const response = await this.api.post<{ success: boolean; message: string; needsCheckout?: boolean }>('/subscription/pay-now');
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async cancelSubscription(): Promise<void> {
+    try {
+      await this.api.post('/subscription/cancel');
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async verifyCheckoutSession(sessionId: string): Promise<User> {
+    try {
+      const response = await this.api.post<{ success: boolean; user: User }>('/subscription/verify-session', { sessionId });
       return response.data.user;
     } catch (error) {
       throw this.handleError(error);
@@ -470,10 +552,10 @@ class UserService {
     try {
       const token = await this.getAccessToken();
       const formData = new FormData();
-      
+
       const fileExtension = imageUri.split('.').pop() || 'jpg';
       const fileName = `profile.${fileExtension}`;
-      
+
       // @ts-ignore - React Native FormData accepts uri
       formData.append('image', {
         uri: imageUri,
@@ -507,10 +589,10 @@ class UserService {
     try {
       const token = await this.getAccessToken();
       const formData = new FormData();
-      
+
       const fileExtension = imageUri.split('.').pop() || 'jpg';
       const fileName = `baby.${fileExtension}`;
-      
+
       // @ts-ignore - React Native FormData accepts uri
       formData.append('image', {
         uri: imageUri,
@@ -535,8 +617,8 @@ class UserService {
       const data = await response.json();
       return { url: data.url };
     } catch (error) {
-       console.error('Upload Error:', error);
-       throw error;
+      console.error('Upload Error:', error);
+      throw error;
     }
   }
 
@@ -561,19 +643,19 @@ class UserService {
   private handleError(error: any): Error {
     if (axios.isAxiosError(error)) {
       const axiosError = error as AxiosError<any>;
-      
+
       if (axiosError.response) {
         // Server responded with error
-        const message = axiosError.response.data?.message || 
-                       axiosError.response.data?.error ||
-                       'An error occurred';
+        const message = axiosError.response.data?.message ||
+          axiosError.response.data?.error ||
+          'An error occurred';
         return new Error(message);
       } else if (axiosError.request) {
         // Request made but no response
         return new Error('Network error. Please check your internet connection.');
       }
     }
-    
+
     return error instanceof Error ? error : new Error('An unexpected error occurred');
   }
 

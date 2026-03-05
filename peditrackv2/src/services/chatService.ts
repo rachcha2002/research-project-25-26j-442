@@ -1,6 +1,6 @@
 // For Android Emulator: use 10.0.2.2
 // For Physical Device: use your computer's IP address (check with ipconfig)
-// Current Wi-Fi IP: 192.168.1.3
+// Current Wi-Fi IP: 192.168.1.179
 
 const API_BASE_URL = 'https://peditrack-chat-service-production-0d1d.up.railway.app/api';
 
@@ -43,7 +43,8 @@ export interface ConversationHistory {
 export const sendChatMessage = async (
     message: string,
     conversationId?: string,
-    provider: string = 'google'
+    provider: string = 'google',
+    language: string = 'en'
 ): Promise<SendMessageResponse> => {
     try {
         const response = await fetch(`${API_BASE_URL}/chat/message`, {
@@ -55,6 +56,7 @@ export const sendChatMessage = async (
                 message,
                 conversationId,
                 provider,
+                language,
             }),
         });
 

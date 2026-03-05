@@ -79,7 +79,9 @@ export const AddConditionScreen: React.FC = () => {
         if (record.status) {
           setStatus(record.status as Status);
         }
-        // Note: type is not in HealthRecord, keeping default
+        if (record.conditionType) {
+          setType(record.conditionType as ConditionType);
+        }
       } catch (error) {
         console.error('Error loading record:', error);
         Alert.alert('Error', 'Failed to load condition data');
@@ -119,6 +121,7 @@ export const AddConditionScreen: React.FC = () => {
         babyId: selectedBaby._id,
         recordDate: diagnosisDate.toISOString().split('T')[0], // Format: YYYY-MM-DD
         recordType: 'illness' as const, // Using 'illness' as default for conditions
+        conditionType: type,
         diagnosis: conditionName,
         severity: severity,
         status: status, // Add status field

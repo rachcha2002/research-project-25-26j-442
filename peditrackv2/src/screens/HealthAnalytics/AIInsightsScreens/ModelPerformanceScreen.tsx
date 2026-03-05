@@ -1,516 +1,254 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import React from 'react';
+import {
+  View, Text, ScrollView, StyleSheet, TouchableOpacity,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '@/constants/Colors';
-import { useRouter } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
+import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
+import { useAuth } from '../../../contexts/AuthContext';
 
+// ─── Static Info Data ─────────────────────────────────────────────────────────
+const MODELS = [
+  {
+    icon: '🔬',
+    name: 'Risk Classification Model (DNN)',
+    subtitle: 'Fallback when < 3 measurements available',
+    accuracy: '94.2%',
+    accuracyLabel: 'Avg AUC',
+    color: '#3B82F6',
+    details: [
+      'Growth Disorder AUC: 0.988 · Dev Delay AUC: 0.912',
+      'Nutritional Deficiency AUC: 0.928',
+      'Analyses 19 clinical features — no time-series data required',
+    ],
+  },
+  {
+    icon: '🧬',
+    name: 'Growth Timeline Model (LSTM)',
+    subtitle: 'Used when ≥ 3 measurements available',
+    accuracy: '97.5%',
+    accuracyLabel: 'Avg AUC',
+    color: '#8B5CF6',
+    details: [
+      'Height: MAPE 3.18%, MAE 2.74 cm, R² 0.931',
+      'Weight: MAPE 8.42%, MAE 0.97 kg, R² 0.837',
+      'Risk AUC — Growth 0.90 · Dev 1.00 · Nutrition 1.00 · Behaviour 1.00',
+    ],
+  },
+];
+
+const HOW_IT_WORKS = [
+  { step: '1', text: "We collect your child's measurements, nutrition, sleep, and health records" },
+  { step: '2', text: 'The AI selects the best model based on how much data is available' },
+  { step: '3', text: 'Predictions are made and compared against WHO 2006 Growth Standards' },
+  { step: '4', text: 'Results are expressed as plain risk levels and actionable recommendations' },
+];
+
+const RISK_LEVELS = [
+  { label: 'Low Risk',      color: '#10B981', desc: 'Growing as expected — keep going!' },
+  { label: 'Moderate Risk', color: '#F59E0B', desc: 'Worth monitoring — see recommendations' },
+  { label: 'High Risk',     color: '#EF4444', desc: 'Consult your pediatrician soon' },
+];
+
+// ─── Main Screen ──────────────────────────────────────────────────────────────
 export const ModelPerformanceScreen: React.FC = () => {
-  const router = useRouter();
-  const [selectedOptions, setSelectedOptions] = useState<string[]>(['option1']);
+  const { user, upgradeToPro } = useAuth();
 
-  // Simple Line Chart Component
-  const LineChart = () => {
-    const data1 = [30, 45, 40, 55, 50, 65];
-    const data2 = [20, 35, 45, 50, 55, 60];
-    const data3 = [40, 50, 35, 60, 45, 70];
-
+  if (!user?.isPro) {
     return (
-      <View style={styles.lineChartContainer}>
-        <View style={styles.lineChartGrid}>
-          {[0, 1, 2, 3, 4].map((i) => (
-            <View key={i} style={styles.gridLine} />
-          ))}
-        </View>
-        <View style={styles.lineChartContent}>
-          {/* Simplified line representation */}
-          <View style={styles.chartLegend}>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#3B82F6' }]} />
-              <Text style={styles.legendText}>Precision</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#10B981' }]} />
-              <Text style={styles.legendText}>Accuracy</Text>
-            </View>
-            <View style={styles.legendItem}>
-              <View style={[styles.legendDot, { backgroundColor: '#F59E0B' }]} />
-              <Text style={styles.legendText}>F1-Score</Text>
-            </View>
+      <>
+        <SecondaryTopBar />
+        <SafeAreaView style={styles.container} edges={['bottom']}>
+          <View style={styles.centerState}>
+            <Ionicons name="lock-closed-outline" size={64} color="#F59E0B" />
+            <Text style={styles.proTitle}>PRO Version Required</Text>
+            <Text style={styles.proDesc}>
+              Upgrade to PRO to learn about the AI models, validation metrics, and how our predictive engine works.
+            </Text>
+            <TouchableOpacity style={styles.upgradeBtn} onPress={() => upgradeToPro('pro')}>
+              <LinearGradient
+                colors={['#F59E0B', '#D97706']}
+                style={styles.upgradeBtnGradient}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              >
+                <Ionicons name="star" size={20} color="#fff" />
+                <Text style={styles.upgradeBtnText}>Upgrade to PRO</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
-        </View>
-        <View style={styles.chartXAxis}>
-          <Text style={styles.axisLabel}>Jan</Text>
-          <Text style={styles.axisLabel}>Feb</Text>
-          <Text style={styles.axisLabel}>Mar</Text>
-        </View>
-      </View>
+        </SafeAreaView>
+      </>
     );
-  };
-
-  // Stacked Area Chart Component  
-  const StackedAreaChart = () => {
-    return (
-      <View style={styles.stackedChartContainer}>
-        <View style={styles.stackedArea1} />
-        <View style={styles.stackedArea2} />
-        <View style={styles.stackedArea3} />
-        <View style={styles.stackedArea4} />
-        
-        <View style={styles.stackedLegend}>
-          <View style={styles.stackedLegendItem}>
-            <View style={[styles.legendSquare, { backgroundColor: '#3B82F6' }]} />
-            <Text style={styles.legendText}>Critical</Text>
-          </View>
-          <View style={styles.stackedLegendItem}>
-            <View style={[styles.legendSquare, { backgroundColor: '#EF4444' }]} />
-            <Text style={styles.legendText}>High Risk</Text>
-          </View>
-          <View style={styles.stackedLegendItem}>
-            <View style={[styles.legendSquare, { backgroundColor: '#F59E0B' }]} />
-            <Text style={styles.legendText}>Moderate</Text>
-          </View>
-          <View style={styles.stackedLegendItem}>
-            <View style={[styles.legendSquare, { backgroundColor: '#10B981' }]} />
-            <Text style={styles.legendText}>Low</Text>
-          </View>
-        </View>
-      </View>
-    );
-  };
-
-  const toggleOption = (option: string) => {
-    if (selectedOptions.includes(option)) {
-      setSelectedOptions(selectedOptions.filter(o => o !== option));
-    } else {
-      setSelectedOptions([...selectedOptions, option]);
-    }
-  };
+  }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Ionicons name="arrow-back" size={24} color={Colors.dark} />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Model Performance Dashboard</Text>
-        <View style={{ width: 24 }} />
-      </View>
+    <>
+      <SecondaryTopBar />
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        <ScrollView style={styles.scroll} contentContainerStyle={styles.content}
+          showsVerticalScrollIndicator={false}>
 
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* Top Metrics Row */}
-        <View style={styles.metricsRow}>
-          <View style={styles.metricCard}>
-            <Text style={styles.metricValue}>87</Text>
-            <Text style={styles.metricLabel}>DG</Text>
-            <Text style={styles.metricSubLabel}>ML</Text>
-          </View>
-          <View style={styles.metricCard}>
-            <Text style={styles.metricValue}>91%</Text>
-            <Text style={styles.metricLabel}>Specificity</Text>
-            <Text style={styles.metricSubLabel}>Ad-Specific</Text>
-          </View>
-          <View style={styles.metricCard}>
-            <Text style={styles.metricValue}>92</Text>
-            <Text style={styles.metricLabel}>F2</Text>
-            <Text style={styles.metricSubLabel}>Avg-F2-macro</Text>
-          </View>
-          <View style={styles.metricCard}>
-            <Text style={styles.metricValue}>88</Text>
-            <Text style={styles.metricLabel}>AUC-ROC</Text>
-            <Text style={styles.metricSubLabel}>Curve</Text>
-          </View>
-        </View>
+          {/* Hero */}
+          <LinearGradient colors={['#6366F1', '#8B5CF6']} style={styles.hero}
+            start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}>
+            <Text style={styles.heroIcon}>🤖</Text>
+            <Text style={styles.heroTitle}>About Our AI</Text>
+            <Text style={styles.heroSub}>
+              PediTrack uses two machine learning models trained on over 50,000 pediatric
+              growth records to predict your child's health trajectory.
+            </Text>
+          </LinearGradient>
 
-        {/* Risk Assessment Dashboard Button */}
-        <TouchableOpacity style={styles.dashboardButton}>
-          <Text style={styles.dashboardButtonText}>Risk Assessment Dashboard</Text>
-        </TouchableOpacity>
-
-        {/* Model Accuracy Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Model Accuracy</Text>
-          <Text style={styles.sectionSubtitle}>Shows Metrics</Text>
-
-          <View style={styles.accuracyRow}>
-            <View style={styles.accuracyBox}>
-              <Text style={styles.accuracyLabel}>Low</Text>
-              <Text style={styles.accuracyValue}>63%</Text>
-              <View style={styles.successBadge}>
-                <Text style={styles.successBadgeText}>NORMAL</Text>
+          {/* Models */}
+          <Text style={styles.sectionTitle}>Our AI Models</Text>
+          {MODELS.map((m) => (
+            <View key={m.name} style={[styles.modelCard, { borderLeftColor: m.color }]}>
+              <View style={styles.modelTopRow}>
+                <Text style={styles.modelIcon}>{m.icon}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.modelName}>{m.name}</Text>
+                  <Text style={styles.modelSub}>{m.subtitle}</Text>
+                </View>
+                <View style={[styles.accBadge, { backgroundColor: m.color + '20', borderColor: m.color }]}>
+                  <Text style={[styles.accScore, { color: m.color }]}>{m.accuracy}</Text>
+                  <Text style={[styles.accLabel, { color: m.color }]}>{m.accuracyLabel}</Text>
+                </View>
+              </View>
+              <View style={styles.detailsList}>
+                {m.details.map((d, i) => (
+                  <View key={i} style={styles.detailRow}>
+                    <Ionicons name="checkmark-circle" size={16} color={m.color} />
+                    <Text style={styles.detailText}>{d}</Text>
+                  </View>
+                ))}
               </View>
             </View>
-            <View style={styles.accuracyBox}>
-              <Text style={styles.accuracyLabel}>Med</Text>
-              <Text style={styles.accuracyValue}>≤0.5 kg</Text>
-              <View style={styles.successBadge}>
-                <Text style={styles.successBadgeText}>NORMAL</Text>
+          ))}
+
+          {/* How it works */}
+          <Text style={styles.sectionTitle}>How Predictions Work</Text>
+          <View style={styles.stepsCard}>
+            {HOW_IT_WORKS.map(({ step, text }) => (
+              <View key={step} style={styles.stepRow}>
+                <View style={styles.stepCircle}>
+                  <Text style={styles.stepNum}>{step}</Text>
+                </View>
+                <Text style={styles.stepText}>{text}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* WHO Standards note */}
+          <View style={styles.whoCard}>
+            <Ionicons name="globe-outline" size={22} color="#3B82F6" />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.whoTitle}>WHO Growth Standards (2006)</Text>
+              <Text style={styles.whoDesc}>
+                All predictions are benchmarked against World Health Organization growth
+                standards for children aged 0–84 months. Percentiles and z-scores are
+                calculated per WHO's LMS method.
+              </Text>
+            </View>
+          </View>
+
+          {/* Risk legend */}
+          <Text style={styles.sectionTitle}>Risk Levels Explained</Text>
+          {RISK_LEVELS.map(({ label, color, desc }) => (
+            <View key={label} style={styles.riskLegendRow}>
+              <View style={[styles.riskDot, { backgroundColor: color }]} />
+              <View>
+                <Text style={[styles.riskLegendLabel, { color }]}>{label}</Text>
+                <Text style={styles.riskLegendDesc}>{desc}</Text>
               </View>
             </View>
-            <View style={styles.accuracyBox}>
-              <Text style={styles.accuracyLabel}>High</Text>
-              <Text style={styles.accuracyValue}>87%</Text>
-              <View style={styles.successBadge}>
-                <Text style={styles.successBadgeText}>HIGH</Text>
-              </View>
-            </View>
-          </View>
-        </View>
+          ))}
 
-        {/* Precision-Accuracy Over Time */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Precision-Accuracy Over Time</Text>
-          <LineChart />
-        </View>
-
-        {/* Model Performance */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Model Performance</Text>
-          
-          <View style={styles.performanceGrid}>
-            <View style={styles.performanceCard}>
-              <Ionicons name="trending-up" size={20} color="#10B981" />
-              <Text style={styles.performanceValue}>+4.5%</Text>
-              <Text style={styles.performanceLabel}>Avg Error</Text>
-            </View>
-            <View style={styles.performanceCard}>
-              <Ionicons name="trending-up" size={20} color="#10B981" />
-              <Text style={styles.performanceValue}>+7%</Text>
-              <Text style={styles.performanceLabel}>Precision</Text>
-            </View>
-            <View style={styles.performanceCard}>
-              <Ionicons name="trending-up" size={20} color="#10B981" />
-              <Text style={styles.performanceValue}>+15%</Text>
-              <Text style={styles.performanceLabel}>Recall</Text>
-            </View>
-            <View style={styles.performanceCard}>
-              <Ionicons name="trending-up" size={20} color="#10B981" />
-              <Text style={styles.performanceValue}>+8%</Text>
-              <Text style={styles.performanceLabel}>F1-Score</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Risk Analysis by Type */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Risk Analysis by Type</Text>
-          <StackedAreaChart />
-        </View>
-
-        {/* Custom Options */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Custom Options</Text>
-
-          <View style={styles.optionsList}>
-            <TouchableOpacity style={styles.optionItem} onPress={() => toggleOption('option1')}>
-              <Ionicons 
-                name={selectedOptions.includes('option1') ? 'checkbox' : 'square-outline'} 
-                size={20} 
-                color="#3B82F6" 
-              />
-              <Ionicons name="document-text" size={20} color="#6B7280" style={styles.optionIcon} />
-              <Text style={styles.optionText}>Calculate Report</Text>
-              <Ionicons name="chevron-forward" size={16} color={Colors.inactive} />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.optionItem} onPress={() => toggleOption('option2')}>
-              <Ionicons 
-                name={selectedOptions.includes('option2') ? 'checkbox' : 'square-outline'} 
-                size={20} 
-                color="#3B82F6" 
-              />
-              <Ionicons name="analytics" size={20} color="#6B7280" style={styles.optionIcon} />
-              <Text style={styles.optionText}>Prediction Analysis</Text>
-              <Ionicons name="chevron-forward" size={16} color={Colors.inactive} />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.optionItem} onPress={() => toggleOption('option3')}>
-              <Ionicons 
-                name={selectedOptions.includes('option3') ? 'checkbox' : 'square-outline'} 
-                size={20} 
-                color="#3B82F6" 
-              />
-              <Ionicons name="bar-chart" size={20} color="#6B7280" style={styles.optionIcon} />
-              <Text style={styles.optionText}>Risk Assessment Current</Text>
-              <Ionicons name="chevron-forward" size={16} color={Colors.inactive} />
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.optionItem} onPress={() => toggleOption('option4')}>
-              <Ionicons 
-                name={selectedOptions.includes('option4') ? 'checkbox' : 'square-outline'} 
-                size={20} 
-                color="#3B82F6" 
-              />
-              <Ionicons name="warning" size={20} color="#6B7280" style={styles.optionIcon} />
-              <Text style={styles.optionText}>Risk Interaction</Text>
-              <Ionicons name="chevron-forward" size={16} color={Colors.inactive} />
-            </TouchableOpacity>
+          {/* Disclaimer */}
+          <View style={styles.disclaimerCard}>
+            <Ionicons name="information-circle-outline" size={18} color="#6B7280" />
+            <Text style={styles.disclaimerText}>
+              AI predictions are for informational purposes only and do not replace
+              professional medical advice. Always consult your pediatrician for clinical decisions.
+            </Text>
           </View>
 
-          <TouchableOpacity style={styles.pdfButton}>
-            <Text style={styles.pdfButtonText}>Get Full PDF</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          {/* Version info */}
+          <Text style={styles.versionText}>PediTrack AI v2.0 · LSTM retrained Mar 2026 · Validated on 13 samples</Text>
+        </ScrollView>
+      </SafeAreaView>
+    </>
   );
 };
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
+  container: { flex: 1, backgroundColor: '#F8FAFC' },
+  scroll:    { flex: 1 },
+  content:   { padding: 16, paddingBottom: 40, gap: 16 },
+
+  hero: { borderRadius: 20, padding: 24, alignItems: 'center', gap: 8 },
+  heroIcon:  { fontSize: 42 },
+  heroTitle: { fontSize: 24, fontWeight: '800', color: '#fff' },
+  heroSub:   { fontSize: 13, color: 'rgba(255,255,255,0.85)', textAlign: 'center', lineHeight: 20 },
+
+  sectionTitle: { fontSize: 15, fontWeight: '700', color: '#1F2937' },
+
+  modelCard: {
+    backgroundColor: '#fff', borderRadius: 16, padding: 16, gap: 12,
+    borderLeftWidth: 4,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: Colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+  modelTopRow:{ flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  modelIcon:  { fontSize: 24 },
+  modelName:  { fontSize: 14, fontWeight: '700', color: '#1F2937' },
+  modelSub:   { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
+  accBadge:   { borderRadius: 10, borderWidth: 1, padding: 8, alignItems: 'center' },
+  accScore:   { fontSize: 18, fontWeight: '800' },
+  accLabel:   { fontSize: 10, fontWeight: '600' },
+  detailsList:{ gap: 6 },
+  detailRow:  { flexDirection: 'row', gap: 8, alignItems: 'flex-start' },
+  detailText: { fontSize: 13, color: '#374151', flex: 1, lineHeight: 18 },
+
+  stepsCard: {
+    backgroundColor: '#fff', borderRadius: 16, padding: 16, gap: 16,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05, shadowRadius: 4, elevation: 1,
   },
-  headerTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.dark,
+  stepRow:    { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  stepCircle: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center' },
+  stepNum:    { fontSize: 13, fontWeight: '800', color: '#3B82F6' },
+  stepText:   { flex: 1, fontSize: 13, color: '#374151', lineHeight: 20 },
+
+  whoCard: {
+    flexDirection: 'row', gap: 12, alignItems: 'flex-start',
+    backgroundColor: '#EFF6FF', borderRadius: 14, padding: 14,
   },
-  scroll: {
-    flex: 1,
+  whoTitle: { fontSize: 14, fontWeight: '700', color: '#1E40AF' },
+  whoDesc:  { fontSize: 12, color: '#3B82F6', lineHeight: 18, marginTop: 4 },
+
+  riskLegendRow: { flexDirection: 'row', alignItems: 'center', gap: 12,
+    backgroundColor: '#fff', borderRadius: 12, padding: 12 },
+  riskDot:         { width: 14, height: 14, borderRadius: 7 },
+  riskLegendLabel: { fontSize: 14, fontWeight: '700' },
+  riskLegendDesc:  { fontSize: 12, color: '#6B7280', marginTop: 2 },
+
+  disclaimerCard: {
+    flexDirection: 'row', gap: 8, alignItems: 'flex-start',
+    backgroundColor: '#F9FAFB', borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: '#E5E7EB',
   },
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 32,
+  disclaimerText: { flex: 1, fontSize: 12, color: '#6B7280', lineHeight: 18 },
+  versionText: { textAlign: 'center', fontSize: 11, color: '#9CA3AF' },
+
+  centerState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 12 },
+  proTitle: { fontSize: 24, fontWeight: '800', color: '#1F2937', marginTop: 8 },
+  proDesc: { fontSize: 15, color: '#6B7280', textAlign: 'center', paddingHorizontal: 20, lineHeight: 22 },
+  upgradeBtn: { marginTop: 12, width: '100%', paddingHorizontal: 20 },
+  upgradeBtnGradient: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    paddingVertical: 14, borderRadius: 12,
   },
-  metricsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 16,
-  },
-  metricCard: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-  },
-  metricValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: Colors.dark,
-  },
-  metricLabel: {
-    fontSize: 11,
-    color: Colors.dark,
-    marginTop: 4,
-  },
-  metricSubLabel: {
-    fontSize: 9,
-    color: Colors.inactive,
-  },
-  dashboardButton: {
-    backgroundColor: '#10B981',
-    borderRadius: 8,
-    padding: 14,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  dashboardButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.white,
-  },
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: Colors.dark,
-    marginBottom: 4,
-  },
-  sectionSubtitle: {
-    fontSize: 12,
-    color: Colors.inactive,
-    marginBottom: 12,
-  },
-  accuracyRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  accuracyBox: {
-    flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-  },
-  accuracyLabel: {
-    fontSize: 12,
-    color: Colors.inactive,
-    marginBottom: 4,
-  },
-  accuracyValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: Colors.dark,
-    marginBottom: 8,
-  },
-  successBadge: {
-    backgroundColor: '#D1FAE5',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  successBadgeText: {
-    fontSize: 9,
-    fontWeight: '700',
-    color: '#059669',
-  },
-  lineChartContainer: {
-    backgroundColor: Colors.white,
-    borderRadius: 8,
-    padding: 16,
-    height: 200,
-  },
-  lineChartGrid: {
-    height: 120,
-    justifyContent: 'space-between',
-  },
-  gridLine: {
-    height: 1,
-    backgroundColor: '#F3F4F6',
-  },
-  lineChartContent: {
-    marginTop: 16,
-  },
-  chartLegend: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 16,
-  },
-  legendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  legendSquare: {
-    width: 12,
-    height: 12,
-    borderRadius: 2,
-  },
-  legendText: {
-    fontSize: 11,
-    color: Colors.inactive,
-  },
-  chartXAxis: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginTop: 8,
-  },
-  axisLabel: {
-    fontSize: 10,
-    color: Colors.inactive,
-  },
-  performanceGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  performanceCard: {
-    width: '48%',
-    backgroundColor: Colors.white,
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-  },
-  performanceValue: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#10B981',
-    marginVertical: 4,
-  },
-  performanceLabel: {
-    fontSize: 11,
-    color: Colors.inactive,
-  },
-  stackedChartContainer: {
-    backgroundColor: Colors.white,
-    borderRadius: 8,
-    padding: 16,
-    height: 250,
-  },
-  stackedArea1: {
-    height: 40,
-    backgroundColor: '#3B82F6',
-    borderTopLeftRadius: 8,
-    borderTopRightRadius: 8,
-  },
-  stackedArea2: {
-    height: 30,
-    backgroundColor: '#EF4444',
-  },
-  stackedArea3: {
-    height: 50,
-    backgroundColor: '#F59E0B',
-  },
-  stackedArea4: {
-    height: 40,
-    backgroundColor: '#10B981',
-    marginBottom: 16,
-  },
-  stackedLegend: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-    justifyContent: 'center',
-  },
-  stackedLegendItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  optionsList: {
-    backgroundColor: Colors.white,
-    borderRadius: 8,
-    padding: 4,
-    marginBottom: 12,
-  },
-  optionItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    gap: 12,
-  },
-  optionIcon: {
-    marginLeft: -4,
-  },
-  optionText: {
-    flex: 1,
-    fontSize: 13,
-    color: Colors.dark,
-  },
-  pdfButton: {
-    backgroundColor: Colors.dark,
-    borderRadius: 8,
-    padding: 14,
-    alignItems: 'center',
-  },
-  pdfButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.white,
-  },
+  upgradeBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

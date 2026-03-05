@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,20 +10,45 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useAuth } from '../../src/contexts/AuthContext';
+import { GOOGLE_CONFIG } from '../../src/config/config';
+import { Ionicons } from '@expo/vector-icons';
+
+// Safely try to import Google Sign-In (not available in Expo Go)
+let GoogleSignin: any = null;
+let statusCodes: any = {};
+try {
+  const googleSignInModule = require('@react-native-google-signin/google-signin');
+  GoogleSignin = googleSignInModule.GoogleSignin;
+  statusCodes = googleSignInModule.statusCodes;
+} catch (e) {
+  // Native module not available (running in Expo Go)
+  console.log('[Login] Google Sign-In native module not available (Expo Go)');
+}
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, error, clearError } = useAuth();
-  
+  const { login, googleSignIn, error, clearError } = useAuth();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  // Configure Google Sign-In on mount (only if native module is available)
+  useEffect(() => {
+    if (GoogleSignin) {
+      GoogleSignin.configure({
+        webClientId: GOOGLE_CONFIG.WEB_CLIENT_ID,
+        offlineAccess: false,
+      });
+    }
+  }, []);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -43,16 +68,50 @@ export default function LoginScreen() {
     }
   };
 
-  const handleGoogleSignIn = () => {
-    Alert.alert('Coming Soon', 'Google Sign-In will be available soon!');
+  const handleGoogleSignIn = async () => {
+    if (!GoogleSignin) {
+      Alert.alert(
+        'Development Build Required',
+        'Google Sign-In requires a development build. Please run "npx expo run:android" or "npx expo run:ios" instead of Expo Go.'
+      );
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      clearError();
+
+      await GoogleSignin.hasPlayServices();
+      const response = await GoogleSignin.signIn();
+
+      const idToken = response?.data?.idToken;
+      if (!idToken) {
+        throw new Error('Failed to get Google ID token');
+      }
+
+      await googleSignIn(idToken);
+      router.replace('/(tabs)');
+    } catch (err: any) {
+      if (err.code === statusCodes.SIGN_IN_CANCELLED) {
+        // User cancelled — do nothing
+      } else if (err.code === statusCodes.IN_PROGRESS) {
+        // Sign-in in progress
+      } else if (err.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
+        Alert.alert('Error', 'Google Play Services is not available on this device');
+      } else {
+        Alert.alert('Google Sign-In Failed', err.message || 'An error occurred');
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
-      
+
       <LinearGradient
-        colors={['#667eea', '#764ba2']}
+        colors={['#7C3AED', '#6D28D9', '#5B21B6']}
         style={styles.gradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -67,8 +126,12 @@ export default function LoginScreen() {
           >
             {/* Header */}
             <View style={styles.header}>
-              <Text style={styles.title}>Welcome Back!</Text>
-              <Text style={styles.subtitle}>Sign in to continue</Text>
+              <Image
+                source={require('../../assets/peditrack_logo/peditrackfull-removebg-preview.png')}
+                style={styles.headerLogo}
+                resizeMode="contain"
+              />
+              <Text style={styles.subtitle}>Welcome back! Sign in to continue</Text>
             </View>
 
             {/* Form */}
@@ -123,7 +186,7 @@ export default function LoginScreen() {
                 activeOpacity={0.9}
               >
                 {isLoading ? (
-                  <ActivityIndicator color="#667eea" />
+                  <ActivityIndicator color="#7C3AED" />
                 ) : (
                   <Text style={styles.loginButtonText}>Sign In</Text>
                 )}
@@ -179,6 +242,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     paddingVertical: 40,
     justifyContent: 'center',
+  },
+  headerLogo: {
+    width: 260,
+    height: 80,
+    marginBottom: 16,
   },
   header: {
     marginBottom: 40,
@@ -260,7 +328,7 @@ const styles = StyleSheet.create({
   loginButtonText: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#667eea',
+    color: '#7C3AED',
   },
   divider: {
     flexDirection: 'row',
@@ -292,7 +360,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginRight: 12,
     fontWeight: 'bold',
-    color: '#667eea',
+    color: '#7C3AED',
   },
   googleButtonText: {
     fontSize: 16,

@@ -41,6 +41,25 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isPro: {
+    type: Boolean,
+    default: false
+  },
+  subscriptionPlan: {
+    type: String,
+    enum: ['basic', 'pro_monthly', 'pro_yearly'],
+    default: 'basic'
+  },
+  subscriptionExpiry: {
+    type: Date,
+    default: null
+  },
+  stripeCustomerId: {
+    type: String,
+    unique: true,
+    sparse: true,
+    default: null
+  },
   defaultBabyProfile: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'BabyProfile',
@@ -61,13 +80,9 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Index for faster queries
-userSchema.index({ email: 1 });
-userSchema.index({ googleId: 1 });
-
 // Hash password before saving
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
+  if (!this.isModified('password') || this.$skipPasswordHash) {
     return next();
   }
   

@@ -15,7 +15,7 @@
 const API_BASE_URL = 'https://peditrack-chat-service-production-0d1d.up.railway.app/api';
 
 
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 /**
  * Voice Service for PediTrack v2

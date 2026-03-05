@@ -8,91 +8,30 @@ import {
   TextInput,
   Image,
   Alert,
+  Modal,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-
-type MealId = 'breakfast' | 'morningSnack' | 'lunch' | 'afternoonSnack' | 'dinner';
-
-type NutrientKey =
-  | 'energy'
-  | 'carbohydrates'
-  | 'protein'
-  | 'fat'
-  | 'fiber'
-  | 'iron'
-  | 'calcium'
-  | 'vitaminA'
-  | 'vitaminC'
-  | 'vitaminD'
-  | 'omega3';
-
-const NUTRIENT_LABELS: Record<NutrientKey, string> = {
-  energy: 'Energy',
-  carbohydrates: 'Carbohydrates',
-  protein: 'Protein',
-  fat: 'Healthy fats',
-  fiber: 'Fiber',
-  iron: 'Iron',
-  calcium: 'Calcium',
-  vitaminA: 'Vitamin A',
-  vitaminC: 'Vitamin C',
-  vitaminD: 'Vitamin D',
-  omega3: 'Omega-3',
-};
-
-// Simple keyword-based nutrient detection
-const KEYWORD_MAP: { keywords: string[]; nutrients: NutrientKey[] }[] = [
-  {
-    keywords: ['rice', 'bread', 'roti', 'noodle', 'pasta', 'potato'],
-    nutrients: ['energy', 'carbohydrates', 'fiber'],
-  },
-  {
-    keywords: ['milk', 'cheese', 'yogurt', 'curd'],
-    nutrients: ['protein', 'calcium', 'vitaminD'],
-  },
-  {
-    keywords: ['egg', 'chicken', 'meat'],
-    nutrients: ['protein', 'iron', 'energy'],
-  },
-  {
-    keywords: ['fish', 'salmon', 'sardine'],
-    nutrients: ['protein', 'omega3', 'vitaminD'],
-  },
-  {
-    keywords: ['apple', 'orange', 'banana', 'fruit', 'mango', 'berry'],
-    nutrients: ['fiber', 'vitaminC', 'energy'],
-  },
-  {
-    keywords: ['carrot', 'pumpkin', 'spinach', 'leafy'],
-    nutrients: ['vitaminA', 'iron', 'fiber'],
-  },
-  {
-    keywords: ['oil', 'butter', 'ghee', 'avocado'],
-    nutrients: ['fat', 'energy'],
-  },
-];
-
-const TODAY_MEALS: { id: MealId; hour: number; minute: number }[] = [
-  { id: 'breakfast', hour: 8, minute: 0 },
-  { id: 'morningSnack', hour: 10, minute: 0 },
-  { id: 'lunch', hour: 13, minute: 0 },
-  { id: 'afternoonSnack', hour: 16, minute: 0 },
-  { id: 'dinner', hour: 19, minute: 0 },
-];
+import { useBaby } from '@/contexts/BabyContext';
+import {
+  scanFoodText,
+  scanFoodVision,
+  ClinicalSafetyResponse,
+} from '@/services/nutritionExtractionService';
 
 export default function NutritionTrackerScreen() {
-  const router = useRouter();
+  const { selectedBaby } = useBaby();
 
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [description, setDescription] = useState('');
-  const [detectedNutrients, setDetectedNutrients] = useState<NutrientKey[]>([]);
-  const [hasPeanutWarning, setHasPeanutWarning] = useState(false);
+  const [foodIdentified, setFoodIdentified] = useState('');
+  const [nutrients, setNutrients] = useState<string[]>([]);
   const [analysisDone, setAnalysisDone] = useState(false);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisSummary, setAnalysisSummary] = useState('');
+  const [safetyStatus, setSafetyStatus] = useState<string | null>(null);
 
   const hasInput = useMemo(
     () => !!imageUri || description.trim().length > 0,
@@ -108,7 +47,7 @@ export default function NutritionTrackerScreen() {
           return;
         }
         const result = await ImagePicker.launchCameraAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          mediaTypes: 'images',
           allowsEditing: true,
           quality: 0.7,
         });
@@ -117,7 +56,7 @@ export default function NutritionTrackerScreen() {
         }
       } else {
         const result = await ImagePicker.launchImageLibraryAsync({
-          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          mediaTypes: 'images',
           allowsEditing: true,
           quality: 0.7,
         });
@@ -130,97 +69,62 @@ export default function NutritionTrackerScreen() {
     }
   };
 
-  const analyzeMeal = () => {
+  const analyzeMeal = async () => {
     if (!hasInput) {
       Alert.alert('Add details', 'Please add a photo or describe the meal.');
       return;
     }
 
-    const text = description.toLowerCase();
-    const found = new Set<NutrientKey>();
+    setIsAnalyzing(true);
 
-    KEYWORD_MAP.forEach(({ keywords, nutrients }) => {
-      if (keywords.some((k) => text.includes(k))) {
-        nutrients.forEach((n) => found.add(n));
-      }
-    });
+    const childProfile = {
+      allergies: selectedBaby?.allergies ?? [],
+      medical_conditions: [],
+      medications: [],
+    };
 
-    // Always include energy if we have any input
-    if (hasInput) {
-      found.add('energy');
-    }
+    try {
+      const response: ClinicalSafetyResponse = imageUri
+        ? await scanFoodVision(imageUri, childProfile, description)
+        : await scanFoodText(description.trim(), childProfile);
 
-    const peanutWords = ['peanut', 'peanuts', 'groundnut', 'groundnuts'];
-    const hasPeanut = peanutWords.some((w) => text.includes(w));
+      setFoodIdentified(response.food_identified);
+      setNutrients(response.nutrients?.length ? response.nutrients : ['Energy']);
+      setSafetyStatus(response.safety_status);
+      setAnalysisSummary(response.clinical_reasoning);
+      setAnalysisDone(true);
+    } catch (error) {
+      setFoodIdentified('');
+      setNutrients([]);
+      setSafetyStatus(null);
+      setAnalysisSummary('Could not extract nutrition from service right now. Please try again.');
+      setAnalysisDone(true);
 
-    setDetectedNutrients(Array.from(found));
-    setHasPeanutWarning(hasPeanut);
-    setAnalysisDone(true);
-
-    if (hasPeanut) {
-      Alert.alert('Allergy alert', "Don't give this meal to the child (peanut allergy).");
+      console.error('Nutrition extraction API analysis failed:', error);
+      Alert.alert(
+        'Service unavailable',
+        'Could not reach nutrition extraction service. Please try again.',
+      );
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
-  const getNextMealId = (): MealId | null => {
-    const now = new Date();
-    const today = new Date();
-    const mealsWithDate = TODAY_MEALS.map((meal) =>
-      new Date(
-        today.getFullYear(),
-        today.getMonth(),
-        today.getDate(),
-        meal.hour,
-        meal.minute,
-      ),
-    );
+  const isSafeForChild = useMemo(
+    () => !!safetyStatus && safetyStatus.toLowerCase() === 'safe',
+    [safetyStatus],
+  );
 
-    const upcomingIndexes = mealsWithDate
-      .map((dt, index) => ({ dt, index }))
-      .filter(({ dt }) => dt >= now);
-
-    if (upcomingIndexes.length === 0) {
-      return null;
-    }
-
-    const next = upcomingIndexes.reduce((prev, curr) =>
-      curr.dt < prev.dt ? curr : prev,
-    );
-
-    return TODAY_MEALS[next.index].id;
+  const handleCloseModal = () => {
+    setAnalysisDone(false);
+    setImageUri(null);
+    setDescription('');
+    setFoodIdentified('');
+    setNutrients([]);
+    setAnalysisSummary('');
+    setSafetyStatus(null);
+    setIsAnalyzing(false);
   };
-
-  const handleAddToUpcomingMeal = () => {
-    const nextMealId = getNextMealId();
-    if (!nextMealId) {
-      Alert.alert('No upcoming meals', 'All meals for today are already past.');
-      return;
-    }
-
-    router.replace({
-      pathname: '/(tabs)/location',
-      params: { completedMealId: nextMealId },
-    });
-  };
-
-  const isMealBad = useMemo(
-    () => analysisDone && (hasPeanutWarning || detectedNutrients.length === 0),
-    [analysisDone, hasPeanutWarning, detectedNutrients],
-  );
-
-  const isMealGood = useMemo(
-    () => analysisDone && !hasPeanutWarning && detectedNutrients.length > 0,
-    [analysisDone, hasPeanutWarning, detectedNutrients],
-  );
-
-  const alternativeSuggestions = useMemo(
-    () => [
-      'Fruit and yogurt bowl without nuts',
-      'Rice with vegetables and egg (no peanuts)',
-      'Soft steamed vegetables with mashed potato',
-    ],
-    [],
-  );
 
   return (
     <>
@@ -230,9 +134,9 @@ export default function NutritionTrackerScreen() {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Nutrition Tracker</Text>
+        <Text style={styles.title}>Nutrition Checker</Text>
         <Text style={styles.subtitle}>
-          Capture or describe a meal to see basic nutrition and safety for your child.
+          Capture or describe a meal to extract nutrition information for your child.
         </Text>
 
         <View style={styles.card}>
@@ -276,93 +180,72 @@ export default function NutritionTrackerScreen() {
           style={[styles.analyzeButton, !hasInput && styles.analyzeButtonDisabled]}
           activeOpacity={0.8}
           onPress={analyzeMeal}
+          disabled={!hasInput || isAnalyzing}
         >
-          <Text style={styles.analyzeButtonText}>Analyze meal</Text>
+          <Text style={styles.analyzeButtonText}>
+            {isAnalyzing ? 'Analyzing...' : 'Analyze meal'}
+          </Text>
         </TouchableOpacity>
 
-        {analysisDone && (
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Meal nutrition</Text>
-            {detectedNutrients.length > 0 ? (
+      </ScrollView>
+
+      <Modal
+        visible={analysisDone}
+        transparent
+        animationType="fade"
+        onRequestClose={() => {}}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalCard}>
+            <View style={styles.modalHeaderRow}>
+              <Text style={styles.sectionTitle}>Nutrition</Text>
+              <TouchableOpacity
+                style={styles.closeIconButton}
+                activeOpacity={0.8}
+                onPress={handleCloseModal}
+              >
+                <Ionicons name="close" size={20} color={Colors.dark} />
+              </TouchableOpacity>
+            </View>
+            {!!foodIdentified && (
+              <Text style={styles.helperText}>Detected meal: {foodIdentified}</Text>
+            )}
+
+            {!!safetyStatus && (
+              <View style={[styles.safetyBadge, isSafeForChild ? styles.safeBadge : styles.unsafeBadge]}>
+                <Ionicons
+                  name={isSafeForChild ? 'checkmark-circle' : 'alert-circle'}
+                  size={16}
+                  color={isSafeForChild ? Colors.success.DEFAULT : Colors.error}
+                />
+                <Text style={[styles.safetyBadgeText, isSafeForChild ? styles.safeText : styles.unsafeText]}>
+                  {isSafeForChild ? 'Safe to give' : 'Not safe to give'}
+                </Text>
+              </View>
+            )}
+
+            {nutrients.length > 0 ? (
               <View style={styles.nutrientChipsRow}>
-                {detectedNutrients.map((key) => (
-                  <View key={key} style={styles.nutrientChip}>
+                {nutrients.map((item) => (
+                  <View key={item} style={styles.nutrientChip}>
                     <Ionicons
-                      name="checkmark-circle"
+                      name="nutrition-outline"
                       size={16}
                       color={Colors.primary.DEFAULT}
                       style={styles.nutrientChipIcon}
                     />
-                    <Text style={styles.nutrientChipText}>{NUTRIENT_LABELS[key]}</Text>
+                    <Text style={styles.nutrientChipText}>{item}</Text>
                   </View>
                 ))}
               </View>
             ) : (
-              <Text style={styles.helperText}>
-                We could not detect specific nutrients from this description, but the meal
-                still provides energy.
-              </Text>
+              <Text style={styles.helperText}>No nutrients were returned by the analysis.</Text>
             )}
 
-            {hasPeanutWarning && (
-              <View style={styles.warningBox}>
-                <Ionicons
-                  name="alert-circle-outline"
-                  size={20}
-                  color={Colors.error}
-                  style={styles.warningIcon}
-                />
-                <Text style={styles.warningText}>
-                  This meal seems to include peanuts. Don&apos;t give this meal to the child
-                  (peanut allergy).
-                </Text>
-              </View>
-            )}
-            {isMealBad && (
-              <View style={styles.addToPlanBox}>
-                <Text style={styles.addToPlanTitle}>This meal may not be ideal</Text>
-                <Text style={styles.addToPlanSubtitle}>
-                  Based on our simple checks, this meal might not be the best choice for
-                  your child today. Here are some quick alternatives you can consider
-                  (without peanuts).
-                </Text>
-                {alternativeSuggestions.map((alt) => (
-                  <View key={alt} style={styles.alternativeRow}>
-                    <Ionicons
-                      name="sparkles-outline"
-                      size={16}
-                      color={Colors.primary.DEFAULT}
-                      style={styles.alternativeIcon}
-                    />
-                    <Text style={styles.alternativeText}>{alt}</Text>
-                  </View>
-                ))}
-              </View>
-            )}
-
-            {isMealGood && (
-              <View style={styles.addToPlanBox}>
-                <Text style={styles.addToPlanTitle}>
-                  Add to upcoming meal and mark as completed?
-                </Text>
-                <Text style={styles.addToPlanSubtitle}>
-                  Optional: we can treat this meal as the next meal in today&apos;s plan and
-                  mark that meal as completed.
-                </Text>
-                <TouchableOpacity
-                  style={styles.addToPlanButton}
-                  activeOpacity={0.8}
-                  onPress={handleAddToUpcomingMeal}
-                >
-                  <Text style={styles.addToPlanButtonText}>
-                    Add to next meal & mark completed
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
+            {!!analysisSummary && <Text style={styles.helperText}>{analysisSummary}</Text>}
           </View>
-        )}
-      </ScrollView>
+        </View>
+      </Modal>
     </>
   );
 }
@@ -453,92 +336,84 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.white,
   },
-  nutrientChipsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 4,
-  },
-  nutrientChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 999,
-    backgroundColor: Colors.gray.light,
-  },
-  nutrientChipIcon: {
-    marginRight: 4,
-  },
-  nutrientChipText: {
-    fontSize: 13,
-    color: Colors.dark,
-    fontWeight: '500',
-  },
   helperText: {
     fontSize: 13,
     color: Colors.gray.DEFAULT,
     marginTop: 4,
   },
-  warningBox: {
+  safetyBadge: {
+    marginTop: 10,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginTop: 12,
-    padding: 10,
-    borderRadius: 12,
-    backgroundColor: '#FEE2E2',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
     borderWidth: 1,
+  },
+  safeBadge: {
+    backgroundColor: Colors.success.light,
+    borderColor: Colors.success.DEFAULT,
+  },
+  unsafeBadge: {
+    backgroundColor: Colors.gray.light,
     borderColor: Colors.error,
   },
-  warningIcon: {
-    marginRight: 8,
-    marginTop: 2,
-  },
-  warningText: {
-    flex: 1,
+  safetyBadgeText: {
+    marginLeft: 6,
     fontSize: 13,
+    fontWeight: '600',
+  },
+  safeText: {
+    color: Colors.success.DEFAULT,
+  },
+  unsafeText: {
     color: Colors.error,
   },
-  addToPlanBox: {
-    marginTop: 16,
-    padding: 12,
-    borderRadius: 14,
-    backgroundColor: '#EEF5FF',
-  },
-  addToPlanTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: Colors.dark,
-    marginBottom: 4,
-  },
-  addToPlanSubtitle: {
-    fontSize: 13,
-    color: Colors.gray.DEFAULT,
-    marginBottom: 10,
-  },
-  alternativeRow: {
+  nutrientChipsRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginTop: 6,
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 10,
   },
-  alternativeIcon: {
+  nutrientChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+    backgroundColor: Colors.gray.light,
+  },
+  nutrientChipIcon: {
     marginRight: 6,
-    marginTop: 2,
   },
-  alternativeText: {
-    flex: 1,
+  nutrientChipText: {
     fontSize: 13,
     color: Colors.dark,
-  },
-  addToPlanButton: {
-    borderRadius: 999,
-    paddingVertical: 10,
-    alignItems: 'center',
-    backgroundColor: Colors.primary.DEFAULT,
-  },
-  addToPlanButtonText: {
-    fontSize: 14,
     fontWeight: '600',
-    color: Colors.white,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.45)',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  modalCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 16,
+    padding: 16,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  closeIconButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.gray.light,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

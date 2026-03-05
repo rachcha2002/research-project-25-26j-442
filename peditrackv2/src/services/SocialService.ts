@@ -1,5 +1,6 @@
-const API_BASE_URL = 'http://10.72.187.59:3007/api';
-export const FILE_BASE_URL = 'http://10.72.187.59:3007/api/file/uploads/';
+
+const API_BASE_URL = 'http://10.174.51.59:3007/api';
+export const FILE_BASE_URL = 'http://10.174.51.59:3007/api/file/uploads/';
 
 export interface Post {
     PostID: string;

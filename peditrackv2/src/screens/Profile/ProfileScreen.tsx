@@ -15,6 +15,8 @@ import { useBaby } from '../../contexts/BabyContext';
 import * as ImagePicker from 'expo-image-picker';
 import { SecondaryTopBar } from '../../components/SecondaryTopBar/SecondaryTopBar';
 import { Colors } from '@/constants/Colors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -32,12 +34,25 @@ export default function ProfileScreen() {
           text: 'Logout',
           style: 'destructive',
           onPress: async () => {
-            await logout();
-            router.replace('/auth/onboarding');
+            try {
+              await logout();
+            } catch (e) {
+              console.log('Logout error (navigating anyway):', e);
+            }
+            router.replace('/auth/login');
           },
         },
       ]
     );
+  };
+
+  const handleSubscriptionClick = () => {
+    if (!user) return;
+    if (user.isPro) {
+      router.push('/profile/manage-subscription' as any);
+    } else {
+      router.push('/profile/subscription' as any);
+    }
   };
 
   const handleUploadPhoto = async () => {
@@ -79,8 +94,8 @@ export default function ProfileScreen() {
         showBackButton={true}
         onBackPress={() => router.back()}
       />
-      
-      <ScrollView>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
         {/* Profile Picture */}
         <View style={styles.profileSection}>
           <TouchableOpacity onPress={handleUploadPhoto} disabled={isUploading}>
@@ -102,8 +117,20 @@ export default function ProfileScreen() {
               </View>
             </View>
           </TouchableOpacity>
-          
-          <Text style={styles.name}>{user.name}</Text>
+
+          <View style={styles.nameRow}>
+            <Text style={styles.name}>{user.name}</Text>
+            {user.isPro && (
+              <LinearGradient
+                colors={['#F59E0B', '#F59E0B']}
+                style={styles.proBadge}
+                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+              >
+                <Ionicons name="star" size={12} color="#fff" />
+                <Text style={styles.proBadgeText}>PRO</Text>
+              </LinearGradient>
+            )}
+          </View>
           <Text style={styles.email}>{user.email}</Text>
         </View>
 
@@ -120,9 +147,9 @@ export default function ProfileScreen() {
             <Text style={styles.statValue}>
               {user.createdAt
                 ? new Date(user.createdAt).toLocaleDateString('en-US', {
-                    month: 'short',
-                    year: 'numeric',
-                  })
+                  month: 'short',
+                  year: 'numeric',
+                })
                 : 'N/A'}
             </Text>
             <Text style={styles.statLabel}>Member Since</Text>
@@ -146,6 +173,13 @@ export default function ProfileScreen() {
             title="Manage Babies"
             subtitle={`${babies.length} baby profile${babies.length !== 1 ? 's' : ''}`}
             onPress={() => router.push('/profile/baby-profiles')}
+          />
+          <MenuItem
+            icon={user.isPro ? "⭐" : "🚀"}
+            title={user.isPro ? "Manage Subscription" : "Upgrade to PRO"}
+            titleColor={user.isPro ? Colors.primary.DEFAULT : Colors.primary.DEFAULT}
+            onPress={handleSubscriptionClick}
+            showArrow={true}
           />
           <MenuItem
             icon="🚪"
@@ -239,11 +273,29 @@ const styles = StyleSheet.create({
   camera: {
     fontSize: 16,
   },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  proBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  proBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '700',
+  },
   name: {
     fontSize: 24,
     fontWeight: 'bold',
     color: Colors.dark,
-    marginBottom: 4,
   },
   email: {
     fontSize: 16,

@@ -1,6 +1,7 @@
 import { Tabs, useSegments, useRouter } from 'expo-router';
-import React from 'react';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import { Platform, StyleSheet, Alert } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { TabBarIcon } from '@/components/BottomNav';
 import { TopBar } from '@/components/TopBar';
 import { Colors } from '@/constants/Colors';
@@ -10,19 +11,36 @@ import { useBaby } from '../../src/contexts/BabyContext';
 export default function TabLayout() {
   const segments = useSegments();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
   const { selectedBaby } = useBaby();
   const hideUI = (segments as string[]).includes('feeding');
+  const insets = useSafeAreaInsets();
+  const wasAuthenticated = useRef(false);
+
+  // Track when user becomes authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      wasAuthenticated.current = true;
+    }
+  }, [isAuthenticated]);
+
+  // Auth guard — only redirect if user WAS authenticated but session expired
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated && wasAuthenticated.current) {
+      wasAuthenticated.current = false;
+      Alert.alert('Session Expired', 'Please log in to continue.');
+      router.replace('/auth/login');
+    }
+  }, [isLoading, isAuthenticated]);
 
   return (
     <>
       {!hideUI && (
-        <TopBar 
+        <TopBar
           username={user?.name}
           childName={selectedBaby?.name}
           profileImage={user?.profilePicture}
           onProfilePress={() => router.push('/profile')}
-          onNotificationPress={() => console.log('Notification pressed')}
           onChildNamePress={() => router.push('/profile/baby-profiles')}
         />
       )}
@@ -33,8 +51,8 @@ export default function TabLayout() {
           tabBarStyle: {
             backgroundColor: Colors.white,
             borderTopWidth: 0,
-            height: Platform.OS === 'ios' ? 85 : 70,
-            paddingBottom: Platform.OS === 'ios' ? 25 : 10,
+            height: 60 + Math.max(insets.bottom, 10),
+            paddingBottom: Math.max(insets.bottom, 10),
             paddingTop: 10,
             ...styles.tabBarShadow,
           },

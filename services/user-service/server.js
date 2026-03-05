@@ -1,4 +1,9 @@
 require('dotenv').config(); // MUST be first - loads .env before other modules
+const dns = require('dns');
+// Fix for ISP routers that expose DNS on IPv6 link-local only (fe80::1)
+// Node.js c-ares resolver can't reach those, so we use public DNS servers
+dns.setServers(['8.8.8.8', '1.1.1.1']);
+
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -21,6 +26,10 @@ const limiter = rateLimit({
 // Middleware
 app.use(helmet()); // Security headers
 app.use(cors()); // Enable CORS for all routes
+
+// Stripe webhook needs raw body - must be BEFORE express.json()
+app.use('/api/subscription/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json()); // Parse JSON bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 app.use(morgan('dev')); // HTTP request logging
@@ -42,6 +51,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/users', require('./routes/users'));
 app.use('/api/babies', require('./routes/babies'));
 app.use('/api/upload', require('./routes/upload'));
+app.use('/api/subscription', require('./routes/subscription'));
 
 // 404 handler
 app.use((req, res) => {
@@ -88,19 +98,47 @@ app.use((err, req, res, next) => {
 
 // MongoDB Connection
 const connectDB = async () => {
+  const mongoUri = process.env.MONGODB_URI;
+  const mongoDirectUri = process.env.MONGODB_URI_DIRECT;
+
+  if (!mongoUri) {
+    console.error('❌ MongoDB connection error: MONGODB_URI is not set in .env');
+    process.exit(1);
+  }
+
   try {
-    await mongoose.connect(process.env.MONGODB_URI, {
+    await mongoose.connect(mongoUri, {
       family: 4, // Force IPv4
     });
     console.log('✅ MongoDB connected successfully');
     console.log(`📊 Database: ${mongoose.connection.db.databaseName}`);
   } catch (error) {
+    const isSrvDnsFailure = error?.code === 'ECONNREFUSED' && error?.message?.includes('querySrv');
+
+    if (isSrvDnsFailure && mongoDirectUri) {
+      try {
+        console.warn('⚠️  SRV DNS lookup failed, trying MONGODB_URI_DIRECT fallback...');
+        await mongoose.connect(mongoDirectUri, {
+          family: 4,
+        });
+        console.log('✅ MongoDB connected successfully using direct URI fallback');
+        console.log(`📊 Database: ${mongoose.connection.db.databaseName}`);
+        return;
+      } catch (fallbackError) {
+        console.error('❌ MongoDB direct URI fallback failed:', fallbackError.message);
+      }
+    }
+
     console.error('❌ MongoDB connection error:', error.message);
     console.error('💡 Tips:');
     console.error('   - Make sure MongoDB Atlas cluster is running');
     console.error('   - Verify your IP is whitelisted in MongoDB Atlas');
     console.error('   - Check your connection string in .env file');
     console.error('   - Ensure network connectivity');
+    if (isSrvDnsFailure) {
+      console.error('   - SRV DNS lookup failed: try changing DNS to 8.8.8.8 or 1.1.1.1');
+      console.error('   - Or add MONGODB_URI_DIRECT in .env (non-SRV mongodb:// URI)');
+    }
     process.exit(1);
   }
 };
@@ -146,6 +184,13 @@ connectDB().then(() => {
     console.log('  POST   /api/upload/baby-photo/:babyId');
     console.log('  DELETE /api/upload/profile-picture');
     console.log('  DELETE /api/upload/baby-photo/:babyId');
+    console.log('  POST   /api/subscription/create-checkout');
+    console.log('  GET    /api/subscription/status');
+    console.log('  PUT    /api/subscription/auto-renew');
+    console.log('  POST   /api/subscription/pay-now');
+    console.log('  POST   /api/subscription/cancel');
+    console.log('  POST   /api/subscription/webhook');
+    console.log('  POST   /api/subscription/verify-session');
     console.log('═══════════════════════════════════════════════');
     console.log('');
   });

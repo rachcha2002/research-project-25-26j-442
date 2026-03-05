@@ -227,13 +227,16 @@ export const HomeScreen: React.FC = () => {
            <Text style={styles.actionText}>Emergency</Text>
              </TouchableOpacity>
              
-             {/* Feeding Times (kept as requested) */}
-             <View style={[styles.actionCard, styles.card, styles.actionCardRight]}>
+             <TouchableOpacity
+              style={[styles.actionCard, styles.card, styles.actionCardRight]}
+              onPress={() => router.push('/nutrition-tracker')}
+              activeOpacity={0.8}
+             >
               <View style={styles.actionIcon}>
                 <Text style={styles.actionEmoji}>🍽️</Text>
               </View>
-              <Text style={styles.actionText}>Feeding Times</Text>
-            </View>
+              <Text style={styles.actionText}>Nutrition Checker</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>

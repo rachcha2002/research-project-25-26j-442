@@ -1,0 +1,101 @@
+Item Name,Ideal_Meal_Time,Cut_Size,Visual_Color,Prep_Style,Cost,Allergies,Serving Size (Child),Calories (kcal),Carbs (g),Protein (g),Fat (g),Fiber (g),Health_Benefit
+Pumpkin Curry (Kiriata),Lunch;Dinner,Soft Chunks,Orange,Kirata,Low,None,0.25 cup,60,8,1,3,2.5,Vitamin A (Vision)
+Pumpkin Mash (Sweet),Breakfast;Snack,Smooth Mash,Orange,Mashed,Low,None,0.25 cup,50,10,1,0.5,3,Easy Digestion
+Roasted Pumpkin Cubes,Lunch;Snack,Soft Cubes,Orange,Roasted,Low,None,0.25 cup,70,9,1,3.5,2.5,High Energy
+Carrot Curry (Kiriata),Lunch;Dinner,Soft Coins,Orange,Kirata,Low,None,0.25 cup,55,7,1,3,2,Immunity
+Carrot Sambol (Raw),Lunch,Grated,Orange,Raw/Lemon,Low,None,2 tbsp,20,4,0.5,0.1,1.5,Crunchy Texture
+Steamed Carrot Sticks,Snack;,Sticks,Orange,Steamed,Low,None,4 sticks,30,6,0.5,0.2,2,Teething/Motor Skills
+Carrot & Pea Stir-fry,Dinner,Small Cubes,Orange/Green,Stir-fry,Low,None,0.25 cup,65,8,2,3,3,Eye Health
+Potato Curry (Kiriata),Lunch;Dinner,Soft Chunks,Yellow,Kirata,Low,None,0.25 cup,80,12,1.5,3,1.5,Calorie Boost
+Potato Tempered (Ala Theldala),Lunch;Dinner,Soft Cubes,Yellow/Red,Tempered,Low,None,0.25 cup,100,14,2,5,2,Weight Gain
+Mashed Potato (Plain),Lunch;Snack,Smooth Mash,White,Mashed,Low,Dairy,0.25 cup,90,13,2,4,1.5,Comfort Food
+Sweet Potato Curry,Lunch,Soft Chunks,Yellow/Purple,Kirata,Low,None,0.25 cup,85,15,1,2.5,2.5,Complex Carbs
+Beetroot Curry (Kiriata),Lunch;Dinner,Soft Strips,Red/Purple,Kirata,Low,None,0.25 cup,50,8,1,2,2,Anemia Prevention
+Beetroot Sambol (Raw),Lunch,Grated,Red/Purple,Raw/Lemon,Low,None,2 tbsp,25,5,0.5,0.2,1.5,Blood Health
+Gotu Kola Sambol,Lunch,Finely Chopped,Green,Raw/Coconut,Low,None,2 tbsp,35,3,1,2.5,1.5,Brain Function
+Gotu Kola Mallum,Lunch,Finely Chopped,Green,Steamed/Coconut,Low,None,2 tbsp,40,3.5,1.5,3,2,Memory & Fiber
+Gotu Kola Kanda (Strained),Breakfast,Liquid,Green,Broth,Low,None,0.5 cup,60,10,1,2,1,Hydration
+Mukunuwenna Mallum,Lunch,Finely Chopped,Green,Steamed/Coconut,Low,None,2 tbsp,45,4,2,3,2.5,Vision & Iron
+Kankun (Water Spinach) Stir-fry,Dinner,Chopped Leaves,Green,Stir-fry,Low,None,0.25 cup,30,3,1.5,1.5,2,Bowel Movement
+Kathurumurunga Mallum,Lunch,Finely Chopped,Green,Steamed/Coconut,Low,None,2 tbsp,40,3,3,2,2,Calcium for Bones
+Spinach (Niwithi) Kiriata,Lunch;Dinner,Soft Leaves,Green,Kirata,Low,None,0.25 cup,45,4,2,2.5,2.5,High Iron
+Spinach & Dhal Curry,Lunch;Dinner,Mashed Leaves,Green/Yellow,Mixed Kirata,Low,None,0.25 cup,80,10,4,3,3.5,Growth & Immunity
+Thampala (Amaranth) Curry,Lunch;Dinner,Soft Leaves,Green/Red,Kirata,Low,None,0.25 cup,40,4,2,2,2,Blood Building
+Sarana Curry,Lunch,Soft Stems,Green,Kirata,Low,None,0.25 cup,35,4,1,1.5,2.5,Kidney Health
+Kohila Leaves Mallum,Lunch,Finely Chopped,Green,Steamed/Coconut,Low,None,2 tbsp,45,5,1.5,2.5,4,Constipation Relief
+Kohila Root Curry,Lunch,Soft Chunks,Brown,Kirata,Low,None,0.25 cup,55,9,1,2,5,Extreme Fiber
+Green Beans (Bonchi) Kiriata,Lunch;Dinner,Short Pieces,Green,Kirata,Low,None,0.25 cup,45,5,1.5,2,2.5,Folate
+Green Beans Tempered,Lunch;Dinner,Short Pieces,Green,Tempered,Low,None,0.25 cup,60,6,1.5,4,2.5,Calorie Dense
+Winged Bean (Dambala) Curry,Lunch;Dinner,Thin Slices,Green,Kirata,Low,None,0.25 cup,40,4,2,2,2.5,Protein & Fiber
+Long Beans (Mae Karal) Curry,Lunch;Dinner,Short Pieces,Green,Kirata,Low,None,0.25 cup,45,5,1.5,2,3,Gut Health
+Green Peas Curry (Kiriata),Lunch;Dinner,Whole Soft,Green,Kirata,Low,None,0.25 cup,70,10,3,2.5,3.5,Plant Protein
+Ash Gourd (Puhul) Curry,Lunch;Dinner,Soft Chunks,Translucent,Kirata,Low,None,0.25 cup,35,4,0.5,2,1.5,Cooling Body
+Snake Gourd (Pathola) Curry,Lunch;Dinner,Thin Slices,Pale Green,Kirata,Low,None,0.25 cup,30,3,0.5,2,1.5,Hydration
+Ridge Gourd (Watakolu) Curry,Lunch;Dinner,Soft Chunks,Green,Kirata,Low,None,0.25 cup,35,4,0.5,2,2,Easy to Chew
+Bitter Gourd (Karawila) White Curry,Lunch,Thin Slices,Green,Mild Kirata,Low,None,2 tbsp,40,5,1,2.5,2,Blood Sugar Regulation
+Karawila Sambol (Deep Fried),Lunch,Thin Slices,Brown,Fried/Tomato,Med,None,1 tbsp,45,3,0.5,4,1,Appetite Stimulant
+Cucumber (Pipinya) Curry,Lunch,Soft Chunks,Pale Green,Kirata,Low,None,0.25 cup,30,3,0.5,2,1,Cooling Property
+Cucumber Sticks (Raw),Snack,Sticks,Green/White,Raw,Low,None,4 sticks,10,2,0.2,0,1,Hydration & Crunch
+Brinjal (Wambatu) Moju (Mild),Lunch;Dinner,Soft Strips,Dark Purple,Sweet/Sour Fried,Med,None,2 tbsp,70,8,0.5,4.5,2,High Satiety
+Brinjal Curry (Kiriata),Lunch;Dinner,Soft Chunks,Purple/Brown,Kirata,Low,None,0.25 cup,50,6,1,2.5,2.5,Brain Health
+Fried Brinjal Slices,Lunch;Dinner,Rounds,Brown,Fried,Low,None,2 slices,65,5,0.5,5,1.5,Calorie Boost
+Ash Plantain (Ash Kehel) Curry,Lunch,Soft Chunks,Yellowish,Kirata,Low,None,0.25 cup,75,14,1,2,2.5,Stomach Soothing
+Fried Ash Plantain,Lunch,Thick Chips,Golden,Fried,Low,None,0.25 cup,110,16,1,5,2,Weight Gain
+Banana Blossom (Kehel Muwa) Curry,Lunch,Finely Chopped,Dark Brown,Kirata,Low,None,0.25 cup,55,8,1.5,2.5,4.5,High Fiber & Iron
+Banana Blossom Tempered,Lunch,Finely Chopped,Dark Brown,Tempered,Low,None,0.25 cup,70,9,1.5,4,4.5,Digestive Health
+Breadfruit (Del) Curry,Lunch,Soft Chunks,Yellow,Kirata,Low,None,0.25 cup,90,15,1.5,3,3.5,Dense Energy
+Jackfruit (Kos) Curry (Kiri Kos),Lunch,Soft Strips,Yellow/White,Kirata,Low,None,0.25 cup,85,16,1.5,2.5,4,Sustained Energy
+Young Jackfruit (Polos) Curry,Lunch,Very Soft Chunks,Dark Brown,Slow Cooked,Low,None,0.25 cup,60,10,1.5,2,4.5,Constipation Relief
+Mushroom (Bimli) Curry,Lunch;Dinner,Soft Slices,Brown/White,Kirata,Med,None,0.25 cup,45,4,2.5,2.5,1.5,Immunity & Zinc
+Tempered Mushrooms,Lunch;Dinner,Soft Slices,Brown,Tempered,Med,None,0.25 cup,65,5,2.5,4.5,1.5,Protein Boost
+Tomato Curry (Thakkali),Lunch;Dinner,Soft Quarters,Red,Kirata,Low,None,0.25 cup,35,4,1,2,1.5,Vitamin C
+Tomato Wedges (Raw),Snack;,Wedges,Red,Raw,Low,None,0.25 cup,15,3,0.5,0.1,1,Lycopene
+Okra (Bandakka) Curry,Lunch;Dinner,Soft Rings,Green,Kirata,Low,None,0.25 cup,40,5,1,2,2.5,Joint Health
+Crispy Fried Okra,Snack;,Thin Rings,Green/Brown,Fried,Low,None,0.25 cup,75,6,1,6,2,Crunchy Alternative
+Cabbage Curry (Kiriata),Lunch;Dinner,Soft Shreds,Pale Green,Kirata,Low,None,0.25 cup,35,4,1,2,2,Vitamin K
+Cabbage Mallum,Lunch,Finely Shredded,Pale Green,Steamed/Coconut,Low,None,2 tbsp,40,4,1,2.5,2.5,Gut Health
+Cabbage & Carrot Stir-fry,Lunch;Dinner,Thin Strips,Green/Orange,Stir-fry,Low,None,0.25 cup,50,5,1,3,2.5, Veggie
+Leeks Tempered,Lunch;Dinner,Soft Rings,Green,Tempered,Low,None,0.25 cup,55,6,1,3.5,2,Flavor Enhancer
+Cauliflower White Curry,Lunch;Dinner,Small Florets,White,Kirata,Med,None,0.25 cup,45,4,1.5,2.5,2,Brain Development
+Cauliflower Mash,Lunch;Dinner,Smooth Mash,White,Mashed,Med,Dairy,0.25 cup,60,5,2,4,2,Potato Alternative
+Broccoli Stir-fry,Lunch;Dinner,Small Florets,Dark Green,Stir-fry,High,None,0.25 cup,50,5,2,3,2.5,Vitamin C & Iron
+Steamed Broccoli Cubes,Snack;,Small Florets,Dark Green,Steamed,High,None,0.25 cup,25,4,2,0.2,2.5,Bone Health
+Radish (Rabu) Curry,Lunch,Soft Slices,White,Kirata,Low,None,0.25 cup,35,4,0.5,2,1.5,Liver Health
+Radish Sambol (Mild),Lunch,Finely Grated,White/Orange,Raw/Lemon,Low,None,2 tbsp,20,3,0.5,0.1,1,Digestion
+Lotus Root (Nelum Alu) Curry,Lunch;Dinner,Soft Slices,Cream/Brown,Kirata,Med,None,0.25 cup,65,12,1,2,3,Blood Circulation
+Lotus Root Chips,Snack,Thin Slices,Golden,Fried,Med,None,0.25 cup,90,14,1,4,2,Healthy Crunch
+Sweet Corn Curry,Lunch;Dinner,Kernels,Yellow,Kirata,Med,None,0.25 cup,75,12,2,2.5,2.5,Energy & Vision
+Boiled Corn Kernels,Snack;,Kernels,Yellow,Boiled/Butter,Med,Dairy,0.25 cup,85,14,2.5,3,2.5,Finger Food
+Bell Pepper (Capsicum) White Curry,Lunch;Dinner,Soft Strips,Green/Red,Kirata,Med,None,0.25 cup,35,4,0.5,2,1.5,Immunity
+Stuffed Capsicum (Potato filling),Lunch;Dinner,Whole Soft,Green/Yellow,Baked/Steamed,Med,None,0.5 pepper,90,12,2,4,2.5,Fun Shapes
+Baby Corn Stir-fry,Lunch;Dinner,Short Pieces,Yellow,Stir-fry,High,None,0.25 cup,45,6,1,2.5,2,Chewing Practice
+Drumstick (Murunga) Flesh/Curry,Lunch,Soft Pulp,Green/White,Kirata,Low,None,2 tbsp pulp,30,4,1,1.5,1.5,Iron & Minerals
+Lasoda (Lolu) Curry,Lunch,Soft Chunks,Greenish,Kirata,Med,None,0.25 cup,40,5,1,2,2,Mucilage/Gut Soothing
+Kekiri (Field Cucumber) Curry,Lunch,Soft Chunks,Yellow/Orange,Kirata,Low,None,0.25 cup,35,5,0.5,2,1.5,Hydration
+Kekiri Sambol,Lunch,Small Cubes,Yellow,Raw/Coconut,Low,None,2 tbsp,25,4,0.5,1,1,Refreshing Base
+Spring Onion (Lunu Kola) Omelette Veg,Breakfast;Dinner,Chopped,Green/White,Fried with Egg,Low,Egg,2 tbsp,45,2,3,3,1,Immune Support
+Green Papaya Curry,Lunch,Soft Chunks,Pale Green,Kirata,Low,None,0.25 cup,45,7,0.5,2,2,Digestive Enzymes
+Mung Sprout Sambol,Lunch;Dinner,Short Sprouts,Green/White,Lightly Steamed,Low,None,2 tbsp,30,4,2,1,1.5,Vitamin C
+Chickpea & Spinach Mash,Lunch;Dinner,Smooth Mash,Green/Yellow,Mashed,Low,None,0.25 cup,80,11,4,2.5,3.5,Iron & Protein
+Taro Leaves (Kalu Ala Kola) Curry,Lunch,Very Soft Leaves,Dark Green,Slow Kirata,Low,None,0.25 cup,45,5,1.5,2.5,3,High Calcium
+Vegetable Soup (Clear),Dinner,Liquid/Tiny Cubes,Mixed,Broth,Low,None,0.5 cup,25,4,1,0.5,1,Sick Day Comfort
+Vegetable Soup (Creamy),Dinner,Smooth Puree,Orange/Yellow,Blended/Milk,Med,Dairy,0.5 cup,65,8,2,3,2,Calorie Dense
+Zucchini Mild Curry,Lunch;Dinner,Soft Slices,Green,Kirata,High,None,0.25 cup,35,4,1,2,1.5,Easy Digestion
+Steamed Zucchini Sticks,Snack;,Sticks,Green,Steamed,High,None,4 sticks,15,3,0.5,0.1,1,Finger Food
+Manioc Leaves (Manyokka Kola) Mallum,Lunch,Finely Chopped,Green,Steamed/Coconut,Low,None,2 tbsp,50,4,2.5,3,2.5,Protein & Iron
+Pea & Potato Samosa (Baked Veg),Snack,Triangles,Golden,Baked,Low,Gluten,1 small,110,14,3,4.5,2,Hidden Veggies
+Sweet Potato Wedges (Baked),Snack;,Wedges,Orange,Baked/Oil,Low,None,4 wedges,85,15,1,2.5,2.5,Beta-Carotene
+Carrot & Apple Salad (Grated),Snack,Grated,Orange/White,Raw,Med,None,0.25 cup,35,8,0.5,0.1,2,Sweet Fiber
+Beetroot & Coconut Milk Soup,Dinner,Smooth Puree,Pink,Blended,Low,None,0.5 cup,70,9,1,3.5,2,Anemia Recovery
+Pumpkin & Garlic Mash,Lunch;Dinner,Smooth Mash,Orange,Mashed,Low,Dairy,0.25 cup,65,9,1.5,3,2.5,Immunity
+Mixed Veg Fried Rice Elements,Lunch;Dinner,Tiny Cubes,Rainbow,Stir-fry,Med,None,0.25 cup,45,6,1.5,2,2,Color Exposure
+Green Bean & Carrot Fries,Snack,Thin Sticks,Green/Orange,Air-fried/Baked,Low,None,0.25 cup,55,7,1,2.5,3,Crunchy Veg
+Kiri Kos (Jackfruit) Mash,Lunch,Smooth Mash,Cream,Mashed,Low,None,0.25 cup,80,14,1.5,2.5,3.5,Dense Energy
+Gotu Kola & Tomato Salad,Lunch,Chopped,Green/Red,Raw,Low,None,2 tbsp,20,3,0.5,1,1,Vitamin C + Iron
+Steamed Asparagus Spears,Lunch;Dinner,Soft Spears,Green,Steamed,High,None,3 spears,20,3,2,0.2,1.5,Prebiotics
+Mashed Turnip/Swede,Dinner,Smooth Mash,White,Mashed/Butter,High,Dairy,0.25 cup,45,6,1,2,2,Vitamin C
+Roasted Cherry Tomatoes,Snack;,Whole Soft,Red,Roasted,High,None,0.25 cup,30,5,1,1,1.5,Antioxidants
+Innala (Chinese Potato) Curry,Lunch;Dinner,Soft Chunks,Brown/White,Kirata,Med,None,0.25 cup,75,15,1,2,2.5,Gut Health
+Savoury Pumpkin Pancakes,Breakfast;Snack,Round Flat,Orange,Pan-fried,Low,Gluten;Egg,1 small,95,12,3,3.5,2,Hidden Veggies
+Boiled Edamame/Soybeans,Snack;,Beans,Green,Boiled,High,Soy,0.25 cup,60,4,5,2.5,3,High Protein
+Spinach & Cheese Bites,Snack;,Small Cubes,Green/Yellow,Baked,Med,Dairy;Egg,2 pieces,85,3,5,6,1.5,Calcium & Iron
