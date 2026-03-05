@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { getMedications, deleteMedication, Medication } from '@/services/healthAnalyticsService';
 import { cancelMedicationReminders } from '@/services/pushNotificationService';
@@ -18,11 +18,13 @@ export const MedicationsListScreen: React.FC = () => {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (selectedBaby) {
-      loadMedications();
-    }
-  }, [selectedBaby, selectedTab]);
+  useFocusEffect(
+    useCallback(() => {
+      if (selectedBaby) {
+        loadMedications();
+      }
+    }, [selectedBaby, selectedTab])
+  );
 
   const loadMedications = async () => {
     if (!selectedBaby) return;

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { getVaccinations, deleteVaccination, Vaccination } from '@/services/healthAnalyticsService';
 import { useBaby } from '@/contexts/BabyContext';
@@ -17,11 +17,13 @@ export const VaccinationsListScreen: React.FC = () => {
   const [vaccinations, setVaccinations] = useState<Vaccination[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (selectedBaby) {
-      loadVaccinations();
-    }
-  }, [selectedBaby, selectedTab]);
+  useFocusEffect(
+    useCallback(() => {
+      if (selectedBaby) {
+        loadVaccinations();
+      }
+    }, [selectedBaby, selectedTab])
+  );
 
   const loadVaccinations = async () => {
     if (!selectedBaby) return;
