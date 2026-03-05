@@ -10,17 +10,17 @@
 
 // Get your computer's IP by running 'ipconfig' (Windows) or 'ifconfig' (Mac/Linux)
 
-const COMPUTER_IP = '192.168.1.179'; // Update this with your actual IP
+const COMPUTER_IP = '192.168.1.2'; // Update this with your actual IP
 
 // Detect if running in Expo Go vs production
 const __DEV__ = process.env.NODE_ENV !== 'production';
 
 export const API_CONFIG = {
   // User Service API (port 5002)
-  USER_SERVICE_URL: __DEV__ 
+  USER_SERVICE_URL: __DEV__
     ? `http://${COMPUTER_IP}:5002/api`
     : 'https://your-production-user-service.com/api',
-  
+
   // Health Analytics Service API (port 5001)
   HEALTH_SERVICE_URL: __DEV__
     ? `http://${COMPUTER_IP}:5001/api`
@@ -30,34 +30,34 @@ export const API_CONFIG = {
   MEAL_RECOMMENDATION_SERVICE_URL: __DEV__
     ? `http://${COMPUTER_IP}:5050`
     : 'https://your-production-meal-service.com',
-  
+
   // Request timeout in milliseconds
   REQUEST_TIMEOUT: 30000,
 };
 
 // Google OAuth Configuration
 export const GOOGLE_CONFIG = {
-  // Get this from Google Cloud Console
-  WEB_CLIENT_ID: 'YOUR_GOOGLE_WEB_CLIENT_ID.apps.googleusercontent.com',
-  IOS_CLIENT_ID: 'YOUR_GOOGLE_IOS_CLIENT_ID.apps.googleusercontent.com',
-  ANDROID_CLIENT_ID: 'YOUR_GOOGLE_ANDROID_CLIENT_ID.apps.googleusercontent.com',
+  // Web Client ID from Google Cloud Console (used by mobile Google Sign-In SDK)
+  WEB_CLIENT_ID: '940950846010-07cph3uprj79bimn2vrb376ksv0ikfv1.apps.googleusercontent.com',
+  IOS_CLIENT_ID: '', // Set if you have a separate iOS client ID
+  ANDROID_CLIENT_ID: '', // Set if you have a separate Android client ID
 };
 
 // App Configuration
 export const APP_CONFIG = {
   APP_NAME: 'PediTrack',
   APP_VERSION: '2.0.0',
-  
+
   // Token Storage Keys
   ACCESS_TOKEN_KEY: 'peditrack_access_token',
   REFRESH_TOKEN_KEY: 'peditrack_refresh_token',
   USER_DATA_KEY: 'peditrack_user_data',
   SELECTED_BABY_KEY: 'peditrack_selected_baby',
-  
+
   // File Upload Configuration
   MAX_IMAGE_SIZE: 5 * 1024 * 1024, // 5MB
   ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'],
-  
+
   // Validation
   PASSWORD_MIN_LENGTH: 8,
   PASSWORD_PATTERN: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,

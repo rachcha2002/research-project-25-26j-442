@@ -28,7 +28,11 @@ const config: ExpoConfig = {
   web: {
     favicon: './assets/favicon.png',
   },
-  plugins: ['expo-router'],
+  plugins: [
+    'expo-router',
+    'expo-web-browser',
+    '@react-native-google-signin/google-signin',
+  ],
   experiments: {
     typedRoutes: true,
   },

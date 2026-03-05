@@ -1,5 +1,5 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import userService, { User, AuthResponse } from '../services/userService';
+import userService, { User, AuthResponse, SubscriptionStatus } from '../services/userService';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { APP_CONFIG } from '../config/config';
@@ -23,8 +23,12 @@ interface AuthContextType {
   changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   uploadProfilePicture: (imageUri: string) => Promise<void>;
   setDefaultBaby: (babyId: string) => Promise<void>;
-  upgradeToPro: (plan: string) => Promise<void>;
+  createCheckoutSession: () => Promise<string>;
   cancelSubscription: () => Promise<void>;
+  getSubscriptionStatus: () => Promise<SubscriptionStatus>;
+  toggleAutoRenew: (autoRenew: boolean) => Promise<void>;
+  payNowWithSavedCard: () => Promise<{ success: boolean; message: string; needsCheckout?: boolean }>;
+  verifyCheckoutSession: (sessionId: string) => Promise<void>;
   clearError: () => void;
 }
 
@@ -58,10 +62,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     console.log('[AuthContext] checkAuthStatus started');
     try {
       setIsLoading(true);
-      
+
       const isAuth = await userService.isAuthenticated();
       console.log('[AuthContext] isAuthenticated:', isAuth);
-      
+
       if (isAuth) {
         // Get cached user data first
         const cachedUser = await userService.getUserData();
@@ -69,26 +73,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (cachedUser) {
           setUser(cachedUser);
         }
-        
+
         // Then fetch fresh data with timeout
         try {
           console.log('[AuthContext] Fetching fresh user data...');
           // Create a promise that rejects after 5 seconds
-          const timeoutPromise = new Promise((_, reject) => 
+          const timeoutPromise = new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Request timeout')), 5000)
           );
-          
+
           const freshUser = await Promise.race([
             userService.getCurrentUser(),
             timeoutPromise
           ]) as User;
-          
+
           console.log('[AuthContext] Fresh user data received');
           setUser(freshUser);
           await userService.saveUserData(freshUser);
         } catch (error: any) {
           console.error('[AuthContext] Error refreshing user:', error);
-          
+
           // If timeout or network error, tokens are likely invalid
           // Clear them and force logout rather than using stale cached data
           if (error?.message?.includes('timeout') || error?.message?.includes('401')) {
@@ -97,7 +101,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setUser(null);
             return; // Exit early, finally block will set isLoading to false
           }
-          
+
           // Check if tokens were cleared by response interceptor
           const stillAuth = await userService.isAuthenticated();
           if (!stillAuth) {
@@ -105,7 +109,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setUser(null);
             return;
           }
-          
+
           // For other errors, if we have no cached user, clear auth state
           if (!cachedUser) {
             console.log('[AuthContext] No cached user, clearing state');
@@ -127,13 +131,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const response: AuthResponse = await userService.login(email, password);
-      
+
       if (response.user) {
         setUser(response.user);
         await userService.saveUserData(response.user);
-        
+
         // Mark onboarding as completed for returning users
         await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
       }
@@ -150,11 +154,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const response: AuthResponse = await userService.register(name, email, password);
       setUser(response.user);
       await userService.saveUserData(response.user);
-      
+
       // Mark onboarding as completed for new users
       await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
     } catch (error) {
@@ -170,7 +174,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const response: AuthResponse = await userService.googleAuth(googleIdToken);
       setUser(response.user);
       await userService.saveUserData(response.user);
@@ -189,7 +193,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       await userService.logout();
       // Keep this flag so the user always goes to /auth/login, never onboarding
       await AsyncStorage.setItem('hasCompletedOnboarding', 'true');
@@ -220,7 +224,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const updatedUser = await userService.updateProfile(name);
       setUser(updatedUser);
       await userService.saveUserData(updatedUser);
@@ -237,7 +241,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       await userService.changePassword(currentPassword, newPassword);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to change password';
@@ -252,9 +256,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       const { url } = await userService.uploadProfilePicture(imageUri);
-      
+
       // Refresh user to get updated profile picture
       await refreshUser();
     } catch (error) {
@@ -269,7 +273,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const setDefaultBaby = async (babyId: string) => {
     try {
       setError(null);
-      
+
       const updatedUser = await userService.setDefaultBaby(babyId);
       setUser(updatedUser);
       await userService.saveUserData(updatedUser);
@@ -280,16 +284,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const upgradeToPro = async (plan: string) => {
+  const createCheckoutSession = async (): Promise<string> => {
     try {
       setIsLoading(true);
       setError(null);
-      
-      const updatedUser = await userService.upgradeToPro(plan);
-      setUser(updatedUser);
-      await userService.saveUserData(updatedUser);
+
+      const response = await userService.createCheckoutSession();
+      return response.checkoutUrl;
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to upgrade to PRO';
+      const message = error instanceof Error ? error.message : 'Failed to create checkout session';
       setError(message);
       throw error;
     } finally {
@@ -301,12 +304,69 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       setError(null);
-      
-      const updatedUser = await userService.cancelSubscription();
+
+      await userService.cancelSubscription();
+      // Refresh user data to reflect cancellation
+      await refreshUser();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to cancel subscription';
+      setError(message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getSubscriptionStatus = async (): Promise<SubscriptionStatus> => {
+    try {
+      return await userService.getSubscriptionStatus();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to get subscription status';
+      setError(message);
+      throw error;
+    }
+  };
+
+  const toggleAutoRenew = async (autoRenew: boolean) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      await userService.toggleAutoRenew(autoRenew);
+      await refreshUser();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to toggle auto-renewal';
+      setError(message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const payNowWithSavedCard = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const result = await userService.payNowWithSavedCard();
+      await refreshUser();
+      return result;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to process payment';
+      setError(message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyCheckoutSession = async (sessionId: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const updatedUser = await userService.verifyCheckoutSession(sessionId);
       setUser(updatedUser);
       await userService.saveUserData(updatedUser);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to cancel subscription';
+      const message = error instanceof Error ? error.message : 'Failed to verify checkout session';
       setError(message);
       throw error;
     } finally {
@@ -332,8 +392,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     changePassword,
     uploadProfilePicture,
     setDefaultBaby,
-    upgradeToPro,
+    createCheckoutSession,
     cancelSubscription,
+    getSubscriptionStatus,
+    toggleAutoRenew,
+    payNowWithSavedCard,
+    verifyCheckoutSession,
     clearError,
   };
 
