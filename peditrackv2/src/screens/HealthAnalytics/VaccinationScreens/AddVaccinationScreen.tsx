@@ -11,6 +11,7 @@ import {
   Platform,
   Modal,
   FlatList,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -28,6 +29,7 @@ import {
   VaccineType,
 } from '@/services/healthAnalyticsService';
 import { useBaby } from '@/contexts/BabyContext';
+import { scheduleVaccinationReminder, cancelVaccinationReminder } from '@/services/pushNotificationService';
 
 export const AddVaccinationScreen: React.FC = () => {
   const router = useRouter();
@@ -58,6 +60,9 @@ export const AddVaccinationScreen: React.FC = () => {
 
   const [showScheduledDatePicker, setShowScheduledDatePicker] = useState(false);
   const [showAdministeredDatePicker, setShowAdministeredDatePicker] = useState(false);
+  
+  const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [reminderOffsetDays, setReminderOffsetDays] = useState(1);
 
   useEffect(() => {
     loadVaccineTypes();
@@ -126,6 +131,9 @@ export const AddVaccinationScreen: React.FC = () => {
       setBatchNumber(data.batchNumber || '');
       setNotes(data.notes || '');
       setSideEffects(data.sideEffects?.join(', ') || '');
+      
+      if (data.reminderEnabled !== undefined) setReminderEnabled(data.reminderEnabled);
+      if (data.reminderOffsetDays !== undefined) setReminderOffsetDays(data.reminderOffsetDays);
     } catch (error) {
       console.error('Error loading vaccination:', error);
       Alert.alert('Error', 'Failed to load vaccination details');
@@ -186,13 +194,25 @@ export const AddVaccinationScreen: React.FC = () => {
         batchNumber: batchNumber.trim() || undefined,
         notes: notes.trim() || undefined,
         sideEffects: sideEffects.trim() ? sideEffects.split(',').map(s => s.trim()) : undefined,
+        reminderEnabled,
+        reminderOffsetDays: reminderEnabled ? reminderOffsetDays : undefined,
       };
 
       if (isEditMode && id) {
         await updateVaccination(id as string, vaccinationData);
+        // Clear any old reminders for this vaccination
+        await cancelVaccinationReminder(id as string);
+        
+        // Try to schedule the replacement (it won't do anything if not 'scheduled')
+        // We need the full object to schedule, so merge `id` in
+        await scheduleVaccinationReminder({ _id: id as string, ...vaccinationData } as Vaccination);
+        
         Alert.alert('Success', 'Vaccination updated successfully');
       } else {
-        await addVaccination(vaccinationData);
+        const newVaccine = await addVaccination(vaccinationData);
+        // addVaccination returns the created record containing the _id. Schedule it!
+        await scheduleVaccinationReminder(newVaccine);
+        
         Alert.alert('Success', 'Vaccination added successfully');
       }
 
@@ -329,6 +349,43 @@ export const AddVaccinationScreen: React.FC = () => {
               }}
             />
           )}
+
+          {/* Reminder Section */}
+          <View style={styles.section}>
+            <View style={styles.switchRow}>
+              <Text style={styles.label}>Enable Reminder</Text>
+              <Switch
+                value={reminderEnabled}
+                onValueChange={setReminderEnabled}
+                trackColor={{ false: '#D1D5DB', true: Colors.primary.light }}
+                thumbColor={reminderEnabled ? Colors.primary.DEFAULT : '#f4f3f4'}
+              />
+            </View>
+
+            {reminderEnabled && (
+              <View style={[styles.section, { marginTop: 12, marginBottom: 0 }]}>
+                <Text style={styles.label}>Remind me</Text>
+                <View style={styles.statusRow}>
+                  {[
+                    { label: 'On day of', value: 0 },
+                    { label: '1 day before', value: 1 },
+                    { label: '2 days before', value: 2 },
+                    { label: '1 week before', value: 7 },
+                  ].map((option) => (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[styles.statusButton, reminderOffsetDays === option.value && styles.statusButtonActive]}
+                      onPress={() => setReminderOffsetDays(option.value)}
+                    >
+                      <Text style={[styles.statusButtonText, reminderOffsetDays === option.value && styles.statusButtonTextActive]}>
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
+          </View>
 
           {/* Administered Date */}
           <View style={styles.section}>
@@ -619,6 +676,12 @@ const styles = StyleSheet.create({
   dropdownPlaceholder: {
     fontSize: 16,
     color: Colors.inactive,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   statusRow: {
     flexDirection: 'row',

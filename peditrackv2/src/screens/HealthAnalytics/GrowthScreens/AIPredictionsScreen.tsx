@@ -49,14 +49,24 @@ export const AIPredictionsScreen: React.FC = () => {
     period === '6months'  ? data?.predictions.sixMonths    :
     period === '12months' ? data?.predictions.twelveMonths : null;
 
+  // ── Format a trajectory label: ISO date → "MMM 'YY", future tags (+3m) pass through
+  const formatTrajLabel = (m: number | string | null): string => {
+    if (m == null) return '?';
+    if (typeof m === 'number') return m === 0 ? 'Now' : `+${m}mo`;
+    // Future relative labels like '+3m' pass through
+    if (typeof m === 'string' && m.startsWith('+')) return m;
+    // Try to parse as ISO date
+    const d = new Date(m as string);
+    if (isNaN(d.getTime())) return m as string;
+    const monthStr = d.toLocaleString('en-US', { month: 'short' });
+    const yearStr = String(d.getFullYear()).slice(2);
+    return `${monthStr} '${yearStr}`;
+  };
+
   // ── Chart data from real trajectory
   const chartData = data && data.trajectory && data.trajectory.heights
     ? {
-        labels: data.trajectory.months.map(m => {
-          if (m === 0) return 'Now';
-          if (typeof m === 'number') return `+${m}mo`;
-          return m.toString();
-        }),
+        labels: data.trajectory.months.map(formatTrajLabel),
         datasets: [{
           data: data.trajectory.heights,
           color: () => '#3B82F6',
@@ -67,14 +77,10 @@ export const AIPredictionsScreen: React.FC = () => {
 
   const chartDataWeight = data && data.trajectory && data.trajectory.weights
     ? {
-        labels: data.trajectory.months.map(m => {
-          if (m === 0) return 'Now';
-          if (typeof m === 'number') return `+${m}mo`;
-          return m.toString();
-        }),
+        labels: data.trajectory.months.map(formatTrajLabel),
         datasets: [{
           data: data.trajectory.weights,
-          color: () => '#10B981', // green metric
+          color: () => '#10B981',
           strokeWidth: 3,
         }],
       }

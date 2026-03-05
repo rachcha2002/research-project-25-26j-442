@@ -79,11 +79,11 @@ export const useHealthAnalytics = () => {
     
     getSymptomById: healthAnalyticsService.getSymptomById,
     
-    updateSymptom: healthAnalyticsService.updateSymptom,
+    // updateSymptom: healthAnalyticsService.updateSymptom, // Not implemented in healthAnalyticsService
     
-    deleteSymptom: healthAnalyticsService.deleteSymptom,
+    // deleteSymptom: healthAnalyticsService.deleteSymptom, // Not implemented in healthAnalyticsService
     
-    getSymptomsByCondition: healthAnalyticsService.getSymptomsByCondition,
+    // getSymptomsByCondition: healthAnalyticsService.getSymptomsByCondition, // Not implemented in healthAnalyticsService
 
     // Medications
     addMedication: (data: Omit<healthAnalyticsService.Medication, 'babyId'>) =>
@@ -114,11 +114,11 @@ export const useHealthAnalytics = () => {
     
     deleteVaccination: healthAnalyticsService.deleteVaccination,
     
-    getVaccinationSchedule: () =>
-      healthAnalyticsService.getVaccinationSchedule(getBabyId()),
+    // getVaccinationSchedule: () =>
+    //   healthAnalyticsService.getVaccinationSchedule(getBabyId()), // Not implemented
     
-    getUpcomingVaccinations: (days?: number) =>
-      healthAnalyticsService.getUpcomingVaccinations(getBabyId(), days),
+    getUpcomingVaccinations: () =>
+      healthAnalyticsService.getUpcomingVaccines(getBabyId()), // Uses correctly named getUpcomingVaccines without `days`
 
     // AI Insights
     getHealthInsights: () =>

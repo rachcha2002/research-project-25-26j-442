@@ -80,12 +80,19 @@ class PediTrackPredictor:
                 verbose=0
             )
             
-            # IMPORTANT: Use indices 1-4, ignore index 0!
+            # IMPORTANT: Use indices 1-4, ignore index 0 (auxiliary output)!
+            # Validate output shape to catch model retraining mismatches early.
+            if not isinstance(risk_preds, (list, tuple)) or len(risk_preds) < 5:
+                raise RuntimeError(
+                    f"srilanka_risks model returned {len(risk_preds) if hasattr(risk_preds, '__len__') else '?'} "
+                    "output tensors — expected at least 5 (1 auxiliary + 4 risk heads). "
+                    "Has the model been retrained with a different output structure?"
+                )
             risk_assessment = {
-                'growth_disorder': float(risk_preds[1][0][0]),
-                'developmental_delay': float(risk_preds[2][0][0]),
+                'growth_disorder':        float(risk_preds[1][0][0]),
+                'developmental_delay':    float(risk_preds[2][0][0]),
                 'nutritional_deficiency': float(risk_preds[3][0][0]),
-                'behavioral_issue': float(risk_preds[4][0][0])
+                'behavioral_issue':       float(risk_preds[4][0][0]),
             }
             
             # Calculate health score

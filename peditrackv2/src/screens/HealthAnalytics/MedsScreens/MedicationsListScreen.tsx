@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 import { getMedications, deleteMedication, Medication } from '@/services/healthAnalyticsService';
+import { cancelMedicationReminders } from '@/services/pushNotificationService';
 import { useBaby } from '@/contexts/BabyContext';
 
 type TabType = 'all' | 'active' | 'completed' | 'discontinued';
@@ -17,11 +18,13 @@ export const MedicationsListScreen: React.FC = () => {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (selectedBaby) {
-      loadMedications();
-    }
-  }, [selectedBaby, selectedTab]);
+  useFocusEffect(
+    useCallback(() => {
+      if (selectedBaby) {
+        loadMedications();
+      }
+    }, [selectedBaby, selectedTab])
+  );
 
   const loadMedications = async () => {
     if (!selectedBaby) return;
@@ -45,10 +48,10 @@ export const MedicationsListScreen: React.FC = () => {
     }
   };
 
-  const handleDelete = (medicationId: string, medicationName: string) => {
+  const handleDelete = (medication: Medication) => {
     Alert.alert(
       'Delete Medication',
-      `Are you sure you want to delete "${medicationName}"?`,
+      `Are you sure you want to delete "${medication.name}"?`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -56,7 +59,12 @@ export const MedicationsListScreen: React.FC = () => {
           style: 'destructive',
           onPress: async () => {
             try {
-              await deleteMedication(medicationId);
+              if (medication._id) {
+                await deleteMedication(medication._id);
+                if (medication.reminderEnabled && medication.reminderTimes) {
+                  await cancelMedicationReminders(medication._id, medication.reminderTimes);
+                }
+              }
               Alert.alert('Success', 'Medication deleted successfully');
               loadMedications();
             } catch (error) {
@@ -184,12 +192,12 @@ export const MedicationsListScreen: React.FC = () => {
                         <View
                           style={[
                             styles.statusBadge,
-                            { backgroundColor: getStatusColor(medication.status) },
+                            { backgroundColor: getStatusColor(medication.status ?? '') },
                           ]}
                         >
                           <Text style={styles.statusText}>
-                            {medication.status.charAt(0).toUpperCase() +
-                              medication.status.slice(1)}
+                            {(medication.status ?? '').charAt(0).toUpperCase() +
+                              (medication.status ?? '').slice(1)}
                           </Text>
                         </View>
                         {medication.reminderEnabled && (
@@ -206,7 +214,7 @@ export const MedicationsListScreen: React.FC = () => {
                     </View>
                   </View>
                   <TouchableOpacity
-                    onPress={() => handleDelete(medication._id!, medication.name)}
+                    onPress={() => handleDelete(medication)}
                     style={styles.deleteButton}
                   >
                     <Ionicons name="trash-outline" size={20} color="#EF4444" />
@@ -223,7 +231,7 @@ export const MedicationsListScreen: React.FC = () => {
           )}
         </ScrollView>
 
-        {/* Add Button */}
+        {/* Add Button — sits above the safe-area bottom edge */}
         <TouchableOpacity
           style={styles.addButton}
           onPress={() => router.push('/health-analytics/medications/add' as any)}
@@ -414,10 +422,9 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   addButton: {
-    position: 'absolute',
-    bottom: 20,
-    left: 20,
-    right: 20,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    marginTop: 8,
     backgroundColor: Colors.primary.DEFAULT,
     flexDirection: 'row',
     alignItems: 'center',
