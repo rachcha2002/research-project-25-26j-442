@@ -20,7 +20,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function ProfileScreen() {
   const router = useRouter();
-  const { user, logout, uploadProfilePicture, upgradeToPro } = useAuth();
+  const { user, logout, uploadProfilePicture } = useAuth();
   const { babies } = useBaby();
   const [isUploading, setIsUploading] = useState(false);
 
@@ -95,7 +95,7 @@ export default function ProfileScreen() {
         onBackPress={() => router.back()}
       />
 
-      <ScrollView>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
         {/* Profile Picture */}
         <View style={styles.profileSection}>
           <TouchableOpacity onPress={handleUploadPhoto} disabled={isUploading}>

@@ -63,6 +63,25 @@ export interface ApiResponse<T = any> {
   error?: string;
 }
 
+export interface SubscriptionStatus {
+  status: 'active' | 'canceled' | 'past_due' | 'expired' | 'incomplete' | 'trialing' | 'none';
+  isPro: boolean;
+  autoRenew: boolean;
+  paymentMethodLast4: string | null;
+  paymentMethodBrand: string | null;
+  currentPeriodStart: string | null;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  lastPaymentDate: string | null;
+  lastPaymentAmount: number | null;
+}
+
+export interface CheckoutSessionResponse {
+  success: boolean;
+  checkoutUrl: string;
+  sessionId: string;
+}
+
 // ==================== Axios Instance ====================
 
 class UserService {
@@ -362,18 +381,54 @@ class UserService {
     }
   }
 
-  async upgradeToPro(plan: string): Promise<User> {
+  // ==================== Subscription Management ====================
+
+  async createCheckoutSession(): Promise<CheckoutSessionResponse> {
     try {
-      const response = await this.api.put<{ message: string; user: User }>('/users/me/upgrade', { plan });
-      return response.data.user;
+      const response = await this.api.post<CheckoutSessionResponse>('/subscription/create-checkout');
+      return response.data;
     } catch (error) {
       throw this.handleError(error);
     }
   }
 
-  async cancelSubscription(): Promise<User> {
+  async getSubscriptionStatus(): Promise<SubscriptionStatus> {
     try {
-      const response = await this.api.put<{ message: string; user: User }>('/users/me/cancel-subscription');
+      const response = await this.api.get<{ success: boolean; subscription: SubscriptionStatus }>('/subscription/status');
+      return response.data.subscription;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async toggleAutoRenew(autoRenew: boolean): Promise<void> {
+    try {
+      await this.api.put('/subscription/auto-renew', { autoRenew });
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async payNowWithSavedCard(): Promise<{ success: boolean; message: string; needsCheckout?: boolean }> {
+    try {
+      const response = await this.api.post<{ success: boolean; message: string; needsCheckout?: boolean }>('/subscription/pay-now');
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async cancelSubscription(): Promise<void> {
+    try {
+      await this.api.post('/subscription/cancel');
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
+  async verifyCheckoutSession(sessionId: string): Promise<User> {
+    try {
+      const response = await this.api.post<{ success: boolean; user: User }>('/subscription/verify-session', { sessionId });
       return response.data.user;
     } catch (error) {
       throw this.handleError(error);

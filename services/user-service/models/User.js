@@ -54,6 +54,12 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: null
   },
+  stripeCustomerId: {
+    type: String,
+    unique: true,
+    sparse: true,
+    default: null
+  },
   defaultBabyProfile: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'BabyProfile',
