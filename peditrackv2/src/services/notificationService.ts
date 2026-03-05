@@ -1,103 +1,206 @@
-/**
- * notificationService.ts
- * Computes today's in-app medication reminders from active medications.
- * No push notifications — purely derived from stored data.
- */
-import { getMedications, Medication } from './healthAnalyticsService';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import { Platform } from 'react-native';
 
-export type ReminderStatus = 'overdue' | 'upcoming' | 'later';
+// Configure how notifications should be handled when app is in foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
-export interface MedicationNotification {
-  id: string;             // `${medicationId}_${time}`
-  type: 'medication';
-  title: string;          // "Amoxicillin 250mg"
-  body: string;           // "Due at 08:00 · Oral"
-  time: string;           // "08:00"
-  status: ReminderStatus;
+export interface MedicationReminderData {
   medicationId: string;
   medicationName: string;
   dosage: string;
+  babyId: string;
 }
 
-/** True if today falls within the medication's course dates */
-const isActiveToday = (med: Medication): boolean => {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+type MedicationReminderPayload = MedicationReminderData & {
+  type: 'medication_reminder';
+} & Record<string, unknown>;
 
-  const start = med.startDate ? new Date(med.startDate) : null;
-  const end   = med.endDate   ? new Date(med.endDate)   : null;
-
-  if (start && new Date(start.getFullYear(), start.getMonth(), start.getDate()) > today) return false;
-  if (end   && new Date(end.getFullYear(),   end.getMonth(),   end.getDate())   < today) return false;
-  return true;
+const isMedicationReminderPayload = (data: Record<string, unknown>): data is MedicationReminderPayload => {
+  return (
+    data.type === 'medication_reminder' &&
+    typeof data.medicationId === 'string' &&
+    typeof data.medicationName === 'string' &&
+    typeof data.dosage === 'string' &&
+    typeof data.babyId === 'string'
+  );
 };
-
-/** Convert "HH:MM" string to minutes since midnight */
-const toMinutes = (hhmm: string): number => {
-  const [h, m] = hhmm.split(':').map(Number);
-  return h * 60 + m;
-};
-
-const nowMinutes = (): number => {
-  const d = new Date();
-  return d.getHours() * 60 + d.getMinutes();
-};
-
-const statusForTime = (time: string): ReminderStatus => {
-  const diff = toMinutes(time) - nowMinutes();
-  if (diff < 0)   return 'overdue';
-  if (diff <= 120) return 'upcoming';
-  return 'later';
-};
-
-const statusOrder: Record<ReminderStatus, number> = { overdue: 0, upcoming: 1, later: 2 };
 
 /**
- * Fetch active medications for a baby and return today's reminder notifications,
- * sorted overdue → upcoming → later, then by time within each group.
+ * Request notification permissions from the user
  */
-export const getTodayReminders = async (
-  babyId: string,
-): Promise<{ notifications: MedicationNotification[]; badgeCount: number }> => {
+export const requestNotificationPermissions = async (): Promise<boolean> => {
   try {
-    const medications = await getMedications(babyId, { status: 'active' });
-
-    const notifications: MedicationNotification[] = [];
-
-    for (const med of medications) {
-      if (!med.reminderEnabled) continue;
-      if (!isActiveToday(med)) continue;
-      if (!med.reminderTimes || med.reminderTimes.length === 0) continue;
-
-      const dosageStr = `${med.dosage?.amount ?? ''}${med.dosage?.unit ?? ''}`;
-      const route = med.route ? ` · ${med.route.charAt(0).toUpperCase() + med.route.slice(1)}` : '';
-
-      for (const time of med.reminderTimes) {
-        notifications.push({
-          id: `${med._id}_${time}`,
-          type: 'medication',
-          title: `${med.name}${dosageStr ? ` ${dosageStr}` : ''}`,
-          body: `Due at ${time}${route}`,
-          time,
-          status: statusForTime(time),
-          medicationId: med._id ?? '',
-          medicationName: med.name,
-          dosage: dosageStr,
-        });
-      }
+    if (!Device.isDevice) {
+      console.log('[Notifications] Must use physical device for push notifications');
+      return false;
     }
 
-    // Sort: overdue → upcoming → later, then by time within group
-    notifications.sort((a, b) => {
-      const od = statusOrder[a.status] - statusOrder[b.status];
-      if (od !== 0) return od;
-      return toMinutes(a.time) - toMinutes(b.time);
-    });
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
 
-    const badgeCount = notifications.filter(n => n.status === 'overdue' || n.status === 'upcoming').length;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
 
-    return { notifications, badgeCount };
-  } catch {
-    return { notifications: [], badgeCount: 0 };
+    if (finalStatus !== 'granted') {
+      console.log('[Notifications] Permission not granted');
+      return false;
+    }
+
+    // Configure notification channel for Android
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('medication-reminders', {
+        name: 'Medication Reminders',
+        importance: Notifications.AndroidImportance.HIGH,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+        sound: 'default',
+      });
+    }
+
+    console.log('[Notifications] Permission granted');
+    return true;
+  } catch (error) {
+    console.error('[Notifications] Error requesting permissions:', error);
+    return false;
   }
+};
+
+/**
+ * Schedule medication reminder notifications
+ * @param medication - Medication object with reminder times
+ */
+export const scheduleMedicationReminder = async (medication: {
+  _id: string;
+  name: string;
+  dosage: { amount: number; unit: string };
+  reminderEnabled: boolean;
+  reminderTimes: string[];
+  babyId: string;
+}): Promise<string[]> => {
+  try {
+    if (!medication.reminderEnabled || !medication.reminderTimes || medication.reminderTimes.length === 0) {
+      console.log('[Notifications] Reminders not enabled for medication');
+      return [];
+    }
+
+    // First cancel any existing notifications for this medication
+    await cancelMedicationReminder(medication._id);
+
+    const notificationIds: string[] = [];
+
+    // Schedule a notification for each reminder time
+    for (const time of medication.reminderTimes) {
+      const [hours, minutes] = time.split(':').map(Number);
+      
+      const trigger: Notifications.DailyTriggerInput = {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour: hours,
+        minute: minutes,
+      };
+
+      const payload: MedicationReminderPayload = {
+        medicationId: medication._id,
+        medicationName: medication.name,
+        dosage: `${medication.dosage.amount}${medication.dosage.unit}`,
+        babyId: medication.babyId,
+        type: 'medication_reminder',
+      };
+
+      const notificationId = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '💊 Medication Reminder',
+          body: `Time to take ${medication.name} (${medication.dosage.amount}${medication.dosage.unit})`,          
+          data: payload,
+          sound: 'default',
+          priority: Notifications.AndroidNotificationPriority.HIGH,
+        },
+        trigger,
+      });
+
+      notificationIds.push(notificationId);
+      console.log(`[Notifications] Scheduled reminder for ${medication.name} at ${time}, ID: ${notificationId}`);
+    }
+
+    return notificationIds;
+  } catch (error) {
+    console.error('[Notifications] Error scheduling medication reminder:', error);
+    throw error;
+  }
+};
+
+/**
+ * Cancel all notifications for a specific medication
+ */
+export const cancelMedicationReminder = async (medicationId: string): Promise<void> => {
+  try {
+    const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
+    
+    const medicationNotifications = scheduledNotifications.filter(
+      (notification) => notification.content.data?.medicationId === medicationId
+    );
+
+    for (const notification of medicationNotifications) {
+      await Notifications.cancelScheduledNotificationAsync(notification.identifier);
+      console.log(`[Notifications] Cancelled notification ${notification.identifier} for medication ${medicationId}`);
+    }
+  } catch (error) {
+    console.error('[Notifications] Error cancelling medication reminder:', error);
+    throw error;
+  }
+};
+
+/**
+ * Cancel all pending medication notifications
+ */
+export const cancelAllMedicationReminders = async (): Promise<void> => {
+  try {
+    await Notifications.cancelAllScheduledNotificationsAsync();
+    console.log('[Notifications] Cancelled all medication reminders');
+  } catch (error) {
+    console.error('[Notifications] Error cancelling all reminders:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get all scheduled medication notifications
+ */
+export const getScheduledMedicationReminders = async (): Promise<Notifications.NotificationRequest[]> => {
+  try {
+    const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+    const medicationReminders = scheduled.filter(
+      (notification) => notification.content.data?.type === 'medication_reminder'
+    );
+    console.log(`[Notifications] Found ${medicationReminders.length} scheduled medication reminders`);
+    return medicationReminders;
+  } catch (error) {
+    console.error('[Notifications] Error getting scheduled reminders:', error);
+    return [];
+  }
+};
+
+/**
+ * Set up notification response handler (when user taps notification)
+ */
+export const setupNotificationResponseHandler = (
+  onNotificationTap: (data: MedicationReminderData) => void
+): void => {
+  Notifications.addNotificationResponseReceivedListener((response) => {
+    const rawData = response.notification.request.content.data;
+    
+    if (rawData && isMedicationReminderPayload(rawData)) {
+      console.log('[Notifications] User tapped medication reminder:', rawData);
+      onNotificationTap(rawData);
+    }
+  });
 };
