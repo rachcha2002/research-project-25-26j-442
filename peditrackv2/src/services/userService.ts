@@ -435,6 +435,15 @@ class UserService {
     }
   }
 
+  async applyDemoCoupon(code: string): Promise<{ success: boolean; message: string }> {
+    try {
+      const response = await this.api.post<{ success: boolean; message: string }>('/subscription/apply-demo-coupon', { code });
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
   // ==================== Baby Profile Management ====================
 
   async getBabyProfiles(): Promise<BabyProfile[]> {

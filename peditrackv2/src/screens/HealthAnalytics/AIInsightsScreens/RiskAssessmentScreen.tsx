@@ -66,12 +66,15 @@ export const RiskAssessmentScreen: React.FC = () => {
   const [error, setError]   = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!selectedBaby) return;
+    if (!user?.isPro || !selectedBaby) {
+      setLoad(false);
+      return;
+    }
     setLoad(true); setError(null);
     try { setData(await getRiskAssessment(selectedBaby._id)); }
     catch (e: any) { setError(e.message || 'Failed to load risk assessment'); }
     finally { setLoad(false); }
-  }, [selectedBaby]);
+  }, [selectedBaby, user?.isPro]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
