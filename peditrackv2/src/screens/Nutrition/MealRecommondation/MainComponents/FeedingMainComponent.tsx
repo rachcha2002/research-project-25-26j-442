@@ -80,6 +80,7 @@ export const FeedingMainComponent: React.FC = () => {
 
   const childId = selectedBaby?._id;
   const parentId = selectedBaby?.userId;
+  const isChildProfileAvailable = Boolean(childId);
 
   const buildAndLogFinalPayload = useCallback(async (prefData: MealPreference | null) => {
     if (!selectedBaby?._id) {
@@ -219,6 +220,9 @@ export const FeedingMainComponent: React.FC = () => {
   };
 
   const handleOpenPreferences = () => {
+    if (!isChildProfileAvailable) {
+      return;
+    }
     setIsEditingPreferences(false);
     setIsPreferencesModalVisible(true);
   };
@@ -236,21 +240,51 @@ export const FeedingMainComponent: React.FC = () => {
 
           <View style={styles.headerButtonsRow}>
             <TouchableOpacity
-              style={styles.pastIconButton}
+              style={[
+                styles.pastIconButton,
+                !isChildProfileAvailable && styles.pastIconButtonDisabled,
+              ]}
               activeOpacity={0.8}
+              disabled={!isChildProfileAvailable}
               onPress={handleOpenPreferences}
             >
-              <Ionicons name="options-outline" size={16} color={Colors.primary.DEFAULT} />
-              <Text style={styles.pastIconButtonText}>Preferences</Text>
+              <Ionicons
+                name="options-outline"
+                size={16}
+                color={isChildProfileAvailable ? Colors.primary.DEFAULT : Colors.inactive}
+              />
+              <Text
+                style={[
+                  styles.pastIconButtonText,
+                  !isChildProfileAvailable && styles.pastIconButtonTextDisabled,
+                ]}
+              >
+                Preferences
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.pastIconButton}
+              style={[
+                styles.pastIconButton,
+                !isChildProfileAvailable && styles.pastIconButtonDisabled,
+              ]}
               activeOpacity={0.8}
+              disabled={!isChildProfileAvailable}
               onPress={() => router.push('/past-data')}
             >
-              <Ionicons name="time-outline" size={16} color={Colors.primary.DEFAULT} />
-              <Text style={styles.pastIconButtonText}>Past</Text>
+              <Ionicons
+                name="time-outline"
+                size={16}
+                color={isChildProfileAvailable ? Colors.primary.DEFAULT : Colors.inactive}
+              />
+              <Text
+                style={[
+                  styles.pastIconButtonText,
+                  !isChildProfileAvailable && styles.pastIconButtonTextDisabled,
+                ]}
+              >
+                Past
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -466,6 +500,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
     color: Colors.primary.DEFAULT,
+  },
+  pastIconButtonDisabled: {
+    borderColor: Colors.gray.light,
+    backgroundColor: Colors.gray.light,
+  },
+  pastIconButtonTextDisabled: {
+    color: Colors.inactive,
   },
   headerDescription: {
     fontSize: 14,

@@ -21,10 +21,8 @@ Notifications.setNotificationHandler({
  * Safe to call multiple times (returns early if already granted).
  */
 export const requestPushPermissionsAsync = async (): Promise<boolean> => {
-  if (!Device.isDevice) {
-    console.log('[Push] Must use physical device for Push Notifications');
-    return false;
-  }
+  // We can skip the Device.isDevice check here since local notifications DO work on Android Emulators
+  // This allows the Bell Icon and scheduling logic to be tested locally.
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
   let finalStatus = existingStatus;
@@ -104,9 +102,9 @@ export const scheduleMedicationReminders = async (medication: Medication) => {
           sound: true,
         },
         trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
           hour,
           minute,
-          repeats: true,
           channelId: 'medication-reminders',
         } as Notifications.NotificationTriggerInput,
       });

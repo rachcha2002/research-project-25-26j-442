@@ -9,6 +9,7 @@ import { Colors } from '@/constants/Colors';
 import { useBaby } from '@/contexts/BabyContext';
 import {
   getTodayReminders,
+  dismissAllNotificationsForToday,
   MedicationNotification,
   ReminderStatus,
 } from '@/services/notificationService';
@@ -85,6 +86,13 @@ export const NotificationsPanel: React.FC<Props> = ({ visible, onClose }) => {
     router.push('/health-analytics/medications' as any);
   };
 
+  const handleDismissAll = async () => {
+    if (notifications.length === 0) return;
+    const ids = notifications.map(n => n.id);
+    await dismissAllNotificationsForToday(ids);
+    setNotifications([]);
+  };
+
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       {/* Backdrop */}
@@ -100,9 +108,16 @@ export const NotificationsPanel: React.FC<Props> = ({ visible, onClose }) => {
             <Ionicons name="notifications" size={18} color={Colors.primary.DEFAULT} />
             <Text style={styles.panelTitle}>Today's Reminders</Text>
           </View>
-          <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-            <Ionicons name="close" size={20} color="#6B7280" />
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 16 }}>
+            {notifications.length > 0 && (
+              <TouchableOpacity onPress={handleDismissAll}>
+                <Text style={{ color: Colors.primary.DEFAULT, fontWeight: '600', fontSize: 13 }}>Dismiss All</Text>
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+              <Ionicons name="close" size={20} color="#6B7280" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Body */}

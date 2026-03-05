@@ -18,6 +18,8 @@ interface TopBarProps {
   onChildNamePress?: () => void;
 }
 
+import { useFocusEffect } from 'expo-router';
+
 export const TopBar: React.FC<TopBarProps> = ({
   username,
   childName,
@@ -36,7 +38,11 @@ export const TopBar: React.FC<TopBarProps> = ({
     setBadgeCount(count);
   }, [selectedBaby]);
 
-  useEffect(() => { refreshBadge(); }, [refreshBadge]);
+  useFocusEffect(
+    useCallback(() => {
+      refreshBadge();
+    }, [refreshBadge])
+  );
 
   const handleBellPress = () => {
     if (onNotificationPress) {

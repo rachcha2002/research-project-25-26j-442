@@ -2,9 +2,16 @@
 const API_BASE_URL = 'http://10.174.51.59:3007/api';
 export const FILE_BASE_URL = 'http://10.174.51.59:3007/api/file/uploads/';
 
+export interface UserMeta {
+    userId: string;
+    name: string | null;
+    profilePicture: string | null;
+}
+
 export interface Post {
     PostID: string;
     UserID: string;
+    userMeta?: UserMeta | null;
     PostUrl?: string;
     Description?: string;
     Tags?: string[];
@@ -23,6 +30,7 @@ export interface Comment {
     PostID: string;
     Comment: string;
     CommenterID: string;
+    userMeta?: UserMeta | null;
     CommentTime: string;
     Reply: boolean;
     to?: string | null;
@@ -40,10 +48,17 @@ export interface Follow {
     followerId: string;
     followingId: string;
     followedAt: string;
+    followerName?: string | null;
+    followerProfilePicture?: string | null;
+    followerMeta?: UserMeta | null;
+    followingName?: string | null;
+    followingProfilePicture?: string | null;
+    followingMeta?: UserMeta | null;
 }
 
 export interface UserProfileOverview {
     userId: string;
+    userMeta?: UserMeta | null;
     followersCount: number;
     followingCount: number;
     postCount: number;

@@ -15,3 +15,4 @@ class ClinicalSafetyResponse(BaseModel):
     detection_confidence: Optional[float] = None
     nutrients: List[str] = []
     safety_status: str
+    clinical_reasoning: str = ""

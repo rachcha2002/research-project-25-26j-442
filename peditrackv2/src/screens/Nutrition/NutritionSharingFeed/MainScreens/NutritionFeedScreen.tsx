@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, ScrollView, StyleSheet, Text, TouchableOpacity, RefreshControl } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../../../../contexts/AuthContext';
 import { TopNavBar } from '../SubComponents/TopNavBar';
 import { Searchbar } from '../SubComponents/Searchbar';
 import { FeedPostCard } from '../SubComponents/FeedPostCard';
@@ -76,10 +77,14 @@ const removeCommentFromTree = (items: ApiComment[], id: string): ApiComment[] =>
     }));
 
 export function NutritionFeedScreen() {
+  const { user } = useAuth();
+  const currentUserId = user?._id ?? '';
+  const currentUserName = user?.name?.trim() || 'User';
+  const currentUserAvatar = user?.profilePicture || '';
   const [isCreatePostVisible, setCreatePostVisible] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [currentView, setCurrentView] = React.useState<'feed' | 'profile'>('feed');
-  const [profileUserId, setProfileUserId] = React.useState('USR0007');       // <-- ADD
+  const [profileUserId, setProfileUserId] = React.useState('');
   const [activeTab, setActiveTab] = React.useState<'friends' | 'forYou'>('friends');
   const [posts, setPosts] = React.useState<PostWithMeta[]>([]);
   const [followingIds, setFollowingIds] = React.useState<string[]>([]);
@@ -87,10 +92,15 @@ export function NutritionFeedScreen() {
   const [selectedPost, setSelectedPost] = React.useState<any | null>(null);
   const [startInEditMode, setStartInEditMode] = React.useState(false);
   const [isUserModalVisible, setIsUserModalVisible] = React.useState(false); // <-- ADD
-  const currentUserId = 'USR0007';
   const router = useRouter();
 
   const fetchData = React.useCallback(async () => {
+    if (!currentUserId) {
+      setPosts([]);
+      setFollowingIds([]);
+      return;
+    }
+
     try {
       setRefreshing(true);
       const [postsData, followingData] = await Promise.all([
@@ -108,6 +118,12 @@ export function NutritionFeedScreen() {
       setRefreshing(false);
     }
   }, [currentUserId]);
+
+  React.useEffect(() => {
+    if (currentUserId && !profileUserId) {
+      setProfileUserId(currentUserId);
+    }
+  }, [currentUserId, profileUserId]);
 
   React.useEffect(() => {
     fetchData();
@@ -135,12 +151,12 @@ export function NutritionFeedScreen() {
 
     return base.filter(({ post }) => {
       const description = (post.Description || '').toLowerCase();
-      const userId = (post.UserID || '').toLowerCase();
+      const userName = (post.userMeta?.name || post.UserID || '').toLowerCase();
       const tags = (post.Tags || []).map(t => t.toLowerCase());
 
       return (
         description.includes(query) ||
-        userId.includes(query) ||
+        userName.includes(query) ||
         tags.some(tag => tag.includes(query))
       );
     });
@@ -415,7 +431,7 @@ export function NutritionFeedScreen() {
           setProfileUserId(currentUserId);
           setCurrentView('profile');
         }}
-        profileImage="https://randomuser.me/api/portraits/women/44.jpg"
+        profileImage={currentUserAvatar}
         title="Nutrition share feed"
       />
       <ScrollView
@@ -448,19 +464,23 @@ export function NutritionFeedScreen() {
 
         {visiblePosts.map(({ post, engagement, comments, isSaved }) => {
           const isOwner = post.UserID === currentUserId;
+          const displayName =
+            isOwner ? currentUserName : post.userMeta?.name || 'User';
+          const displayAvatar =
+            isOwner ? currentUserAvatar : post.userMeta?.profilePicture || '';
 
           const openDetailsForEdit = () => {
             const uiPost = {
               postId: post.PostID,
               postOwnerId: post.UserID,
               currentUserId,
-              name: post.UserID,
+              name: displayName,
               role: 'User',
               time: new Date(post.PostedTime).toLocaleString(),
               content: post.Description || '',
               tags: post.Tags || [],
               image: post.PostUrl ? FILE_BASE_URL + post.PostUrl : undefined,
-              avatar: 'https://randomuser.me/api/portraits/lego/1.jpg',
+              avatar: displayAvatar,
               stats: {
                 likes: engagement.LikedBy?.length || 0,
                 dislikes: engagement.DislikedBy?.length || 0,
@@ -493,13 +513,13 @@ export function NutritionFeedScreen() {
               postId={post.PostID}
               postOwnerId={post.UserID}
               currentUserId={currentUserId}
-              name={post.UserID}
+              name={displayName}
               role="User"
               time={new Date(post.PostedTime).toLocaleString()}
               content={post.Description || ''}
               tags={post.Tags || []}
               image={post.PostUrl ? FILE_BASE_URL + post.PostUrl : undefined}
-              avatar="https://randomuser.me/api/portraits/lego/1.jpg"
+              avatar={displayAvatar}
               stats={{
                 likes: engagement.LikedBy?.length || 0,
                 dislikes: engagement.DislikedBy?.length || 0,
@@ -541,6 +561,7 @@ export function NutritionFeedScreen() {
         visible={isUserModalVisible}
         searchText={searchQuery}
         currentUserId={currentUserId}
+        currentUserName={currentUserName}
         followingIds={followingIds}
         onClose={() => setIsUserModalVisible(false)}
         onToggleFollow={handleAddFriend}

@@ -3,7 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useBaby } from '@/contexts/BabyContext';
 import { getTodayReminders } from '@/services/notificationService';
@@ -45,7 +45,11 @@ export const SecondaryTopBar: React.FC<SecondaryTopBarProps> = ({
     setBadgeCount(count);
   }, [selectedBaby]);
 
-  useEffect(() => { refreshBadge(); }, [refreshBadge]);
+  useFocusEffect(
+    useCallback(() => {
+      refreshBadge();
+    }, [refreshBadge])
+  );
 
   const handleBackPress = () => {
     if (onBackPress) { onBackPress(); } else { router.back(); }

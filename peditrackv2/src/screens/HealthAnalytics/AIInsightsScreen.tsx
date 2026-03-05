@@ -1,6 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import {
-  View, Text, ScrollView, StyleSheet, TouchableOpacity,
+  View,
+  Text,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,8 +16,11 @@ import { useRouter, useFocusEffect } from 'expo-router';
 import { useAuth } from '../../contexts/AuthContext';
 import { useBaby } from '../../contexts/BabyContext';
 import {
-  getHealthScore, HealthScoreResponse,
-  confidenceBadge, riskLevelColor, hoursAgo,
+  getHealthScore,
+  HealthScoreResponse,
+  confidenceBadge,
+  riskLevelColor,
+  hoursAgo,
 } from '../../services/aiService';
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -48,9 +55,13 @@ export const AIInsightsScreen: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
-    if (!selectedBaby) return;
+    if (!user?.isPro || !selectedBaby) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
+    console.log('Loaded AI insights for baby ' + selectedBaby.name);
     try {
       const result = await getHealthScore(selectedBaby._id);
       setData(result);
@@ -59,15 +70,21 @@ export const AIInsightsScreen: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedBaby]);
+  }, [selectedBaby, user?.isPro]);
 
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
 
   const riskColor = data ? riskLevelColor(data.riskLevel) : '#10B981';
   const scoreGradient: [string, string] =
-    data?.riskLevel === 'high'     ? ['#F87171', '#EF4444'] :
-    data?.riskLevel === 'moderate' ? ['#FCD34D', '#F59E0B'] :
-                                     ['#60A5FA', '#3B82F6'];
+    data?.riskLevel === 'high'
+      ? ['#F87171', '#EF4444']
+      : data?.riskLevel === 'moderate'
+        ? ['#FCD34D', '#F59E0B']
+        : ['#60A5FA', '#3B82F6'];
 
   return (
     <>
@@ -83,13 +100,18 @@ export const AIInsightsScreen: React.FC = () => {
             <Ionicons name="lock-closed-outline" size={64} color="#F59E0B" />
             <Text style={styles.proTitle}>PRO Version Required</Text>
             <Text style={styles.proDesc}>
-              Upgrade to PRO to unlock advanced AI insights, predictive health scoring, and personalized analytics for your baby.
+              Upgrade to PRO to unlock advanced AI insights, predictive health scoring, and
+              personalized analytics for your baby.
             </Text>
-            <TouchableOpacity style={styles.upgradeBtn} onPress={() => router.push('/profile/subscription' as any)}>
+            <TouchableOpacity
+              style={styles.upgradeBtn}
+              onPress={() => router.push('/profile/subscription' as any)}
+            >
               <LinearGradient
                 colors={['#F59E0B', '#D97706']}
                 style={styles.upgradeBtnGradient}
-                start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
               >
                 <Ionicons name="star" size={20} color="#fff" />
                 <Text style={styles.upgradeBtnText}>Upgrade to PRO</Text>
@@ -115,6 +137,15 @@ export const AIInsightsScreen: React.FC = () => {
             contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}
           >
+            {/* Data Quality Note */}
+            <View style={{ backgroundColor: '#FEF3C7', padding: 12, borderRadius: 12, borderWidth: 1, borderColor: '#FDE68A', flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <Ionicons name="bulb-outline" size={24} color="#D97706" />
+              <Text style={{ flex: 1, fontSize: 13, color: '#92400E', lineHeight: 18 }}>
+                <Text style={{ fontWeight: '700' }}>Pro Tip: </Text>
+                Consistently log your child's measurements, sleep, and feeding to get the most accurate and precise AI insights!
+              </Text>
+            </View>
+
             {/* Health Score Card */}
             <LinearGradient
               colors={scoreGradient}
@@ -162,10 +193,10 @@ export const AIInsightsScreen: React.FC = () => {
                 <Text style={styles.subNote}>AI-calculated weights</Text>
               </View>
               <View style={styles.factorsList}>
-                <FactorBar label="Growth"       value={data!.factors.growth} />
-                <FactorBar label="Nutrition"    value={data!.factors.nutrition} />
-                <FactorBar label="Development"  value={data!.factors.development} />
-                <FactorBar label="Behavior"     value={data!.factors.behavior} />
+                <FactorBar label="Growth" value={data!.factors.growth} />
+                <FactorBar label="Nutrition" value={data!.factors.nutrition} />
+                <FactorBar label="Development" value={data!.factors.development} />
+                <FactorBar label="Behavior" value={data!.factors.behavior} />
               </View>
             </View>
 
@@ -173,7 +204,9 @@ export const AIInsightsScreen: React.FC = () => {
             <View style={styles.actionsRow}>
               <TouchableOpacity
                 style={styles.actionCard}
-                onPress={() => router.push('/health-analytics/growth-details/ai-predictions' as any)}
+                onPress={() =>
+                  router.push('/health-analytics/growth-details/ai-predictions' as any)
+                }
               >
                 <Ionicons name="trending-up" size={22} color="#3B82F6" />
                 <Text style={styles.actionLabel}>Growth{'\n'}Predictions</Text>
@@ -187,7 +220,9 @@ export const AIInsightsScreen: React.FC = () => {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.actionCard}
-                onPress={() => router.push('/health-analytics/ai-insights/model-performance' as any)}
+                onPress={() =>
+                  router.push('/health-analytics/ai-insights/model-performance' as any)
+                }
               >
                 <Ionicons name="information-circle" size={22} color="#F59E0B" />
                 <Text style={styles.actionLabel}>About{'\n'}Our AI</Text>
@@ -217,65 +252,101 @@ const styles = StyleSheet.create({
   // States
   centerState: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 16 },
   loadingText: { fontSize: 15, color: '#6B7280', marginTop: 8 },
-  errorText:   { fontSize: 15, color: '#EF4444', textAlign: 'center' },
-  retryBtn:    { backgroundColor: '#3B82F6', borderRadius: 10, paddingHorizontal: 24, paddingVertical: 10 },
-  retryBtnText:{ color: '#fff', fontWeight: '600', fontSize: 15 },
+  errorText: { fontSize: 15, color: '#EF4444', textAlign: 'center' },
+  retryBtn: {
+    backgroundColor: '#3B82F6',
+    borderRadius: 10,
+    paddingHorizontal: 24,
+    paddingVertical: 10,
+  },
+  retryBtnText: { color: '#fff', fontWeight: '600', fontSize: 15 },
 
   // Score card
-  scoreCard:   { borderRadius: 20, padding: 20, gap: 12 },
+  scoreCard: { borderRadius: 20, padding: 20, gap: 12 },
   scoreTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
-  scoreValueRow:{ flexDirection: 'row', alignItems: 'flex-end' },
-  scoreValue:  { fontSize: 56, fontWeight: '800', color: '#fff' },
-  scoreTotal:  { fontSize: 22, color: 'rgba(255,255,255,0.75)', marginBottom: 8 },
-  scoreLabel:  { color: 'rgba(255,255,255,0.85)', fontSize: 14 },
-  scoreDetails:{ gap: 4 },
-  scoreDetailRow:{ flexDirection: 'row', alignItems: 'center', gap: 6 },
-  riskDot:     { width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' },
-  scoreDetailText:{ color: 'rgba(255,255,255,0.9)', fontSize: 13 },
-  cachedNote:  { color: 'rgba(255,255,255,0.7)', fontSize: 11, fontStyle: 'italic' },
-  modelBadge:  { color: 'rgba(255,255,255,0.75)', fontSize: 11, textAlign: 'right', marginTop: 4 },
+  scoreValueRow: { flexDirection: 'row', alignItems: 'flex-end' },
+  scoreValue: { fontSize: 56, fontWeight: '800', color: '#fff' },
+  scoreTotal: { fontSize: 22, color: 'rgba(255,255,255,0.75)', marginBottom: 8 },
+  scoreLabel: { color: 'rgba(255,255,255,0.85)', fontSize: 14 },
+  scoreDetails: { gap: 4 },
+  scoreDetailRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  riskDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#fff' },
+  scoreDetailText: { color: 'rgba(255,255,255,0.9)', fontSize: 13 },
+  cachedNote: { color: 'rgba(255,255,255,0.7)', fontSize: 11, fontStyle: 'italic' },
+  modelBadge: { color: 'rgba(255,255,255,0.75)', fontSize: 11, textAlign: 'right', marginTop: 4 },
 
   // Confidence badge
   confidenceBadge: { borderRadius: 12, borderWidth: 1, paddingHorizontal: 8, paddingVertical: 3 },
-  confidenceText:  { fontSize: 11, fontWeight: '600' },
+  confidenceText: { fontSize: 11, fontWeight: '600' },
 
   // Factors
   section: { backgroundColor: '#fff', borderRadius: 16, padding: 16, gap: 12 },
-  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
   sectionTitle: { fontSize: 16, fontWeight: '700', color: '#1F2937' },
   subNote: { fontSize: 11, color: '#9CA3AF', textAlign: 'right' },
   factorsList: { gap: 10 },
   factorRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   factorLabel: { width: 90, fontSize: 13, color: '#374151' },
-  factorBarTrack: { flex: 1, height: 8, backgroundColor: '#F3F4F6', borderRadius: 4, overflow: 'hidden' },
+  factorBarTrack: {
+    flex: 1,
+    height: 8,
+    backgroundColor: '#F3F4F6',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
   factorBarFill: { height: '100%', backgroundColor: '#3B82F6', borderRadius: 4 },
   factorPct: { width: 36, fontSize: 12, color: '#6B7280', textAlign: 'right' },
 
   // Actions
   actionsRow: { flexDirection: 'row', gap: 10 },
   actionCard: {
-    flex: 1, backgroundColor: '#fff', borderRadius: 14, padding: 14,
-    alignItems: 'center', gap: 8,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.06, shadowRadius: 4, elevation: 2,
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 14,
+    alignItems: 'center',
+    gap: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
   },
   actionLabel: { fontSize: 12, color: '#374151', fontWeight: '600', textAlign: 'center' },
 
   // Baby info
   babyInfoCard: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#EFF6FF', borderRadius: 12, padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#EFF6FF',
+    borderRadius: 12,
+    padding: 12,
   },
   babyInfoText: { fontSize: 13, color: '#374151' },
   babyName: { fontWeight: '700', color: '#3B82F6' },
-  
+
   // PRO Lock
   proTitle: { fontSize: 24, fontWeight: '800', color: '#1F2937', marginTop: 8 },
-  proDesc: { fontSize: 15, color: '#6B7280', textAlign: 'center', paddingHorizontal: 20, lineHeight: 22 },
+  proDesc: {
+    fontSize: 15,
+    color: '#6B7280',
+    textAlign: 'center',
+    paddingHorizontal: 20,
+    lineHeight: 22,
+  },
   upgradeBtn: { marginTop: 12, width: '100%', paddingHorizontal: 20 },
   upgradeBtnGradient: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    paddingVertical: 14, borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 12,
   },
   upgradeBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

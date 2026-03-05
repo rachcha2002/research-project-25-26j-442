@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, ScrollView, StyleSheet, ActivityIndicator, Text, RefreshControl, TouchableOpacity } from 'react-native';
 import { Colors } from '../../../../constants/Colors';
+import { useAuth } from '../../../../contexts/AuthContext';
 import { ProfileHeader } from '../SubComponents/ProfileHeader';
 import { ProfileStats } from '../SubComponents/ProfileStats';
 import { ProfileTabs } from '../SubComponents/ProfileTabs';
@@ -78,6 +79,7 @@ interface ProfileScreenProps {
 }
 
 export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBackPress, userId, currentUserId }) => {
+  const { user: authUser } = useAuth();
   const viewerId = currentUserId ?? userId;
   const isOwnProfile = viewerId === userId;
 
@@ -144,9 +146,15 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBackPress, userI
 
   const user = profile
     ? {
-        name: profile.userId,
+        name:
+          (isOwnProfile ? authUser?.name : undefined) ||
+          profile.userMeta?.name ||
+          'User',
         role: 'User',
-        avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
+        avatar:
+          (isOwnProfile ? authUser?.profilePicture : undefined) ||
+          profile.userMeta?.profilePicture ||
+          '',
         stats: {
           posts: profile.postCount,
           followers: String(profile.followersCount),
@@ -611,19 +619,22 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBackPress, userI
               profile.posts.map(item => {
                 const { post, engagement, comments, isSaved } = item;
                 const isOwner = post.UserID === viewerId;
+                const postDisplayName = post.userMeta?.name || 'User';
+                const postDisplayAvatar =
+                  post.userMeta?.profilePicture || '';
 
                 const openDetailsForEdit = () => {
                   const uiPost = {
                     postId: post.PostID,
                     postOwnerId: post.UserID,
                     currentUserId: viewerId,
-                    name: post.UserID,
+                    name: postDisplayName,
                     role: 'User',
                     time: new Date(post.PostedTime).toLocaleString(),
                     content: post.Description || '',
                     tags: post.Tags || [],
                     image: post.PostUrl ? FILE_BASE_URL + post.PostUrl : undefined,
-                    avatar: user.avatar,
+                    avatar: postDisplayAvatar,
                     stats: {
                       likes: engagement.LikedBy.length,
                       dislikes: engagement.DislikedBy.length,
@@ -656,13 +667,13 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBackPress, userI
                     postId={post.PostID}
                     postOwnerId={post.UserID}
                     currentUserId={viewerId}
-                    name={post.UserID}
+                    name={postDisplayName}
                     role="User"
                     time={new Date(post.PostedTime).toLocaleString()}
                     content={post.Description || ''}
                     tags={post.Tags || []}
                     image={post.PostUrl ? FILE_BASE_URL + post.PostUrl : undefined}
-                    avatar={user.avatar}
+                    avatar={postDisplayAvatar}
                     stats={{
                       likes: engagement.LikedBy.length,
                       dislikes: engagement.DislikedBy.length,
@@ -704,19 +715,22 @@ export const ProfileScreen: React.FC<ProfileScreenProps> = ({ onBackPress, userI
               savedPosts.map(item => {
                 const { post, engagement, comments, isSaved } = item;
                 const isOwner = post.UserID === viewerId;
+                const postDisplayName = post.userMeta?.name || 'User';
+                const postDisplayAvatar =
+                  post.userMeta?.profilePicture || '';
                 return (
                   <FeedPostCard
                     key={post.PostID}
                     postId={post.PostID}
                     postOwnerId={post.UserID}
                     currentUserId={viewerId}
-                    name={post.UserID}
+                    name={postDisplayName}
                     role="User"
                     time={new Date(post.PostedTime).toLocaleString()}
                     content={post.Description || ''}
                     tags={post.Tags || []}
                     image={post.PostUrl ? FILE_BASE_URL + post.PostUrl : undefined}
-                    avatar={user.avatar}
+                    avatar={postDisplayAvatar}
                     stats={{
                       likes: engagement.LikedBy.length,
                       dislikes: engagement.DislikedBy.length,

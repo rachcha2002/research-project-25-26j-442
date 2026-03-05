@@ -9,6 +9,11 @@ type ApiComment = {
   CommentID: string;
   Comment: string;
   CommenterID: string;
+  userMeta?: {
+    userId: string;
+    name: string | null;
+    profilePicture: string | null;
+  } | null;
   CommentTime: string;
   Reply: boolean;
   to?: string | null;
@@ -18,7 +23,7 @@ type ApiComment = {
 type UiComment = {
   id: string;
   commenterId: string;
-  avatar: string;
+  avatar?: string;
   name: string;
   role?: string;
   time: string;
@@ -78,6 +83,8 @@ export const FeedPostCard: React.FC<FeedPostCardProps> = ({
   const [showComments, setShowComments] = React.useState(false);
   const [isFriendAdded, setIsFriendAdded] = React.useState(false);
   const [showMenu, setShowMenu] = React.useState(false);
+  const hasAvatar = Boolean(avatar?.trim());
+  const profileInitial = (name?.trim()?.charAt(0) || '?').toUpperCase();
 
   const handleAddFriend = () => {
     setIsFriendAdded(true);
@@ -87,8 +94,8 @@ export const FeedPostCard: React.FC<FeedPostCardProps> = ({
   const mapComment = React.useCallback((c: ApiComment): UiComment => ({
     id: c.CommentID,
     commenterId: c.CommenterID,
-    avatar: 'https://randomuser.me/api/portraits/lego/1.jpg',
-    name: c.CommenterID,
+    avatar: c.userMeta?.profilePicture || undefined,
+    name: c.userMeta?.name || 'User',
     role: undefined,
     time: new Date(c.CommentTime).toLocaleString(),
     content: c.Comment,
@@ -109,10 +116,13 @@ export const FeedPostCard: React.FC<FeedPostCardProps> = ({
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <Image 
-          source={{ uri: avatar || 'https://randomuser.me/api/portraits/lego/1.jpg' }} 
-          style={styles.avatar} 
-        />
+        {hasAvatar ? (
+          <Image source={{ uri: avatar }} style={styles.avatar} />
+        ) : (
+          <View style={styles.avatarFallback}>
+            <Text style={styles.avatarFallbackText}>{profileInitial}</Text>
+          </View>
+        )}
         <View style={styles.headerText}>
           <View style={styles.nameRow}>
             <Text style={styles.name}>{name}</Text>
@@ -304,6 +314,19 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
+  },
+  avatarFallback: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: `${Colors.primary.DEFAULT}20`,
+  },
+  avatarFallbackText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.primary.DEFAULT,
   },
   headerText: {
     flex: 1,

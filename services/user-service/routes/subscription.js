@@ -151,6 +151,80 @@ async function syncSubscriptionFromStripe(stripeSubscription, userId) {
 // ==================== Routes ====================
 
 /**
+ * @route   GET /api/subscription/redirect/success
+ * @desc    Redirect from Stripe checkout to mobile app deep link (success)
+ * @access  Public
+ */
+router.get('/redirect/success', (req, res) => {
+  const { session_id } = req.query;
+  const appScheme = process.env.APP_SCHEME || 'peditrack';
+  
+  // Redirect to app's deep link with session ID
+  const deepLink = `${appScheme}://subscription-success${session_id ? `?session_id=${session_id}` : ''}`;
+  
+  // Send HTML that redirects to the deep link
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Redirecting...</title>
+        <meta http-equiv="refresh" content="0;url=${deepLink}">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: linear-gradient(135deg, #7C3AED 0%, #6366F1 100%); color: white; text-align: center; }
+          .container { padding: 20px; }
+          h1 { font-size: 24px; margin-bottom: 10px; }
+          p { font-size: 16px; opacity: 0.9; }
+          a { color: white; text-decoration: underline; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>🎉 Payment Successful!</h1>
+          <p>Redirecting you back to PediTrack...</p>
+          <p><a href="${deepLink}">Click here if not redirected automatically</a></p>
+        </div>
+        <script>window.location.href = "${deepLink}";</script>
+      </body>
+    </html>
+  `);
+});
+
+/**
+ * @route   GET /api/subscription/redirect/cancel
+ * @desc    Redirect from Stripe checkout to mobile app deep link (cancel)
+ * @access  Public
+ */
+router.get('/redirect/cancel', (req, res) => {
+  const appScheme = process.env.APP_SCHEME || 'peditrack';
+  const deepLink = `${appScheme}://subscription-cancel`;
+  
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <title>Redirecting...</title>
+        <meta http-equiv="refresh" content="0;url=${deepLink}">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #F3F4F6; color: #374151; text-align: center; }
+          .container { padding: 20px; }
+          h1 { font-size: 24px; margin-bottom: 10px; }
+          p { font-size: 16px; opacity: 0.8; }
+          a { color: #7C3AED; text-decoration: underline; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <h1>Checkout Cancelled</h1>
+          <p>Redirecting you back to PediTrack...</p>
+          <p><a href="${deepLink}">Click here if not redirected automatically</a></p>
+        </div>
+        <script>window.location.href = "${deepLink}";</script>
+      </body>
+    </html>
+  `);
+});
+
+/**
  * @route   POST /api/subscription/create-checkout
  * @desc    Create a Stripe Checkout session for monthly PRO subscription
  * @access  Private
@@ -173,13 +247,27 @@ router.post('/create-checkout', auth, async (req, res) => {
     // Get or create the price
     const price = await getOrCreatePrice();
 
-    // App return URLs
-    const successUrl = process.env.APP_URL
-      ? `${process.env.APP_URL}subscription-success?session_id={CHECKOUT_SESSION_ID}`
-      : 'https://peditrack.app/subscription-success?session_id={CHECKOUT_SESSION_ID}';
-    const cancelUrl = process.env.APP_URL
-      ? `${process.env.APP_URL}subscription-cancel`
-      : 'https://peditrack.app/subscription-cancel';
+    // Build redirect URLs that point to our server endpoints (Stripe requires HTTPS)
+    // These endpoints will then redirect to the mobile app's deep links
+    // NOTE: For development, use ngrok to expose this server and set SERVER_URL env var
+    // Example: ngrok http 5002 -> set SERVER_URL=https://abc123.ngrok.io
+    const serverBaseUrl = process.env.SERVER_URL || `${req.protocol}://${req.get('host')}`;
+    
+    // Validate that we have an HTTPS URL for Stripe (except localhost for test mode)
+    const isLocalhost = serverBaseUrl.includes('localhost') || serverBaseUrl.includes('127.0.0.1');
+    const isHttps = serverBaseUrl.startsWith('https://');
+    
+    if (!isHttps && !isLocalhost) {
+      console.warn('⚠️  Stripe requires HTTPS URLs for redirects.');
+      console.warn('   For development, run: ngrok http 5002');
+      console.warn('   Then set SERVER_URL environment variable to the ngrok URL');
+      console.warn(`   Current SERVER_URL: ${serverBaseUrl}`);
+    }
+    
+    const successUrl = `${serverBaseUrl}/api/subscription/redirect/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${serverBaseUrl}/api/subscription/redirect/cancel`;
+    
+    console.log('Stripe redirect URLs:', { successUrl, cancelUrl });
 
     // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
@@ -437,6 +525,32 @@ router.post('/cancel', auth, async (req, res) => {
   try {
     const subscription = await Subscription.findOne({ userId: req.userId });
     if (!subscription || !subscription.stripeSubscriptionId) {
+      // If the user manually got marked as Pro in DB, auto-heal their account status back to Free
+      const user = await User.findById(req.userId);
+      if (user && user.isPro) {
+        user.isPro = false;
+        user.subscriptionPlan = 'basic';
+        user.$skipPasswordHash = true;
+        await user.save();
+        
+        if (subscription) {
+          subscription.status = 'none';
+          subscription.cancelAtPeriodEnd = false;
+          subscription.autoRenew = false;
+          await subscription.save();
+        }
+
+        return res.json({
+          success: true,
+          message: 'Subscription successfully removed (downgraded to Free).',
+          subscription: {
+            status: 'none',
+            cancelAtPeriodEnd: false,
+            currentPeriodEnd: null,
+          }
+        });
+      }
+
       return res.status(404).json({ error: 'No active subscription found' });
     }
 
@@ -623,6 +737,56 @@ router.post('/verify-session', auth, async (req, res) => {
   } catch (error) {
     console.error('Verify session error:', error);
     res.status(500).json({ error: 'Failed to verify checkout session' });
+  }
+});
+
+/**
+ * @route   POST /api/subscription/apply-demo-coupon
+ * @desc    Upgrades user to PRO for free using a demo coupon code
+ * @access  Private
+ */
+router.post('/apply-demo-coupon', auth, async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (code !== '18473') {
+      return res.status(400).json({ error: 'Invalid coupon code' });
+    }
+
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    user.isPro = true;
+    user.subscriptionPlan = 'pro_monthly';
+    user.$skipPasswordHash = true;
+    await user.save();
+
+    // Create a mock subscription record
+    const subscriptionData = {
+      userId: req.userId,
+      stripeCustomerId: 'demo_cust_' + Math.random().toString(36).substring(7),
+      stripeSubscriptionId: null, // intentionally null so cancel auto-heal handles it
+      status: 'active',
+      currentPeriodStart: new Date(),
+      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
+      autoRenew: false,
+      cancelAtPeriodEnd: true, // Will automatically expire
+      paymentMethodBrand: 'Demo',
+      paymentMethodLast4: '0000',
+    };
+
+    await Subscription.findOneAndUpdate(
+      { userId: req.userId },
+      subscriptionData,
+      { upsert: true, new: true }
+    );
+
+    res.json({
+      success: true,
+      message: 'Demo PRO activated successfully!',
+    });
+  } catch (error) {
+    console.error('Demo coupon error:', error);
+    res.status(500).json({ error: 'Failed to apply demo coupon' });
   }
 });
 

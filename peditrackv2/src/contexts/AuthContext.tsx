@@ -3,6 +3,7 @@ import userService, { User, AuthResponse, SubscriptionStatus } from '../services
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { APP_CONFIG } from '../config/config';
+import { useRouter } from 'expo-router';
 
 /**
  * Authentication Context
@@ -29,7 +30,9 @@ interface AuthContextType {
   toggleAutoRenew: (autoRenew: boolean) => Promise<void>;
   payNowWithSavedCard: () => Promise<{ success: boolean; message: string; needsCheckout?: boolean }>;
   verifyCheckoutSession: (sessionId: string) => Promise<void>;
+  applyDemoCoupon: (code: string) => Promise<{ success: boolean; message: string }>;
   clearError: () => void;
+  upgradeToPro: (plan?: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -47,11 +50,16 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const isAuthenticated = user !== null;
+
+  const upgradeToPro = (plan?: string) => {
+    router.push('/profile/subscription');
+  };
 
   // Check authentication status on mount
   useEffect(() => {
@@ -374,6 +382,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const applyDemoCoupon = async (code: string) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const res = await userService.applyDemoCoupon(code);
+      await refreshUser(); // refresh to get the updated isPro status
+      return res;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to apply coupon';
+      setError(message);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const clearError = () => {
     setError(null);
   };
@@ -398,7 +422,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     toggleAutoRenew,
     payNowWithSavedCard,
     verifyCheckoutSession,
+    applyDemoCoupon,
     clearError,
+    upgradeToPro,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
