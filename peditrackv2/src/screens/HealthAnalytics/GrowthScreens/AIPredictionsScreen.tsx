@@ -18,7 +18,6 @@ import {
 } from '../../../services/aiService';
 
 const { width } = Dimensions.get('window');
-type Period = 'current' | '3months' | '6months' | '12months';
 
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -26,7 +25,6 @@ export const AIPredictionsScreen: React.FC = () => {
   const router = useRouter();
   const { user } = useAuth();
   const { selectedBaby } = useBaby();
-  const [period, setPeriod]   = useState<Period>('3months');
   const [data, setData]       = useState<PredictionsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState<string | null>(null);
@@ -43,12 +41,6 @@ export const AIPredictionsScreen: React.FC = () => {
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
-  // ── Helper: active forecast point
-  const activePred =
-    period === '3months'  ? data?.predictions.threeMonths  :
-    period === '6months'  ? data?.predictions.sixMonths    :
-    period === '12months' ? data?.predictions.twelveMonths : null;
-
   // ── Format a trajectory label: ISO date → "MMM 'YY", future tags (+3m) pass through
   const formatTrajLabel = (m: number | string | null): string => {
     if (m == null) return '?';
@@ -63,7 +55,11 @@ export const AIPredictionsScreen: React.FC = () => {
     return `${monthStr} '${yearStr}`;
   };
 
-  // ── Chart data from real trajectory
+  // ── Find the index where predictions start
+  const predictionStartIndex = data?.trajectory?.months.findIndex(m => 
+    typeof m === 'string' && m.startsWith('+')
+  ) ?? -1;
+
   const chartData = data && data.trajectory && data.trajectory.heights
     ? {
         labels: data.trajectory.months.map(formatTrajLabel),
@@ -144,23 +140,13 @@ export const AIPredictionsScreen: React.FC = () => {
               {data.cached && <Text style={styles.cachedTag}>CACHED</Text>}
             </View>
 
-            {/* Period selector */}
-            <View style={styles.periodSelector}>
-              {([
-                { key: 'current',  label: 'Current', val: `${data.current.height?.toFixed(1)} cm` },
-                { key: '3months',  label: '3 mo',    val: data.predictions.threeMonths  ? `${data.predictions.threeMonths.height_cm.toFixed(1)} cm`  : '—' },
-                { key: '6months',  label: '6 mo',    val: data.predictions.sixMonths    ? `${data.predictions.sixMonths.height_cm.toFixed(1)} cm`    : '—' },
-                { key: '12months', label: '12 mo',   val: data.predictions.twelveMonths ? `${data.predictions.twelveMonths.height_cm.toFixed(1)} cm` : '—' },
-              ] as const).map(({ key, label, val }) => (
-                <TouchableOpacity
-                  key={key}
-                  style={[styles.periodBtn, period === key && styles.periodBtnActive]}
-                  onPress={() => setPeriod(key)}
-                >
-                  <Text style={[styles.periodLabel, period === key && styles.periodLabelActive]}>{label}</Text>
-                  <Text style={[styles.periodVal, period === key && styles.periodValActive]}>{val}</Text>
-                </TouchableOpacity>
-              ))}
+            {/* Data Quality Note */}
+            <View style={[styles.aiModeBadge, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A', borderWidth: 1 }]}>
+              <Ionicons name="bulb-outline" size={20} color="#D97706" />
+              <Text style={{ flex: 1, fontSize: 13, color: '#92400E', lineHeight: 18 }}>
+                <Text style={{ fontWeight: '700' }}>Pro Tip: </Text>
+                Consistently store measurements, milestones, and daily records in the app to feed the AI and get the most accurate insights.
+              </Text>
             </View>
 
             {/* Line chart (Height) */}
@@ -178,8 +164,11 @@ export const AIPredictionsScreen: React.FC = () => {
                     decimalPlaces: 0,
                     color: (opacity = 1) => `rgba(59, 130, 246, ${opacity})`,
                     labelColor: () => '#9CA3AF',
-                    propsForDots: { r: '4', strokeWidth: '2', stroke: '#3B82F6' },
+                    propsForDots: { r: '5', strokeWidth: '2' },
                   }}
+                  getDotColor={(dataPoint, dataPointIndex) => 
+                    predictionStartIndex !== -1 && dataPointIndex >= predictionStartIndex ? '#F59E0B' : '#3B82F6'
+                  }
                   bezier
                   style={{ borderRadius: 12 }}
                   withShadow={false}
@@ -202,8 +191,11 @@ export const AIPredictionsScreen: React.FC = () => {
                     decimalPlaces: 1,
                     color: (opacity = 1) => `rgba(16, 185, 129, ${opacity})`,
                     labelColor: () => '#9CA3AF',
-                    propsForDots: { r: '4', strokeWidth: '2', stroke: '#10B981' },
+                    propsForDots: { r: '5', strokeWidth: '2' },
                   }}
+                  getDotColor={(dataPoint, dataPointIndex) => 
+                    predictionStartIndex !== -1 && dataPointIndex >= predictionStartIndex ? '#F59E0B' : '#10B981'
+                  }
                   bezier
                   style={{ borderRadius: 12 }}
                   withShadow={false}

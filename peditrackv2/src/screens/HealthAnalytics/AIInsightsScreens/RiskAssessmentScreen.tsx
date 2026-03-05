@@ -121,6 +121,17 @@ export const RiskAssessmentScreen: React.FC = () => {
           <ScrollView style={styles.scroll} contentContainerStyle={styles.content}
             showsVerticalScrollIndicator={false}>
 
+            {/* Data Quality Note */}
+            <View style={[styles.riskCard, { backgroundColor: '#FEF3C7', borderColor: '#FDE68A', borderWidth: 1, paddingVertical: 12 }]}>
+              <Ionicons name="bulb-outline" size={20} color="#D97706" />
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 13, color: '#92400E', lineHeight: 18 }}>
+                  <Text style={{ fontWeight: '700' }}>Pro Tip: </Text>
+                  The AI risk assessment relies on the data you provide. Consistently record your child's measurements, sleep, and developmental milestones in the app to get the most precise insights.
+                </Text>
+              </View>
+            </View>
+
             {/* Overall Health Risk */}
             <View style={[styles.overallCard, { borderColor: overallColor }]}>
               <View style={styles.overallLeft}>
