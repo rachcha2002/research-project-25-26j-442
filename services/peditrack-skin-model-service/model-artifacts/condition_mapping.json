@@ -1,0 +1,11 @@
+{
+  "classes": [
+    "Acne_Rosacea",
+    "Atopic_Dermatitis",
+    "Bullous_Disease",
+    "Cellulitis_Impetigo",
+    "Eczema",
+    "Fungal_Infections"
+  ],
+  "num_classes": 6
+}

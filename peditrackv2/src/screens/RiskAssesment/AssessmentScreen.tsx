@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { submitAssessment } from "@/services/riskAssessmentService";
+import { classifySkinImage, submitAssessment } from "@/services/riskAssessmentService";
 import {
   View,
   Text,
@@ -9,10 +9,13 @@ import {
   TextInput,
   Alert,
   Platform,
+  Image,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import * as ImagePicker from "expo-image-picker";
 import { SecondaryTopBar } from "@/components/SecondaryTopBar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useBaby } from "@/contexts/BabyContext";
@@ -154,6 +157,7 @@ export const EmergencyAssessmentScreen: React.FC = () => {
 
   // Optional photo (placeholder)
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // UI Helpers
   const toggleSymptom = (key: string) => {
@@ -172,8 +176,28 @@ export const EmergencyAssessmentScreen: React.FC = () => {
     setDangerSigns((prev) => (prev.includes(k) ? prev.filter((p) => p !== k) : [...prev, k]));
   };
 
+  const pickRashImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permission.status !== "granted") {
+      Alert.alert("Permission needed", "Please grant photo library access to upload rash images.");
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: false,
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets?.length > 0) {
+      setPhotoUri(result.assets[0].uri);
+    }
+  };
+
   // Basic validation & submit
   const handleSubmit = async () => {
+    if (isSubmitting) return;
+
     if (!selectedBaby) {
       Alert.alert("No baby profile", "Please select or create a baby profile first.");
       return;
@@ -192,8 +216,30 @@ export const EmergencyAssessmentScreen: React.FC = () => {
       details: s.details ?? "",
     }));
 
+    const hasRash = selectedSymptoms.some((s) => s.key === "rash");
+    if (hasRash && !photoUri) {
+      Alert.alert("Rash image required", "Please upload an image of the rash.");
+      return;
+    }
+
     // If any danger sign present -> immediate navigation to high-risk flow
     const hasImmediateFlag = dangerSigns.length > 0 || avpu === "Unresponsive" || selectedSymptoms.some(s=>s.key==="seizure");
+
+    setIsSubmitting(true);
+
+    let skinFindings = null;
+    if (hasRash && photoUri) {
+      try {
+        skinFindings = await classifySkinImage(photoUri);
+      } catch (err) {
+        Alert.alert(
+          "Skin model unavailable",
+          "Could not classify the rash image right now. Please try again in a moment."
+        );
+        setIsSubmitting(false);
+        return;
+      }
+    }
 
     const payload = {
       userId: user?._id || null,
@@ -230,6 +276,7 @@ export const EmergencyAssessmentScreen: React.FC = () => {
         photo_uri: photoUri,
         timestamp: new Date().toISOString(),
       },
+      skin_findings: skinFindings,
       immediate_flag: hasImmediateFlag,
     }
 
@@ -238,7 +285,12 @@ export const EmergencyAssessmentScreen: React.FC = () => {
       // Navigate directly to result screen
       router.push({
         pathname: "/emergency-response/assessment-result",
-        params: { result: JSON.stringify(result) },
+        params: {
+          result: JSON.stringify({
+            ...result,
+            child: payload.child,
+          }),
+        },
       });
     } catch (err) {
       console.warn("submit error", err);
@@ -247,6 +299,8 @@ export const EmergencyAssessmentScreen: React.FC = () => {
         pathname: "/emergency-response/assessment-result",
         params: { result: JSON.stringify({ risk: "medium", payload }) },
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -397,6 +451,25 @@ export const EmergencyAssessmentScreen: React.FC = () => {
                             onChangeText={(text) => updateSymptomDetails(s.key, text)}
                           />
                         )}
+                        {s.selected && s.key === "rash" && (
+                          <View style={styles.rashImageBlock}>
+                            <Text style={styles.label}>Rash Image</Text>
+                            <TouchableOpacity style={styles.uploadBtn} onPress={pickRashImage}>
+                              <Ionicons name="camera" size={20} color={Colors.dark} />
+                              <Text style={{ marginLeft: 8 }}>
+                                {photoUri ? "Change rash image" : "Upload rash image"}
+                              </Text>
+                            </TouchableOpacity>
+                            {photoUri && (
+                              <View style={styles.previewWrap}>
+                                <Image source={{ uri: photoUri }} style={styles.previewImage} />
+                                <TouchableOpacity onPress={() => setPhotoUri(null)} style={styles.removeBtn}>
+                                  <Text style={styles.removeBtnText}>Remove</Text>
+                                </TouchableOpacity>
+                              </View>
+                            )}
+                          </View>
+                        )}
                       </View>
                     );
                   })}
@@ -540,26 +613,14 @@ export const EmergencyAssessmentScreen: React.FC = () => {
             </View>
           </View>
         </View>
-
-        {/* Photo placeholder */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Photo / Video (optional)</Text>
-          <TouchableOpacity
-            style={[styles.uploadBtn]}
-            onPress={() => {
-              // integrate expo-image-picker here. For now, placeholder.
-              Alert.alert("Photo", "Image picker placeholder - integrate expo-image-picker.");
-            }}
-          >
-            <Ionicons name="camera" size={20} color={Colors.dark} />
-            <Text style={{ marginLeft: 8 }}>Add photo / video</Text>
-          </TouchableOpacity>
-        </View>
-
         {/* Submit */}
         <View style={{ marginVertical: 20 }}>
-          <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
-            <Text style={{ color: "#fff", fontWeight: "600" }}>Get Risk Assessment</Text>
+          <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <Text style={{ color: "#fff", fontWeight: "600" }}>Get Risk Assessment</Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -741,6 +802,32 @@ const styles = StyleSheet.create({
     padding: 12,
     flexDirection: "row",
     alignItems: "center",
+  },
+  rashImageBlock: {
+    marginTop: 8,
+  },
+  previewWrap: {
+    marginTop: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  previewImage: {
+    width: 88,
+    height: 88,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  removeBtn: {
+    backgroundColor: "#fee2e2",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  removeBtnText: {
+    color: Colors.danger,
+    fontWeight: "600",
   },
   submitBtn: {
     backgroundColor: Colors.primary,

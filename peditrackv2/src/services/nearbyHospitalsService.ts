@@ -76,7 +76,10 @@ const fetchNearbyPlaces = async (latitude: number, longitude: number): Promise<P
 
   const response = await fetch(url);
   if (!response.ok) {
-    throw new Error(`Nearby places proxy request failed with status ${response.status}`);
+    const body = await response.text().catch(() => '');
+    throw new Error(
+      `Nearby places proxy request failed (${response.status}) at ${url}${body ? `: ${body}` : ''}`
+    );
   }
 
   const data = await response.json();
@@ -105,6 +108,10 @@ const fetchTravelTimes = async (
 
   const response = await fetch(url);
   if (!response.ok) {
+    const body = await response.text().catch(() => '');
+    console.warn(
+      `Travel times proxy request failed (${response.status}) at ${url}${body ? `: ${body}` : ''}`
+    );
     return destinations.map(() => null);
   }
 
