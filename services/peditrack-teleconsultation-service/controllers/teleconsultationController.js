@@ -3,7 +3,8 @@ const { v4: uuidv4 } = require('uuid');
 const mongoose = require('mongoose');
 const { createToken } = require('./livekit.service');
 
-const AUTH_USER_SERVICE_API_URL = (process.env.AUTH_USER_SERVICE_API_URL || 'http://localhost:3012/api/doctors').replace(/\/+$/, '');
+const AUTH_USER_SERVICE_API_URL = 'https://auth-user-service-production.up.railway.app/api/doctors';
+const SUBSCRIPTION_STATUS_API_URL = 'https://research-project-25-26j-442-production.up.railway.app/api/subscription/status';
 
 const RISK_PRIORITY = {
   low: 1,
@@ -49,14 +50,56 @@ const getDoctorDisplayName = async (doctorId) => {
   }
 };
 
+const checkUserHasActiveSubscription = async (authorizationHeader) => {
+  if (!authorizationHeader) {
+    return { ok: false, reason: 'Missing authorization token' };
+  }
+
+  try {
+    const response = await fetch(SUBSCRIPTION_STATUS_API_URL, {
+      method: 'GET',
+      headers: {
+        Authorization: authorizationHeader,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const body = await response.text().catch(() => '');
+      return {
+        ok: false,
+        reason: `Subscription status check failed (${response.status})${body ? `: ${body}` : ''}`,
+      };
+    }
+
+    const data = await response.json();
+    const isPro = Boolean(data?.subscription?.isPro);
+
+    if (!isPro) {
+      return { ok: false, reason: 'An active subscription is required to request teleconsultation' };
+    }
+
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, reason: `Subscription service unavailable: ${error?.message || 'Unknown error'}` };
+  }
+};
+
 // POST /api/teleconsultation/request
 exports.createRequest = async (req, res) => {
   try {
     const { patient = {}, risk_level, risk_score, assessment_id } = req.body;
     const patientUserId = String(req.userId || '');
+    const authorizationHeader = req.header('Authorization');
 
     if (!patientUserId) {
       return res.status(401).json({ error: 'Unauthorized user context' });
+    }
+
+    const subscriptionCheck = await checkUserHasActiveSubscription(authorizationHeader);
+    if (!subscriptionCheck.ok) {
+      const isAccessDenied = subscriptionCheck.reason?.includes('active subscription is required');
+      return res.status(isAccessDenied ? 403 : 503).json({ error: subscriptionCheck.reason });
     }
 
     const riskPriority = RISK_PRIORITY[risk_level] ?? 0;

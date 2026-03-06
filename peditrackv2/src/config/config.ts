@@ -17,12 +17,12 @@ const __DEV__ = process.env.NODE_ENV !== 'production';
 export const API_CONFIG = {
   // User Service API (port 5002)
   USER_SERVICE_URL: __DEV__
-    ? `http://${COMPUTER_IP}:5002/api`
+    ? `https://research-project-25-26j-442-production.up.railway.app/api`
     : 'https://your-production-user-service.com/api',
 
   // Health Analytics Service API (port 5001)
   HEALTH_SERVICE_URL: __DEV__
-    ? `http://${COMPUTER_IP}:5001/api`
+    ? `https://health-analytics-production.up.railway.app/api`
     : 'https://your-production-health-service.com/api',
 
   // Risk Assessment Service API (port 4000)
@@ -31,14 +31,10 @@ export const API_CONFIG = {
     : 'https://your-production-risk-assessment.com/api',
 
   // Teleconsultation Service API (port 4001)
-  TELECONSULTATION_URL: __DEV__
-    ? `http://${COMPUTER_IP}:4001/api/teleconsultation`
-    : 'https://your-production-teleconsultation.com/api',
+  TELECONSULTATION_URL: 'https://teleconsultation-service-production.up.railway.app/api/teleconsultation',
 
   // Places Proxy API (port 4002)
-  PLACES_PROXY_URL: __DEV__
-    ? `http://${COMPUTER_IP}:4002/api`
-    : 'https://your-production-places-proxy.com/api',
+  PLACES_PROXY_URL: 'https://places-proxy-production.up.railway.app/api',
 
   // Admin Service API (port 3012)
   AUTH_USER_URL: __DEV__
@@ -47,14 +43,24 @@ export const API_CONFIG = {
 
   // Meal Recommendation Service API (port 5050)
   MEAL_RECOMMENDATION_SERVICE_URL: __DEV__
-    ? `http://${COMPUTER_IP}:5050`
+    ? `https://meal-recommendation-service-production.up.railway.app`
     : 'https://your-production-meal-service.com',
-
 
   // Nutrition Extraction Service API (port 5560)
   NUTRITION_EXTRACTION_SERVICE_URL: __DEV__
-    ? `http://${COMPUTER_IP}:5560`
+    ? `https://nutrition-extraction-service-production.up.railway.app`
     : 'https://your-production-nutrition-extraction-service.com',
+
+  // Nutrition Share / Social Feed Service (port 3007)
+  SOCIAL_SERVICE_URL: __DEV__
+    ? 'https://nutrition-share-feed-service-production.up.railway.app/api'
+    : 'https://nutrition-share-feed-service-production.up.railway.app/api',
+
+  // Social File Upload URL
+  SOCIAL_FILE_URL: __DEV__
+    ? 'https://nutrition-share-feed-service-production.up.railway.app/api/file/uploads/'
+    : 'https://nutrition-share-feed-service-production.up.railway.app/api/file/uploads',
+
   // Request timeout in milliseconds
   REQUEST_TIMEOUT: 30000,
 };

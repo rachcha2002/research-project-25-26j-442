@@ -42,6 +42,12 @@ const AssessmentReportSchema = new mongoose.Schema(
         onset: { type: String, default: '' },
         trend: { type: String, default: '' },
       },
+      skinFindings: {
+        predictedClass: { type: String, default: null },
+        confidence: { type: Number, default: null },
+        model: { type: String, default: null },
+        version: { type: String, default: null },
+      },
       reasons: [{ type: String }],
       recommendations: [
         {
