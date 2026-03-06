@@ -7,3 +7,4 @@ python-dotenv
 google-genai
 pydantic
 pydantic-settings
+scikit-learn
