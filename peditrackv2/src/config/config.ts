@@ -17,12 +17,12 @@ const __DEV__ = process.env.NODE_ENV !== 'production';
 export const API_CONFIG = {
   // User Service API (port 5002)
   USER_SERVICE_URL: __DEV__
-    ? `http://${COMPUTER_IP}:5002/api`
+    ? `https://research-project-25-26j-442-production.up.railway.app/api`
     : 'https://your-production-user-service.com/api',
 
   // Health Analytics Service API (port 5001)
   HEALTH_SERVICE_URL: __DEV__
-    ? `http://${COMPUTER_IP}:5001/api`
+    ? `https://health-analytics-production.up.railway.app/api`
     : 'https://your-production-health-service.com/api',
 
   // Risk Assessment Service API (port 4000)

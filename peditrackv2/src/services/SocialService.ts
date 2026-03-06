@@ -1,6 +1,6 @@
 
-const API_BASE_URL = 'http://10.174.51.59:3007/api';
-export const FILE_BASE_URL = 'http://10.174.51.59:3007/api/file/uploads/';
+const API_BASE_URL = 'https://nutrition-share-feed-service-production.up.railway.app/api';
+export const FILE_BASE_URL = 'https://nutrition-share-feed-service-production.up.railway.app/api/file/uploads/';
 
 export interface UserMeta {
     userId: string;
