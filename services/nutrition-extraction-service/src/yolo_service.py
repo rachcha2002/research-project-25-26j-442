@@ -42,8 +42,8 @@ class YoloVisionService:
         except Exception as e:
             print(f"⚠️ Warning adding safe globals: {e}")
 
-        # 2. Set Path
-        weights_path = r"C:\personals\Y4\RP\research-project-25-26j-442\services\nutrition-extraction-service\weights\best.pt"
+        # 2. Set Path (weights folder is one level up from src/)
+        weights_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "weights", "best.pt")
         
         print(f"🔍 System checking path: {weights_path}")
         
