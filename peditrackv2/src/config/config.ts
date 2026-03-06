@@ -9,7 +9,7 @@
 // For Physical Device: use your computer's IP address
 
 // Get your computer's IP by running 'ipconfig' (Windows) or 'ifconfig' (Mac/Linux)
-const COMPUTER_IP = '172.20.10.2'; // Update this with your actual IP
+const COMPUTER_IP = '192.168.1.2'; // Update this with your actual IP
 
 // Detect if running in Expo Go vs production
 const __DEV__ = process.env.NODE_ENV !== 'production';
