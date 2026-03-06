@@ -38,6 +38,12 @@ const AssessmentSchema = new mongoose.Schema({
     photo_uri: { type: String, default: null },
     timestamp: { type: String },
   },
+  skin_findings: {
+    predicted_class: { type: String, default: null },
+    confidence: { type: Number, default: null },
+    model: { type: String, default: null },
+    version: { type: String, default: null },
+  },
   immediate_flag: { type: Boolean, default: false },
   // Backend response fields
   assessment_id: { type: String },

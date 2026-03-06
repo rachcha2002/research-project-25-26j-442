@@ -363,15 +363,27 @@ export default function Dashboard({ children, onLogout }: DashboardProps) {
                     {queuePreview.map((request) => (
                       <div
                         key={request._id}
-                        className="flex flex-col gap-3 rounded-lg border border-gray-100 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40 md:flex-row md:items-center md:justify-between"
+                        className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-gradient-to-r from-white to-slate-50 p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md dark:border-slate-700 dark:from-slate-800 dark:to-slate-900 md:flex-row md:items-center md:justify-between"
                       >
-                        <div>
-                          <p className="font-medium text-gray-900 dark:text-white">{request.patient?.name || "Unknown patient"}</p>
-                          <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {request.patient?.assessment_id || "No assessment id"} • Waiting {formatWaitTime(request.requestedAt)}
-                          </p>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300">
+                              {(request.patient?.name || 'P').charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate font-semibold text-slate-900 dark:text-white">
+                                {request.patient?.name || 'Unknown patient'}
+                              </p>
+                              <p className="truncate text-sm text-slate-500 dark:text-slate-400">
+                                Patient: {request.patient?.name || 'Unknown patient'} • Waiting {formatWaitTime(request.requestedAt)}
+                              </p>
+                            </div>
+                          </div>
                         </div>
                         <div className="flex items-center gap-2">
+                          <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-700/60 dark:text-slate-200">
+                            Score {request.risk_score}
+                          </span>
                           <span
                             className={`rounded-full px-2 py-1 text-xs font-medium ${
                               request.risk_level === "high"
@@ -385,7 +397,7 @@ export default function Dashboard({ children, onLogout }: DashboardProps) {
                           </span>
                           <button
                             onClick={() => navigate("/consultation")}
-                            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700"
+                            className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-700"
                           >
                             Open Queue
                           </button>

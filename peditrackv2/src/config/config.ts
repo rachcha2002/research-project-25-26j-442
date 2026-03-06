@@ -31,14 +31,10 @@ export const API_CONFIG = {
     : 'https://your-production-risk-assessment.com/api',
 
   // Teleconsultation Service API (port 4001)
-  TELECONSULTATION_URL: __DEV__
-    ? `http://${COMPUTER_IP}:4001/api/teleconsultation`
-    : 'https://your-production-teleconsultation.com/api',
+  TELECONSULTATION_URL: 'https://teleconsultation-service-production.up.railway.app/api/teleconsultation',
 
   // Places Proxy API (port 4002)
-  PLACES_PROXY_URL: __DEV__
-    ? `http://${COMPUTER_IP}:4002/api`
-    : 'https://your-production-places-proxy.com/api',
+  PLACES_PROXY_URL: 'https://places-proxy-production.up.railway.app/api',
 
   // Admin Service API (port 3012)
   AUTH_USER_URL: __DEV__

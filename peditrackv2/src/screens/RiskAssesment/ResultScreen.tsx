@@ -69,8 +69,10 @@ export const AssessmentResultScreen: React.FC = () => {
     ? JSON.parse(params.result as string)
     : { risk_level: "low", risk_score: 2.1 };
 
+  const resultChild = result.child || result.payload?.child || {};
+
   // Use backend risk_level, fallback to "low"
-  const riskValue = result.risk_level || "low";
+  const riskValue = result.risk_level || result.risk || "low";
   const normalizedRisk = riskValue.toLowerCase();
   const risk: "low" | "medium" | "high" = (normalizedRisk === "low" || normalizedRisk === "medium" || normalizedRisk === "high")
     ? normalizedRisk as "low" | "medium" | "high"
@@ -185,10 +187,10 @@ export const AssessmentResultScreen: React.FC = () => {
                         const telePayload = {
                           userId: user._id,
                           patient: {
-                            name: result.child?.name || "",
+                            name: resultChild?.name || "",
                             userId: user._id,
-                            age_months: result.child?.age_months || 0,
-                            weight_kg: result.child?.weight_kg || 0,
+                            age_months: resultChild?.age_months || 0,
+                            weight_kg: resultChild?.weight_kg || 0,
                             assessment_id: result.assessment_id || "",
                           },
                           risk_level: result.risk_level,
@@ -203,6 +205,14 @@ export const AssessmentResultScreen: React.FC = () => {
                       } catch (err) {
                         console.error('Teleconsultation error:', err);
                         const message = err instanceof Error ? err.message : 'Unknown error';
+                        if (message.includes('HTTP 403')) {
+                          alert('Active subscription required. Please subscribe to request teleconsultation.');
+                          return;
+                        }
+                        if (message.includes('HTTP 503')) {
+                          alert('Teleconsultation is temporarily unavailable. Please try again in a moment.');
+                          return;
+                        }
                         alert(`Failed to request teleconsultation. ${message}`);
                       }
                     }

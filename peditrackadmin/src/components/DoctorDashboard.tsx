@@ -28,7 +28,7 @@ const statusTag = (riskLevel: string, isDark: boolean) => {
           color: '#ef4444',
         }}
       >
-        Urgent
+        High
       </Tag>
     );
   }
@@ -43,7 +43,7 @@ const statusTag = (riskLevel: string, isDark: boolean) => {
           color: '#f59e42',
         }}
       >
-        High
+        Medium
       </Tag>
     );
   }
@@ -435,7 +435,6 @@ const DoctorDashboard: React.FC = () => {
                   : '-'}
               </Descriptions.Item>
               <Descriptions.Item label="Weight">{selectedRequest.patient?.weight_kg || '-'} kg</Descriptions.Item>
-              <Descriptions.Item label="Assessment ID">{selectedRequest.patient?.assessment_id || '-'}</Descriptions.Item>
             </Descriptions>
 
             <Descriptions title="Request" size="small" column={1} bordered>
