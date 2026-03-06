@@ -7,6 +7,7 @@ import Register from './components/auth/Register';
 import Dashboard from './components/Dashboard';
 import PostRecommendations from './components/PostRecommendations';
 import DoctorDashboard from './components/DoctorDashboard';
+import DoctorVideoCall from './components/DoctorVideoCall';
 import ProtectedRoute from './routes/ProtectedRoute';
 import ProfileCompletion from './components/auth/ProfileCompletion';
 import GoogleCallback from './components/auth/GoogleCallBack';
@@ -57,6 +58,14 @@ function AppRoutes() {
             <Dashboard onLogout={logout}>
               <DoctorDashboard />
             </Dashboard>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/consultation/call"
+        element={
+          <ProtectedRoute>
+            <DoctorVideoCall />
           </ProtectedRoute>
         }
       />

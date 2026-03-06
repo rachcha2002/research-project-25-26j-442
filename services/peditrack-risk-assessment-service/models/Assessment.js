@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
 const AssessmentSchema = new mongoose.Schema({
+  userId: { type: String, default: null, index: true },
   child: {
     name: { type: String, default: null },
     age_months: { type: Number, default: null },
@@ -36,6 +37,12 @@ const AssessmentSchema = new mongoose.Schema({
   optional: {
     photo_uri: { type: String, default: null },
     timestamp: { type: String },
+  },
+  skin_findings: {
+    predicted_class: { type: String, default: null },
+    confidence: { type: Number, default: null },
+    model: { type: String, default: null },
+    version: { type: String, default: null },
   },
   immediate_flag: { type: Boolean, default: false },
   // Backend response fields

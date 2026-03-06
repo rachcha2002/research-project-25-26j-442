@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { requestTeleconsultation } from "@/services/teleconsultationService";
 import { SecondaryTopBar } from "@/components/SecondaryTopBar";
+import { useAuth } from "@/contexts/AuthContext";
 
 // Color and style presets for each risk level
 const RISK_STYLES = {
@@ -19,7 +20,7 @@ const RISK_STYLES = {
     background: "#DCFCE7",
     glow: "#bbf7d0",
     icon: "checkmark-circle",
-    label: "LOW RISK",
+    label: "LOW PRIORITY",
     explain:
       "Symptoms appear manageable, but continue monitoring. If symptoms worsen or new ones appear, reassess immediately.",
     actions: [
@@ -33,7 +34,7 @@ const RISK_STYLES = {
     background: "#FFEDD5",
     glow: "#fdba74",
     icon: "alert-circle",
-    label: "MEDIUM RISK",
+    label: "MEDIUM PRIORITY",
     explain:
       "Medical evaluation recommended soon. Your child’s symptoms warrant professional assessment within the next few hours.",
     actions: [
@@ -47,7 +48,7 @@ const RISK_STYLES = {
     background: "#FEE2E2",
     glow: "#fecaca",
     icon: "warning",
-    label: "HIGH RISK",
+    label: "HIGH PRIORITY",
     explain:
       "Immediate medical attention is strongly recommended. Your child's symptoms indicate a potentially serious condition.",
     actions: [
@@ -60,6 +61,7 @@ const RISK_STYLES = {
 export const AssessmentResultScreen: React.FC = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
+  const { user, isAuthenticated } = useAuth();
 
   // Extract the result object passed from assessment screen
   // TODO: Replace with backend result when available
@@ -67,8 +69,10 @@ export const AssessmentResultScreen: React.FC = () => {
     ? JSON.parse(params.result as string)
     : { risk_level: "low", risk_score: 2.1 };
 
+  const resultChild = result.child || result.payload?.child || {};
+
   // Use backend risk_level, fallback to "low"
-  const riskValue = result.risk_level || "low";
+  const riskValue = result.risk_level || result.risk || "low";
   const normalizedRisk = riskValue.toLowerCase();
   const risk: "low" | "medium" | "high" = (normalizedRisk === "low" || normalizedRisk === "medium" || normalizedRisk === "high")
     ? normalizedRisk as "low" | "medium" | "high"
@@ -130,7 +134,6 @@ export const AssessmentResultScreen: React.FC = () => {
           <Text style={[styles.riskLabel, { color: style.color }]}>
             {style.label}
           </Text>
-          <Text style={[styles.scoreText, { color: style.color }]}>Risk Score: {score.toFixed(1)}/10</Text>
           <Text style={styles.timeText}>
             Assessed: {new Date().toLocaleString('en-US', {
               hour: 'numeric',
@@ -174,12 +177,20 @@ export const AssessmentResultScreen: React.FC = () => {
                 isTeleconsult
                   ? async () => {
                       try {
+                        if (!isAuthenticated || !user?._id) {
+                          alert("Please sign in to request teleconsultation.");
+                          router.push('/auth/login');
+                          return;
+                        }
+
                         // Prepare teleconsultation payload
                         const telePayload = {
+                          userId: user._id,
                           patient: {
-                            name: result.child?.name || "",
-                            age_months: result.child?.age_months || 0,
-                            weight_kg: result.child?.weight_kg || 0,
+                            name: resultChild?.name || "",
+                            userId: user._id,
+                            age_months: resultChild?.age_months || 0,
+                            weight_kg: resultChild?.weight_kg || 0,
                             assessment_id: result.assessment_id || "",
                           },
                           risk_level: result.risk_level,
@@ -189,17 +200,37 @@ export const AssessmentResultScreen: React.FC = () => {
                         console.log('Teleconsultation payload:', telePayload);
                         const teleRequest = await requestTeleconsultation(telePayload);
                         console.log('Teleconsultation request response:', teleRequest);
-                        router.push({ pathname: "/teleconsultation", params: { requestId: teleRequest._id } });
-                        console.log('Navigated to /teleconsultation with requestId:', teleRequest._id);
+                        router.push({ pathname: "/emergency-response/teleconsultation" , params: { requestId: teleRequest._id } });
+                        console.log('Navigated to /emergency-response/teleconsultation with requestId:', teleRequest._id);
                       } catch (err) {
                         console.error('Teleconsultation error:', err);
-                        alert("Failed to request teleconsultation. Please try again.");
+                        const message = err instanceof Error ? err.message : 'Unknown error';
+                        if (message.includes('HTTP 403')) {
+                          alert('Active subscription required. Please subscribe to request teleconsultation.');
+                          return;
+                        }
+                        if (message.includes('HTTP 503')) {
+                          alert('Teleconsultation is temporarily unavailable. Please try again in a moment.');
+                          return;
+                        }
+                        alert(`Failed to request teleconsultation. ${message}`);
                       }
                     }
                   : isNearbyHospital
-                  ? () => router.push("/nearby-hospitals")
+                  ? () => router.push("/emergency-response/nearby-hospitals")
                   : isFullReport
-                  ? () => router.push("/assesment-report")
+                  ? () => {
+                      const assessmentId = result.assessment_id || "";
+                      if (!assessmentId) {
+                        alert("Assessment ID not available. Please complete the assessment again.");
+                        return;
+                      }
+
+                      router.push({
+                        pathname: "/emergency-response/assesment-report",
+                        params: { assessmentId },
+                      });
+                    }
                   : undefined
               }
             >
@@ -226,24 +257,10 @@ export const AssessmentResultScreen: React.FC = () => {
           </Text>
         </View>
       </ScrollView>
-
-      {/* Footer Buttons */}
-      <View style={styles.footer}>
-        <TouchableOpacity style={styles.saveBtn}>
-          <Text style={styles.footerText}>Save Report</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.doneBtn}
-          onPress={() => router.push("/")}
-        >
-          <Text style={[styles.footerText, { color: "#fff" }]}>Done</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
 
-// Styles
 const styles = StyleSheet.create({
   container: {
     flex: 1,

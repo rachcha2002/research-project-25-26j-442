@@ -27,9 +27,13 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="chat" options={{ headerShown: false }} />
             <Stack.Screen name="voice" options={{ headerShown: false }} />
-            <Stack.Screen name="assessment" options={{ headerShown: false }} />
-            <Stack.Screen name="teleconsultation" options={{ headerShown: false }} />
-            <Stack.Screen name="nearby-hospitals" options={{ headerShown: false }} />
+            <Stack.Screen name="emergency-response/emergency-response" options={{ headerShown: false }} />
+            <Stack.Screen name="emergency-response/assessment" options={{ headerShown: false }} />
+            <Stack.Screen name="emergency-response/assessment-result" options={{ headerShown: false }} />
+            <Stack.Screen name="emergency-response/teleconsultation" options={{ headerShown: false }} />
+            <Stack.Screen name="emergency-response/nearby-hospitals" options={{ headerShown: false }} />
+            <Stack.Screen name="emergency-response/videocall-screen" options={{ headerShown: false }} />
+            <Stack.Screen name="emergency-response/assesment-report" options={{ headerShown: false }} />
             <Stack.Screen name="nutrition-tracker" options={{ headerShown: false }} />
             <Stack.Screen name="past-data" options={{ headerShown: false }} />
           </Stack>

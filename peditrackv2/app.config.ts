@@ -13,6 +13,11 @@ const config: ExpoConfig = {
     resizeMode: 'contain',
     backgroundColor: '#7C3AED',
   },
+  extra: {
+    eas: {
+      projectId: "891e7c97-c89d-42d5-80db-311915a50e3b"
+    }
+  },
   assetBundlePatterns: ['**/*'],
   ios: {
     supportsTablet: true,
@@ -24,6 +29,7 @@ const config: ExpoConfig = {
       backgroundColor: '#7C3AED',
     },
     package: 'com.peditrack.app',
+    permissions: ['android.permission.RECORD_AUDIO', 'android.permission.MODIFY_AUDIO_SETTINGS'],
   },
   web: {
     favicon: './assets/favicon.png',
@@ -32,6 +38,14 @@ const config: ExpoConfig = {
     'expo-router',
     'expo-web-browser',
     '@react-native-google-signin/google-signin',
+    [
+      'expo-av',
+      {
+        microphonePermission: 'Allow PediTrack to access your microphone for voice chat.',
+      },
+    ],
+    '@livekit/react-native-expo-plugin',
+    '@config-plugins/react-native-webrtc',
   ],
   experiments: {
     typedRoutes: true,

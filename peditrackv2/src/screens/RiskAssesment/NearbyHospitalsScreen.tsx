@@ -7,61 +7,183 @@ import {
   ScrollView,
   Linking,
   Alert,
+  ActivityIndicator,
+  RefreshControl,
+  Image,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { WebView } from "react-native-webview";
 import { Ionicons } from "@expo/vector-icons";
 import { SecondaryTopBar } from "@/components/SecondaryTopBar";
+import {
+  getNearestHospitals,
+  NearbyHospital,
+  openNavigationToHospital,
+  requestCurrentLocation,
+} from "@/services/nearbyHospitalsService";
 
-const HOSPITALS = [
-  {
-    name: "City Children's Hospital",
-    rating: 4.8,
-    distance: 2.3,
-    time: 8,
-    status: "Available",
-    statusColor: "#22c55e",
-    statusBg: "#dcfce7",
-    capabilities: ["Ward", "HDU", "PICU"],
-    phone: "1234-5678",
-    address: "123 Medical Center Blvd",
-  },
-  {
-    name: "Pediatric Care Center",
-    rating: 4.6,
-    distance: 3.7,
-    time: 12,
-    status: "Limited",
-    statusColor: "#f59e42",
-    statusBg: "#ffedd5",
-    capabilities: ["Ward", "HDU"],
-    phone: "1234-9012",
-    address: "456 Health Street",
-  },
-  {
-    name: "Emergency Kids Clinic",
-    rating: 4.5,
-    distance: 5.1,
-    time: 18,
-    status: "Available",
-    statusColor: "#22c55e",
-    statusBg: "#dcfce7",
-    capabilities: ["Ward"],
-    phone: "1234-3456",
-    address: "789 Care Avenue",
-  },
-];
+const tabOptions = ["All Facilities", "Open Now"] as const;
+type NearbyTab = (typeof tabOptions)[number];
 
 export const NearbyHospitalsScreen: React.FC = () => {
-  const [selectedTab, setSelectedTab] = React.useState("All Facilities");
+  const [selectedTab, setSelectedTab] = React.useState<NearbyTab>("All Facilities");
+  const [hospitals, setHospitals] = React.useState<NearbyHospital[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [refreshing, setRefreshing] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [coords, setCoords] = React.useState<{ latitude: number; longitude: number } | null>(null);
+  const [showMap, setShowMap] = React.useState(true);
+
+  const loadNearbyHospitals = React.useCallback(async (isRefresh = false) => {
+    try {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
+      setError(null);
+
+      const current = await requestCurrentLocation();
+      setCoords({ latitude: current.latitude, longitude: current.longitude });
+
+      const nearest = await getNearestHospitals(current.latitude, current.longitude, 12);
+      setHospitals(nearest);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to load nearby facilities";
+      setError(message);
+      setHospitals([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    loadNearbyHospitals();
+  }, [loadNearbyHospitals]);
+
+  const filteredHospitals = React.useMemo(() => {
+    if (selectedTab === "Open Now") {
+      return hospitals.filter((hospital) => hospital.status === "Open Now");
+    }
+
+    return hospitals;
+  }, [hospitals, selectedTab]);
+
+  const facilitiesWithin10Km = React.useMemo(
+    () => hospitals.filter((hospital) => hospital.distanceKm <= 10),
+    [hospitals]
+  );
+
+  const mapHtml = React.useMemo(() => {
+    if (!coords) return "";
+
+    const markersJson = JSON.stringify(
+      facilitiesWithin10Km.map((hospital) => ({
+        name: hospital.name,
+        lat: hospital.latitude,
+        lng: hospital.longitude,
+        distanceKm: Number(hospital.distanceKm.toFixed(1)),
+      }))
+    );
+
+    return `
+      <!doctype html>
+      <html>
+        <head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+          <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+          <style>
+            html, body, #map { height: 100%; margin: 0; padding: 0; }
+            body { font-family: Arial, sans-serif; }
+          </style>
+        </head>
+        <body>
+          <div id="map"></div>
+          <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+          <script>
+            const center = [${coords.latitude}, ${coords.longitude}];
+            const map = L.map('map').setView(center, 12);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              maxZoom: 19,
+              attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+
+            L.circle(center, {
+              radius: 10000,
+              color: '#6366F1',
+              fillColor: '#C7D2FE',
+              fillOpacity: 0.18,
+              weight: 2
+            }).addTo(map).bindPopup('10 km radius from your location');
+
+            L.marker(center).addTo(map).bindPopup('Your location');
+
+            const facilities = ${markersJson};
+            facilities.forEach((facility) => {
+              L.marker([facility.lat, facility.lng])
+                .addTo(map)
+                .bindPopup('<b>' + facility.name + '</b><br/>' + facility.distanceKm + ' km away');
+            });
+          </script>
+        </body>
+      </html>
+    `;
+  }, [coords, facilitiesWithin10Km]);
+
+  const handleNavigate = async (hospital: NearbyHospital) => {
+    if (!coords) {
+      Alert.alert("Location unavailable", "Unable to get your current location. Please refresh.");
+      return;
+    }
+
+    try {
+      const url = await openNavigationToHospital(
+        coords.latitude,
+        coords.longitude,
+        hospital.latitude,
+        hospital.longitude
+      );
+      await Linking.openURL(url);
+    } catch {
+      Alert.alert("Error", "Unable to open Google Maps");
+    }
+  };
+
+  const handleCall = (phone: string | null) => {
+    if (!phone) {
+      Alert.alert("Phone unavailable", "Phone number is not available for this facility.");
+      return;
+    }
+
+    Linking.openURL(`tel:${phone}`).catch(() => {
+      Alert.alert("Error", "Unable to place a call");
+    });
+  };
+
+  const statusMeta = (status: NearbyHospital["status"]) => {
+    if (status === "Open Now") {
+      return { color: "#22c55e", bg: "#dcfce7" };
+    }
+    if (status === "Closed") {
+      return { color: "#ef4444", bg: "#fee2e2" };
+    }
+    return { color: "#64748b", bg: "#f1f5f9" };
+  };
 
   return (
     <View style={styles.container}>
-      <ScrollView  showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={() => loadNearbyHospitals(true)} />
+        }
+      >
         <SecondaryTopBar />
-        <Text style={styles.headerTitle}>Nearby Hospitals</Text>
+        <Text style={styles.headerTitle}>Nearby Health Facilities</Text>
         {/* Tabs */}
         <View style={styles.tabs}>
-          {["All Facilities", "PICU Available", "Available Now"].map((tab) => (
+          {tabOptions.map((tab) => (
             <TouchableOpacity
               key={tab}
               style={[styles.tab, selectedTab === tab && styles.tabActive]}
@@ -71,29 +193,66 @@ export const NearbyHospitalsScreen: React.FC = () => {
             </TouchableOpacity>
           ))}
         </View>
-        {/* Real-time traffic info */}
-        <View style={styles.trafficCard}>
-          <Ionicons name="car" size={18} color="#6366F1" style={{ marginRight: 8 }} />
-          <Text style={styles.trafficText}>Real-time traffic data</Text>
-          <Text style={styles.trafficSub}>Travel times updated based on current conditions</Text>
-        </View>
+        <TouchableOpacity
+          style={styles.mapBtn}
+          onPress={() => setShowMap((prev) => !prev)}
+        >
+          <Ionicons name="map" size={18} color="#6366F1" style={{ marginRight: 8 }} />
+          <Text style={styles.mapBtnText}>{showMap ? "Hide Health Facility Map" : "View Health Facility Map"}</Text>
+        </TouchableOpacity>
+
+        {showMap && coords && (
+          <View style={styles.mapContainer}>
+            <Text style={styles.mapCaption}>
+              Showing {facilitiesWithin10Km.length} facilities within 10 km radius
+            </Text>
+            <WebView source={{ html: mapHtml }} style={styles.mapWebView} originWhitelist={["*"]} />
+          </View>
+        )}
+        {loading ? (
+          <View style={styles.stateWrap}>
+            <ActivityIndicator size="large" color="#6366F1" />
+            <Text style={styles.stateText}>Finding nearby health facilities...</Text>
+          </View>
+        ) : error ? (
+          <View style={styles.stateWrap}>
+            <Ionicons name="alert-circle" size={24} color="#DC2626" />
+            <Text style={styles.stateText}>{error}</Text>
+            <TouchableOpacity style={styles.retryBtn} onPress={() => loadNearbyHospitals()}>
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : filteredHospitals.length === 0 ? (
+          <View style={styles.stateWrap}>
+            <Ionicons name="search" size={24} color="#64748B" />
+            <Text style={styles.stateText}>No facilities found for this filter.</Text>
+          </View>
+        ) : null}
         {/* Hospital Cards */}
-        {HOSPITALS.map((h, idx) => (
+        {filteredHospitals.map((h) => {
+          const status = statusMeta(h.status);
+          return (
           <View key={h.name} style={styles.hospitalCard}>
+            {h.imageUrl ? (
+              <Image source={{ uri: h.imageUrl }} style={styles.facilityImage} resizeMode="cover" />
+            ) : (
+              <View style={styles.imageFallback}>
+                <Ionicons name="image-outline" size={28} color="#94A3B8" />
+                <Text style={styles.imageFallbackText}>No Image</Text>
+              </View>
+            )}
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
               <Ionicons name="star" size={15} color="#fbbf24" style={{ marginRight: 4 }} />
-              <Text style={styles.rating}>{h.rating}</Text>
-              <View style={[styles.statusBadge, { backgroundColor: h.statusBg }]}>
-                <Text style={[styles.statusText, { color: h.statusColor }]}>{h.status}</Text>
+              <Text style={styles.rating}>{h.rating ?? "N/A"}</Text>
+              <View style={[styles.statusBadge, { backgroundColor: status.bg }]}>
+                <Text style={[styles.statusText, { color: status.color }]}>{h.status}</Text>
               </View>
             </View>
             <Text style={styles.hospitalName}>{h.name}</Text>
             <View style={styles.infoRow}>
               <Ionicons name="location" size={15} color="#6366F1" style={{ marginRight: 4 }} />
-              <Text style={styles.infoText}>{h.distance} km</Text>
+              <Text style={styles.infoText}>{h.distanceKm.toFixed(1)} km</Text>
               <Text style={styles.dot}>•</Text>
-              <Text style={styles.infoText}>{h.time} min</Text>
-              <Text style={styles.infoText}>away</Text>
             </View>
             <View style={styles.capabilitiesRow}>
               <Text style={styles.capLabel}>Capabilities:</Text>
@@ -103,48 +262,24 @@ export const NearbyHospitalsScreen: React.FC = () => {
             </View>
             <View style={styles.infoRow}>
               <Ionicons name="call" size={15} color="#6366F1" style={{ marginRight: 4 }} />
-              <Text style={styles.infoText}>{h.phone}</Text>
+              <Text style={styles.infoText}>{h.phone ?? "N/A"}</Text>
               <Text style={styles.dot}>•</Text>
               <Text style={styles.infoText}>{h.address}</Text>
             </View>
             <View style={styles.cardActions}>
               <TouchableOpacity
                 style={styles.navigateBtn}
-                onPress={() => {
-                  // Dummy coordinates for now (e.g., Times Square, NY)
-                  const lat = 40.758;
-                  const lng = -73.9855;
-                  const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-                  Linking.openURL(url).catch(() => {
-                    Alert.alert('Error', 'Unable to open Google Maps');
-                  });
-                }}
+                onPress={() => handleNavigate(h)}
               >
                 <Ionicons name="navigate" size={18} color="#fff" style={{ marginRight: 8 }} />
                 <Text style={styles.navigateText}>Navigate</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.callBtn}>
+              <TouchableOpacity style={styles.callBtn} onPress={() => handleCall(h.phone)}>
                 <Ionicons name="call" size={18} color="#7C3AED" />
               </TouchableOpacity>
             </View>
           </View>
-        ))}
-        {/* View on Map */}
-        <TouchableOpacity
-          style={styles.mapBtn}
-          onPress={() => {
-            // Dummy coordinates for now (e.g., Times Square, NY)
-            const lat = 40.758;
-            const lng = -73.9855;
-            const url = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-            Linking.openURL(url).catch(() => {
-              Alert.alert('Error', 'Unable to open Google Maps');
-            });
-          }}
-        >
-          <Ionicons name="map" size={18} color="#6366F1" style={{ marginRight: 8 }} />
-          <Text style={styles.mapBtnText}>View on Map</Text>
-        </TouchableOpacity>
+        )})}
       </ScrollView>
     </View>
   );
@@ -203,6 +338,29 @@ const styles = StyleSheet.create({
     color: '#64748B',
     fontSize: 13,
   },
+  stateWrap: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+  },
+  stateText: {
+    marginTop: 8,
+    color: '#334155',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  retryBtn: {
+    marginTop: 10,
+    backgroundColor: '#6366F1',
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+  },
+  retryText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
   hospitalCard: {
     backgroundColor: '#fff',
     borderRadius: 14,
@@ -215,6 +373,28 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderWidth: 1,
     borderColor: '#e5e7eb',
+  },
+  facilityImage: {
+    width: '100%',
+    height: 150,
+    borderRadius: 10,
+    marginBottom: 10,
+    backgroundColor: '#E2E8F0',
+  },
+  imageFallback: {
+    width: '100%',
+    height: 110,
+    borderRadius: 10,
+    marginBottom: 10,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  imageFallbackText: {
+    color: '#64748B',
+    marginTop: 6,
+    fontSize: 13,
+    fontWeight: '600',
   },
   rating: {
     color: '#fbbf24',
@@ -319,5 +499,25 @@ const styles = StyleSheet.create({
     color: '#6366F1',
     fontWeight: '700',
     fontSize: 15,
+  },
+  mapContainer: {
+    marginTop: 8,
+    marginBottom: 20,
+    borderRadius: 12,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#fff',
+  },
+  mapCaption: {
+    padding: 10,
+    color: '#475569',
+    fontSize: 13,
+    fontWeight: '600',
+    backgroundColor: '#F8FAFC',
+  },
+  mapWebView: {
+    width: '100%',
+    height: 320,
   },
 });
