@@ -1,4 +1,61 @@
-// ED-PEWS and WHO ETAT scoring logic
+// ED-PEWS and WHO ETAT scoring logic + skin-condition model risk merge
+
+const RISK_RANK = {
+  low: 1,
+  medium: 2,
+  high: 3,
+};
+
+// Keep these 6 labels aligned with your EfficientNet-B0 training classes.
+const SKIN_CLASS_RISK_MAP = {
+  // Model labels currently produced by condition_mapping.json
+  Acne_Rosacea: 'low',
+  Atopic_Dermatitis: 'low',
+  Bullous_Disease: 'high',
+  Cellulitis_Impetigo: 'high',
+  Eczema: 'low',
+  Fungal_Infections: 'medium',
+};
+
+function getHigherRisk(a, b) {
+  const safeA = RISK_RANK[a] ? a : 'low';
+  const safeB = RISK_RANK[b] ? b : 'low';
+  return RISK_RANK[safeA] >= RISK_RANK[safeB] ? safeA : safeB;
+}
+
+function getSkinModelRisk(skin_findings) {
+  if (!skin_findings || typeof skin_findings !== 'object') {
+    return { risk_level: null, reasons: [] };
+  }
+
+  const predictedClass =
+    typeof skin_findings.predicted_class === 'string' ? skin_findings.predicted_class : null;
+  const confidence =
+    typeof skin_findings.confidence === 'number' ? skin_findings.confidence : null;
+
+  if (!predictedClass) {
+    return { risk_level: null, reasons: [] };
+  }
+
+  const mappedRisk = SKIN_CLASS_RISK_MAP[predictedClass] || 'medium';
+  const reasons = [];
+
+  if (confidence !== null) {
+    reasons.push(
+      `Skin model predicted ${predictedClass} (${Math.round(confidence * 100)}% confidence)`
+    );
+  } else {
+    reasons.push(`Skin model predicted ${predictedClass}`);
+  }
+
+  // Confidence guard: low-confidence predictions are treated conservatively.
+  if (confidence !== null && confidence < 0.55) {
+    reasons.push('Skin model confidence is low; risk adjusted conservatively');
+    return { risk_level: getHigherRisk(mappedRisk, 'medium'), reasons };
+  }
+
+  return { risk_level: mappedRisk, reasons };
+}
 
 function calculateEDPEWS(vitals) {
   // Example scoring (simplified):
@@ -81,9 +138,10 @@ function generateRecommendations(risk_level, reasons) {
 }
 
 function assessRisk(payload) {
-  const { vitals, danger_signs } = payload;
+  const { vitals = {}, danger_signs = [], skin_findings = null } = payload || {};
   const edpews = calculateEDPEWS(vitals);
   const etatFlag = checkETAT(danger_signs);
+  const skinRisk = getSkinModelRisk(skin_findings);
 
   let risk_level = 'low';
   let immediate_flag = etatFlag;
@@ -94,13 +152,18 @@ function assessRisk(payload) {
     risk_level = 'medium';
   }
 
-  const recommendations = generateRecommendations(risk_level, edpews.reasons);
+  if (skinRisk.risk_level) {
+    risk_level = getHigherRisk(risk_level, skinRisk.risk_level);
+  }
+
+  const mergedReasons = [...edpews.reasons, ...skinRisk.reasons];
+  const recommendations = generateRecommendations(risk_level, mergedReasons);
 
   return {
     risk_score: edpews.score,
     risk_level,
     immediate_flag,
-    reasons: edpews.reasons,
+    reasons: mergedReasons,
     recommendations,
   };
 }

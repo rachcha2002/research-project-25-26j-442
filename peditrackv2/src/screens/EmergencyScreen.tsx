@@ -148,9 +148,8 @@ export const EmergencyScreen: React.FC = () => {
               <View style={{ flex: 1 }}>
                 <Text style={[styles.actionTitle, { color: '#F43F5E' }]}>Teleconsultation</Text>
                 <Text style={styles.actionDesc}>Connect instantly with a pediatrician</Text>
-                <Text style={[styles.actionDesc, { color: '#c19a1b' }]}>Premium Service</Text>
+                <Text style={[styles.actionDesc, { color: '#c19a1b' }]}>Premium Feature</Text>
               </View>
-              <Ionicons name="chevron-forward" size={22} color="#94A3B8" />
             </View>
             <TouchableOpacity style={[styles.actionCard, { borderLeftColor: '#6366F1' }]} onPress={() => router.push('/emergency-response/nearby-hospitals' as any)}>
               <View style={[styles.iconCircle, { backgroundColor: '#6366F122' }]}> 

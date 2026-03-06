@@ -1,6 +1,7 @@
 const Assessment = require('../models/Assessment');
 const AssessmentReport = require('../models/AssessmentReport');
 const { assessRisk } = require('../utils/riskScoring');
+const { classifySkinImage: classifySkinImageWithModel } = require('../services/skinClassifierService');
 
 const toTitleRisk = (riskLevel) => {
   if (!riskLevel || typeof riskLevel !== 'string') return 'Low';
@@ -76,10 +77,41 @@ const buildAssessmentReportPayload = (assessmentDoc) => {
         onset: safeDoc.context?.onset || '',
         trend: safeDoc.context?.trend || '',
       },
+      skinFindings: {
+        predictedClass: safeDoc.skin_findings?.predicted_class || null,
+        confidence: safeDoc.skin_findings?.confidence ?? null,
+        model: safeDoc.skin_findings?.model || null,
+        version: safeDoc.skin_findings?.version || null,
+      },
       reasons: Array.isArray(safeDoc.reasons) ? safeDoc.reasons : [],
       recommendations: Array.isArray(safeDoc.recommendations) ? safeDoc.recommendations : [],
     },
   };
+};
+
+// POST /api/skin/classify
+exports.classifySkinImage = async (req, res) => {
+  try {
+    const file = req.file;
+    if (!file) {
+      return res.status(400).json({ error: 'Image file is required (multipart/form-data, field: image)' });
+    }
+
+    const result = await classifySkinImageWithModel(file);
+    return res.json({
+      predicted_class: result.predicted_class,
+      confidence: result.confidence,
+      model: result.model,
+      version: result.version,
+      labels: result.labels,
+    });
+  } catch (err) {
+    console.error('Skin classify error:', err);
+    return res.status(502).json({
+      error: 'Skin classification failed',
+      details: err.message,
+    });
+  }
 };
 
 // POST /api/risk-score

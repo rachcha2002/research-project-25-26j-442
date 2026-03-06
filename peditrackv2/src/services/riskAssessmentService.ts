@@ -3,6 +3,13 @@ import { API_CONFIG, APP_CONFIG } from '@/config/config';
 
 const API_BASE_URL = API_CONFIG.RISK_ASSESSMENT_URL;
 
+export interface SkinFindings {
+  predicted_class: string;
+  confidence: number | null;
+  model: string;
+  version?: string | null;
+}
+
 export interface AssessmentPayload {
   userId?: string | null;
   child: {
@@ -37,6 +44,7 @@ export interface AssessmentPayload {
     photo_uri?: string | null;
     timestamp: string;
   };
+  skin_findings?: SkinFindings | null;
   immediate_flag?: boolean;
 }
 
@@ -93,6 +101,12 @@ export interface AssessmentReportResponse {
       onset: string;
       trend: string;
     };
+    skinFindings?: {
+      predictedClass: string | null;
+      confidence: number | null;
+      model: string | null;
+      version: string | null;
+    };
     reasons: string[];
     recommendations: BackendRecommendation[];
   };
@@ -122,6 +136,39 @@ export const submitAssessment = async (
     return await response.json();
   } catch (error) {
     console.error('Error submitting assessment:', error);
+    throw error;
+  }
+};
+
+/**
+ * Classify rash/skin image with model behind risk-assessment-service.
+ */
+export const classifySkinImage = async (imageUri: string): Promise<SkinFindings> => {
+  try {
+    const token = await SecureStore.getItemAsync(APP_CONFIG.ACCESS_TOKEN_KEY);
+
+    const formData = new FormData();
+    formData.append('image', {
+      uri: imageUri,
+      name: 'rash-image.jpg',
+      type: 'image/jpeg',
+    } as any);
+
+    const response = await fetch(`${API_BASE_URL}/skin/classify`, {
+      method: 'POST',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Error classifying skin image:', error);
     throw error;
   }
 };

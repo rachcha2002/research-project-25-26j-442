@@ -50,6 +50,11 @@ exports.getRequestById = async (req, res) => {
 exports.getQueuePosition = async (req, res) => {
   try {
     const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ error: 'Invalid request id format' });
+    }
+
     const actorId = String(req.userId || '');
     const request = await TeleconsultationRequest.findById(id);
     if (!request) return res.status(404).json({ error: 'Request not found' });
@@ -95,6 +100,6 @@ exports.getQueuePosition = async (req, res) => {
     res.json({ position: higherPriority + 1, estWait });
   } catch (err) {
     console.error('Get queue position error:', err);
-    res.status(500).json({ error: 'Failed to fetch queue position' });
+    res.status(500).json({ error: 'Failed to fetch queue position', details: err?.message || 'Unknown error' });
   }
 };
