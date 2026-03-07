@@ -27,29 +27,31 @@ export const API_CONFIG = {
 
   // Risk Assessment Service API (port 4000)
   RISK_ASSESSMENT_URL: __DEV__
-    ? `http://${COMPUTER_IP}:4000/api`
-    : 'https://your-production-risk-assessment.com/api',
+  ?`http://${COMPUTER_IP}:4000/api`
+  :`https://risk-assessment-service-production.up.railway.app/apii`,
 
   // Teleconsultation Service API (port 4001)
-  TELECONSULTATION_URL: 'https://teleconsultation-service-production.up.railway.app/api/teleconsultation',
+  TELECONSULTATION_URL: __DEV__
+    ? `http://${COMPUTER_IP}:4001/api/teleconsultation`
+    : 'https://your-production-risk-assessment.com/api',
 
   // Places Proxy API (port 4002)
-  PLACES_PROXY_URL: 'https://places-proxy-production.up.railway.app/api',
+  PLACES_PROXY_URL: `https://places-proxy-production.up.railway.app/api`,
 
   // Admin Service API (port 3012)
   AUTH_USER_URL: __DEV__
-    ? `http://${COMPUTER_IP}:3012/api/doctors`
+    ? `https://auth-user-service-production.up.railway.app/api/doctors`
     : 'https://your-production-admin-service.com/api',
 
   // Meal Recommendation Service API (port 5050)
   MEAL_RECOMMENDATION_SERVICE_URL: __DEV__
-    ? `http://${COMPUTER_IP}:5050`
+    ? `https://meal-recommendation-service-production.up.railway.app/`
     : 'https://your-production-meal-service.com',
 
 
   // Nutrition Extraction Service API (port 5560)
   NUTRITION_EXTRACTION_SERVICE_URL: __DEV__
-    ? `http://${COMPUTER_IP}:5560`
+    ? `https://nutrition-extraction-service-production.up.railway.app/`
     : 'https://your-production-nutrition-extraction-service.com',
   // Request timeout in milliseconds
   REQUEST_TIMEOUT: 30000,

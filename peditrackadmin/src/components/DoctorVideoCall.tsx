@@ -56,13 +56,16 @@ export default function DoctorVideoCall() {
   }
 
   return (
-    <div  
+    <div
       style={{
-       height: "calc(100vh - 64px)",
-       background: "#0f172a",
-       padding: 16,
-       display: "flex",
-       flexDirection: "column",
+        height: '100dvh',
+        maxHeight: '100dvh',
+        background: '#0f172a',
+        padding: 12,
+        display: 'flex',
+        flexDirection: 'column',
+        boxSizing: 'border-box',
+        overflow: 'hidden',
       }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <h2 style={{ color: '#fff', margin: 0 }}>Consultation Room</h2>
@@ -88,6 +91,7 @@ export default function DoctorVideoCall() {
       <LiveKitRoom
         token={token}
         serverUrl={serverUrl}
+        data-lk-theme="default"
         connect={true}
         video={true}
         audio={true}
@@ -97,9 +101,15 @@ export default function DoctorVideoCall() {
         onDisconnected={() => {
           setConnectionStatus('disconnected');
         }}
-        style={{ flex: 1, display: "flex" }}
+        style={{
+          flex: 1,
+          display: 'flex',
+          minHeight: 0,
+          overflow: 'visible',
+          borderRadius: 12,
+        }}
       >
-        <VideoConference style={{ flex: 1 }} />
+        <VideoConference style={{ flex: 1, minHeight: 0 }} />
       </LiveKitRoom>
     </div>
   );
