@@ -73,6 +73,7 @@ export const NotificationsPanel: React.FC<Props> = ({ visible, onClose }) => {
       setLoading(true);
       getTodayReminders(selectedBaby._id)
         .then(({ notifications: n }) => setNotifications(n))
+        .catch(err => console.error(err))
         .finally(() => setLoading(false));
     }
   }, [visible, selectedBaby]);
@@ -87,9 +88,9 @@ export const NotificationsPanel: React.FC<Props> = ({ visible, onClose }) => {
   };
 
   const handleDismissAll = async () => {
-    if (notifications.length === 0) return;
+    if (notifications.length === 0 || !selectedBaby?._id) return;
     const ids = notifications.map(n => n.id);
-    await dismissAllNotificationsForToday(ids);
+    await dismissAllNotificationsForToday(ids, selectedBaby._id);
     setNotifications([]);
   };
 

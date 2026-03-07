@@ -1,8 +1,7 @@
-// For Android Emulator: use 10.0.2.2
-// For Physical Device: use your computer's IP address (check with ipconfig)
-// Current Wi-Fi IP: 192.168.1.179
+import { API_CONFIG } from '../config/config';
 
-const API_BASE_URL = 'https://peditrack-chat-service-production-0d1d.up.railway.app/api';
+
+const API_BASE_URL = API_CONFIG.CHAT_SERVICE_URL;
 
 
 

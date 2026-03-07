@@ -1,6 +1,18 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getMedications } from './healthAnalyticsService';
+
+// Add type for reminder status
+export type ReminderStatus = 'overdue' | 'upcoming' | 'later';
+
+export type MedicationNotification = {
+  id: string;
+  title: string;
+  body: string;
+  status: ReminderStatus;
+};
 
 // Configure how notifications should be handled when app is in foreground
 Notifications.setNotificationHandler({
@@ -203,4 +215,127 @@ export const setupNotificationResponseHandler = (
       onNotificationTap(rawData);
     }
   });
+};
+
+/**
+ * Get the current date string (YYYY-MM-DD) for local storage keys
+ */
+const getTodayDateString = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
+};
+
+/**
+ * Get all active medications with reminders and classify them for today
+ */
+export const getTodayReminders = async (babyId: string): Promise<{ notifications: MedicationNotification[], badgeCount: number }> => {
+  try {
+    const activeMedications = await getMedications(babyId, { status: 'active' });
+    const notifications: MedicationNotification[] = [];
+    let badgeCount = 0;
+
+    const now = new Date();
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
+    const currentTimeMinutes = currentHours * 60 + currentMinutes;
+
+    // Load dismissed notifications for today
+    const dateStr = getTodayDateString();
+    const dismissedKey = `dismissed_notifications_${dateStr}_${babyId}`;
+    const dismissedDataStr = await AsyncStorage.getItem(dismissedKey);
+    const dismissedIds: string[] = dismissedDataStr ? JSON.parse(dismissedDataStr) : [];
+
+    activeMedications.forEach(med => {
+      if (med.reminderEnabled && med.reminderTimes && med.reminderTimes.length > 0) {
+        med.reminderTimes.forEach((timeStr, index) => {
+          const id = `${med._id}-${index}`;
+          
+          // Skip if already dismissed today
+          if (dismissedIds.includes(id)) {
+            return;
+          }
+
+          const [hours, minutes] = timeStr.split(':').map(Number);
+          const reminderTimeMinutes = hours * 60 + minutes;
+          const diffMinutes = reminderTimeMinutes - currentTimeMinutes;
+
+          let status: ReminderStatus = 'later';
+          if (diffMinutes < 0) {
+            status = 'overdue';
+            badgeCount++;
+          } else if (diffMinutes <= 120) { // within 2 hours
+            status = 'upcoming';
+            badgeCount++;
+          }
+
+          notifications.push({
+            id,
+            title: med.name,
+            body: `Dosage: ${med.dosage.amount}${med.dosage.unit}`,
+            status
+          });
+        });
+      }
+    });
+
+    // Sort by status: overdue > upcoming > later
+    notifications.sort((a, b) => {
+      const rank = { overdue: 0, upcoming: 1, later: 2 };
+      return rank[a.status] - rank[b.status];
+    });
+
+    return { notifications, badgeCount };
+  } catch (error) {
+    console.error('[Notifications] Error getting today reminders:', error);
+    return { notifications: [], badgeCount: 0 };
+  }
+};
+
+/**
+ * Dismiss specific notifications for today
+ */
+export const dismissAllNotificationsForToday = async (ids: string[], babyId?: string): Promise<void> => {
+  try {
+    const dateStr = getTodayDateString();
+    // Default to 'default' if babyId is not provided (though it should be for accuracy)
+    const storeBabyId = babyId || 'default'; 
+    const dismissedKey = `dismissed_notifications_${dateStr}_${storeBabyId}`;
+    
+    // Get currently dismissed
+    const dismissedDataStr = await AsyncStorage.getItem(dismissedKey);
+    const dismissedIds: string[] = dismissedDataStr ? JSON.parse(dismissedDataStr) : [];
+    
+    // Add new ones
+    const updatedDismissedIds = [...new Set([...dismissedIds, ...ids])];
+    
+    await AsyncStorage.setItem(dismissedKey, JSON.stringify(updatedDismissedIds));
+    console.log(`[Notifications] Saved ${ids.length} dismissed notifications to storage`);
+  } catch (err) {
+    console.error('[Notifications] Failed to save dismissed notifications', err);
+  }
+};
+
+/**
+ * Clear dismissed status for a specific medication (used when editing a medication)
+ */
+export const clearDismissedMedicationReminder = async (medicationId: string, babyId: string): Promise<void> => {
+  try {
+    const dateStr = getTodayDateString();
+    const dismissedKey = `dismissed_notifications_${dateStr}_${babyId}`;
+    
+    const dismissedDataStr = await AsyncStorage.getItem(dismissedKey);
+    if (!dismissedDataStr) return;
+    
+    const dismissedIds: string[] = JSON.parse(dismissedDataStr);
+    
+    // Filter out any IDs that start with this medicationId (since IDs are formatted as "medId-index")
+    const updatedDismissedIds = dismissedIds.filter(id => !id.startsWith(`${medicationId}-`));
+    
+    if (updatedDismissedIds.length !== dismissedIds.length) {
+      await AsyncStorage.setItem(dismissedKey, JSON.stringify(updatedDismissedIds));
+      console.log(`[Notifications] Cleared dismissed status for medication ${medicationId}`);
+    }
+  } catch (err) {
+    console.error('[Notifications] Failed to clear dismissed status', err);
+  }
 };

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -206,7 +207,14 @@ export const AssessmentResultScreen: React.FC = () => {
                         console.error('Teleconsultation error:', err);
                         const message = err instanceof Error ? err.message : 'Unknown error';
                         if (message.includes('HTTP 403')) {
-                          alert('Active subscription required. Please subscribe to request teleconsultation.');
+                          Alert.alert(
+                            'Subscription Required',
+                            'An active subscription is required to request teleconsultation. Would you like to view subscription plans?',
+                            [
+                              { text: 'Not Now', style: 'cancel' },
+                              { text: 'View Plans', onPress: () => router.push('/profile/subscription') },
+                            ]
+                          );
                           return;
                         }
                         if (message.includes('HTTP 503')) {
