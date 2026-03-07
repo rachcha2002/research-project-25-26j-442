@@ -169,6 +169,12 @@ export default function ProfileScreen() {
             onPress={() => router.push('/profile/change-password')}
           />
           <MenuItem
+            icon="📙"
+            title="Health Section Guide"
+            subtitle="How to use health features"
+            onPress={() => router.push('/health-analytics/guide' as any)}
+          />
+          <MenuItem
             icon="👶"
             title="Manage Babies"
             subtitle={`${babies.length} baby profile${babies.length !== 1 ? 's' : ''}`}

@@ -1,6 +1,18 @@
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getMedications } from './healthAnalyticsService';
+
+// Add type for reminder status
+export type ReminderStatus = 'overdue' | 'upcoming' | 'later';
+
+export type MedicationNotification = {
+  id: string;
+  title: string;
+  body: string;
+  status: ReminderStatus;
+};
 
 // Configure how notifications should be handled when app is in foreground
 Notifications.setNotificationHandler({
@@ -38,8 +50,10 @@ const isMedicationReminderPayload = (data: Record<string, unknown>): data is Med
  */
 export const requestNotificationPermissions = async (): Promise<boolean> => {
   try {
-    // We can skip the Device.isDevice check here since local notifications DO work on Android Emulators
-    // This allows the Bell Icon and scheduling logic to be tested locally.
+    if (!Device.isDevice) {
+      console.log('[Notifications] Must use physical device for push notifications');
+      return false;
+    }
 
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
@@ -203,130 +217,125 @@ export const setupNotificationResponseHandler = (
   });
 };
 
-export type ReminderStatus = 'overdue' | 'upcoming' | 'later';
-
-export interface MedicationNotification {
-  id: string;
-  status: ReminderStatus;
-  title: string;
-  body: string;
-}
-
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
-const DISMISSED_NOTIFICATIONS_KEY = '@peditrack_dismissed_notifications';
-
-const getDismissedNotifications = async (): Promise<{ date: string; ids: string[] }> => {
-  try {
-    const data = await AsyncStorage.getItem(DISMISSED_NOTIFICATIONS_KEY);
-    if (data) return JSON.parse(data);
-  } catch (e) {}
-  return { date: '', ids: [] };
-};
-
-export const dismissNotificationForToday = async (notificationId: string) => {
-  const today = new Date().toISOString().split('T')[0];
-  const { date, ids } = await getDismissedNotifications();
-  
-  let newIds = [];
-  if (date === today) {
-    if (!ids.includes(notificationId)) newIds = [...ids, notificationId];
-    else newIds = ids;
-  } else {
-    newIds = [notificationId];
-  }
-  
-  await AsyncStorage.setItem(DISMISSED_NOTIFICATIONS_KEY, JSON.stringify({ date: today, ids: newIds }));
-};
-
-export const dismissAllNotificationsForToday = async (notificationIds: string[]) => {
-  const today = new Date().toISOString().split('T')[0];
-  const { date, ids } = await getDismissedNotifications();
-  
-  let newIds = [];
-  if (date === today) {
-    newIds = [...new Set([...ids, ...notificationIds])];
-  } else {
-    newIds = notificationIds;
-  }
-  
-  await AsyncStorage.setItem(DISMISSED_NOTIFICATIONS_KEY, JSON.stringify({ date: today, ids: newIds }));
+/**
+ * Get the current date string (YYYY-MM-DD) for local storage keys
+ */
+const getTodayDateString = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}`;
 };
 
 /**
- * Get today's medication reminders for a specific baby, parsed into UI-friendly format.
+ * Get all active medications with reminders and classify them for today
  */
-export const getTodayReminders = async (
-  babyId: string
-): Promise<{ badgeCount: number; notifications: MedicationNotification[] }> => {
+export const getTodayReminders = async (babyId: string): Promise<{ notifications: MedicationNotification[], badgeCount: number }> => {
   try {
-    const scheduled = await getScheduledMedicationReminders();
-    
-    const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
-    const { date: dismissedDate, ids: dismissedIds } = await getDismissedNotifications();
-    const activeDismissedIds = dismissedDate === todayStr ? dismissedIds : [];
-
-    // Filter by babyId and ignore dismissed notifications
-    const babyNotifications = scheduled.filter(
-      (n) => {
-        const isBabyMatch = n.content.data?.babyId === babyId || (n.content.data as any)?.type === 'medication_reminder';
-        const isNotDismissed = !activeDismissedIds.includes(n.identifier);
-        return isBabyMatch && isNotDismissed;
-      }
-    );
-
-    const currentHour = now.getHours();
-    const currentMinute = now.getMinutes();
-    const currentTimeMinutes = currentHour * 60 + currentMinute;
-
+    const activeMedications = await getMedications(babyId, { status: 'active' });
     const notifications: MedicationNotification[] = [];
     let badgeCount = 0;
 
-    for (const notif of babyNotifications) {
-      const trigger = notif.trigger as any;
-      let hour: number | undefined;
-      let minute: number | undefined;
+    const now = new Date();
+    const currentHours = now.getHours();
+    const currentMinutes = now.getMinutes();
+    const currentTimeMinutes = currentHours * 60 + currentMinutes;
 
-      if (trigger) {
-        if (typeof trigger.hour === 'number') hour = trigger.hour;
-        else if (trigger.dateComponents?.hour !== undefined) hour = trigger.dateComponents.hour;
+    // Load dismissed notifications for today
+    const dateStr = getTodayDateString();
+    const dismissedKey = `dismissed_notifications_${dateStr}_${babyId}`;
+    const dismissedDataStr = await AsyncStorage.getItem(dismissedKey);
+    const dismissedIds: string[] = dismissedDataStr ? JSON.parse(dismissedDataStr) : [];
 
-        if (typeof trigger.minute === 'number') minute = trigger.minute;
-        else if (trigger.dateComponents?.minute !== undefined) minute = trigger.dateComponents.minute;
-      }
+    activeMedications.forEach(med => {
+      if (med.reminderEnabled && med.reminderTimes && med.reminderTimes.length > 0) {
+        med.reminderTimes.forEach((timeStr, index) => {
+          const id = `${med._id}-${index}`;
+          
+          // Skip if already dismissed today
+          if (dismissedIds.includes(id)) {
+            return;
+          }
 
-      if (hour !== undefined && minute !== undefined) {
-        const triggerMinutes = hour * 60 + minute;
-        
-        let status: ReminderStatus = 'later';
-        if (triggerMinutes < currentTimeMinutes) {
-          status = 'overdue';
-          badgeCount++;
-        } else if (triggerMinutes - currentTimeMinutes <= 120) {
-          status = 'upcoming'; // within 2 hours
-          badgeCount++;
-        }
+          const [hours, minutes] = timeStr.split(':').map(Number);
+          const reminderTimeMinutes = hours * 60 + minutes;
+          const diffMinutes = reminderTimeMinutes - currentTimeMinutes;
 
-        notifications.push({
-          id: notif.identifier,
-          status,
-          title: notif.content.title || 'Medication Reminder',
-          body: notif.content.body || '',
+          let status: ReminderStatus = 'later';
+          if (diffMinutes < 0) {
+            status = 'overdue';
+            badgeCount++;
+          } else if (diffMinutes <= 120) { // within 2 hours
+            status = 'upcoming';
+            badgeCount++;
+          }
+
+          notifications.push({
+            id,
+            title: med.name,
+            body: `Dosage: ${med.dosage.amount}${med.dosage.unit}`,
+            status
+          });
         });
       }
-    }
+    });
 
-    // Sort: overdue first, then upcoming, then later. And by time.
-    const statusWeight = { overdue: 0, upcoming: 1, later: 2 };
-    notifications.sort((a, b) => statusWeight[a.status] - statusWeight[b.status]);
+    // Sort by status: overdue > upcoming > later
+    notifications.sort((a, b) => {
+      const rank = { overdue: 0, upcoming: 1, later: 2 };
+      return rank[a.status] - rank[b.status];
+    });
 
-    return {
-      badgeCount,
-      notifications,
-    };
+    return { notifications, badgeCount };
   } catch (error) {
     console.error('[Notifications] Error getting today reminders:', error);
-    return { badgeCount: 0, notifications: [] };
+    return { notifications: [], badgeCount: 0 };
+  }
+};
+
+/**
+ * Dismiss specific notifications for today
+ */
+export const dismissAllNotificationsForToday = async (ids: string[], babyId?: string): Promise<void> => {
+  try {
+    const dateStr = getTodayDateString();
+    // Default to 'default' if babyId is not provided (though it should be for accuracy)
+    const storeBabyId = babyId || 'default'; 
+    const dismissedKey = `dismissed_notifications_${dateStr}_${storeBabyId}`;
+    
+    // Get currently dismissed
+    const dismissedDataStr = await AsyncStorage.getItem(dismissedKey);
+    const dismissedIds: string[] = dismissedDataStr ? JSON.parse(dismissedDataStr) : [];
+    
+    // Add new ones
+    const updatedDismissedIds = [...new Set([...dismissedIds, ...ids])];
+    
+    await AsyncStorage.setItem(dismissedKey, JSON.stringify(updatedDismissedIds));
+    console.log(`[Notifications] Saved ${ids.length} dismissed notifications to storage`);
+  } catch (err) {
+    console.error('[Notifications] Failed to save dismissed notifications', err);
+  }
+};
+
+/**
+ * Clear dismissed status for a specific medication (used when editing a medication)
+ */
+export const clearDismissedMedicationReminder = async (medicationId: string, babyId: string): Promise<void> => {
+  try {
+    const dateStr = getTodayDateString();
+    const dismissedKey = `dismissed_notifications_${dateStr}_${babyId}`;
+    
+    const dismissedDataStr = await AsyncStorage.getItem(dismissedKey);
+    if (!dismissedDataStr) return;
+    
+    const dismissedIds: string[] = JSON.parse(dismissedDataStr);
+    
+    // Filter out any IDs that start with this medicationId (since IDs are formatted as "medId-index")
+    const updatedDismissedIds = dismissedIds.filter(id => !id.startsWith(`${medicationId}-`));
+    
+    if (updatedDismissedIds.length !== dismissedIds.length) {
+      await AsyncStorage.setItem(dismissedKey, JSON.stringify(updatedDismissedIds));
+      console.log(`[Notifications] Cleared dismissed status for medication ${medicationId}`);
+    }
+  } catch (err) {
+    console.error('[Notifications] Failed to clear dismissed status', err);
   }
 };

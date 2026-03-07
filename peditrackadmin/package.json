@@ -63,7 +63,8 @@
             "vite": "6.3.5"
       },
       "scripts": {
-            "start": "vite",
-            "build": "vite build"
+            "dev": "vite",
+            "build": "vite build",
+            "start": "npx serve build -s -l tcp://0.0.0.0:$PORT"
       }
 }
