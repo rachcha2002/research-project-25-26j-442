@@ -121,8 +121,8 @@ async function syncSubscriptionFromStripe(stripeSubscription, userId) {
   // Safely parse dates from Stripe (can be Unix timestamps, Date objects, or ISO strings)
   const parseStripeDate = (value) => {
     if (!value) {
-      console.log('parseStripeDate: no value provided, using current date');
-      return new Date();
+      console.log('parseStripeDate: no value provided, returning null');
+      return null;
     }
     // If it's a number (Unix timestamp in seconds)
     if (typeof value === 'number') {
@@ -140,11 +140,17 @@ async function syncSubscriptionFromStripe(stripeSubscription, userId) {
       }
     }
     console.log('parseStripeDate: could not parse value:', value, typeof value);
-    return new Date(); // Default to now if all else fails
+    return null; // Return null if unable to parse
   };
 
   const currentPeriodStart = parseStripeDate(stripeSubscription.current_period_start);
-  const currentPeriodEnd = parseStripeDate(stripeSubscription.current_period_end);
+  let currentPeriodEnd = parseStripeDate(stripeSubscription.current_period_end);
+
+  // For new subscriptions, if currentPeriodEnd is missing but start exists, calculate +1 month
+  if (!currentPeriodEnd && currentPeriodStart) {
+    currentPeriodEnd = new Date(currentPeriodStart);
+    currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1);
+  }
 
   // Update subscription record
   const subscriptionData = {
