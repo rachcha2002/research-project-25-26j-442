@@ -5,6 +5,9 @@ const { createToken } = require('./livekit.service');
 
 const AUTH_USER_SERVICE_API_URL = 'https://auth-user-service-production.up.railway.app/api/doctors';
 const SUBSCRIPTION_STATUS_API_URL = 'https://research-project-25-26j-442-production.up.railway.app/api/subscription/status';
+const USER_PROFILE_API_URL = 'https://research-project-25-26j-442-production.up.railway.app/api/users/me';
+
+const ACTIVE_SUBSCRIPTION_STATUSES = new Set(['active', 'trialing']);
 
 const RISK_PRIORITY = {
   low: 1,
@@ -33,6 +36,29 @@ const sanitizeRoomSegment = (value) => String(value || '')
   .replace(/[^a-z0-9_-]/g, '')
   .slice(0, 40);
 
+const parseBoolean = (value) => {
+  if (typeof value === 'boolean') return value;
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'true') return true;
+    if (normalized === 'false') return false;
+  }
+  return null;
+};
+
+const hasActiveSubscription = (payload) => {
+  const directIsPro = parseBoolean(payload?.subscription?.isPro)
+    ?? parseBoolean(payload?.isPro)
+    ?? parseBoolean(payload?.user?.isPro);
+
+  if (directIsPro === true) {
+    return true;
+  }
+
+  const status = String(payload?.subscription?.status || payload?.status || '').trim().toLowerCase();
+  return ACTIVE_SUBSCRIPTION_STATUSES.has(status);
+};
+
 const getDoctorDisplayName = async (doctorId) => {
   try {
     if (!doctorId) return null;
@@ -55,6 +81,8 @@ const checkUserHasActiveSubscription = async (authorizationHeader) => {
     return { ok: false, reason: 'Missing authorization token' };
   }
 
+  let statusCheckError = null;
+
   try {
     const response = await fetch(SUBSCRIPTION_STATUS_API_URL, {
       method: 'GET',
@@ -66,22 +94,51 @@ const checkUserHasActiveSubscription = async (authorizationHeader) => {
 
     if (!response.ok) {
       const body = await response.text().catch(() => '');
+      statusCheckError = `Subscription status check failed (${response.status})${body ? `: ${body}` : ''}`;
+    } else {
+      const data = await response.json();
+      const isPro = hasActiveSubscription(data);
+
+      if (isPro) {
+        return { ok: true };
+      }
+    }
+  } catch (error) {
+    statusCheckError = `Subscription service unavailable: ${error?.message || 'Unknown error'}`;
+  }
+
+  try {
+    const profileResponse = await fetch(USER_PROFILE_API_URL, {
+      method: 'GET',
+      headers: {
+        Authorization: authorizationHeader,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!profileResponse.ok) {
+      const body = await profileResponse.text().catch(() => '');
+      const profileError = `User profile entitlement check failed (${profileResponse.status})${body ? `: ${body}` : ''}`;
       return {
         ok: false,
-        reason: `Subscription status check failed (${response.status})${body ? `: ${body}` : ''}`,
+        reason: statusCheckError || profileError,
       };
     }
 
-    const data = await response.json();
-    const isPro = Boolean(data?.subscription?.isPro);
+    const profileData = await profileResponse.json();
+    const profileIsPro = parseBoolean(profileData?.user?.isPro);
 
-    if (!isPro) {
-      return { ok: false, reason: 'An active subscription is required to request teleconsultation' };
+    if (profileIsPro === true) {
+      return { ok: true };
     }
 
-    return { ok: true };
+    return { ok: false, reason: 'An active subscription is required to request teleconsultation' };
   } catch (error) {
-    return { ok: false, reason: `Subscription service unavailable: ${error?.message || 'Unknown error'}` };
+    const profileError = `User profile service unavailable: ${error?.message || 'Unknown error'}`;
+    return {
+      ok: false,
+      reason: statusCheckError || profileError,
+    };
   }
 };
 

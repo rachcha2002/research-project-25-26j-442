@@ -12,6 +12,18 @@ const CLASS_LABELS = [
   'measles_like_rash',
 ];
 
+function resolveModelUrl(rawUrl) {
+  const trimmed = String(rawUrl || '').trim();
+  if (!trimmed) return '';
+
+  const withoutTrailingSlash = trimmed.replace(/\/+$/, '');
+  if (/\/predict-skin$/i.test(withoutTrailingSlash)) {
+    return withoutTrailingSlash;
+  }
+
+  return `${withoutTrailingSlash}/predict-skin`;
+}
+
 function normalizePrediction(data) {
   if (!data || typeof data !== 'object') {
     throw new Error('Invalid classifier response');
@@ -61,7 +73,8 @@ function normalizePrediction(data) {
 }
 
 async function classifySkinImage(file) {
-  const modelUrl = process.env.SKIN_MODEL_URL;
+  const configuredUrl = process.env.SKIN_MODEL_URL;
+  const modelUrl = resolveModelUrl(configuredUrl);
   const modelApiKey = process.env.SKIN_MODEL_API_KEY;
 
   if (!modelUrl) {
@@ -86,12 +99,28 @@ async function classifySkinImage(file) {
     headers.Authorization = `Bearer ${modelApiKey}`;
   }
 
-  const response = await axios.post(modelUrl, form, {
-    headers,
-    timeout: 25000,
-    maxContentLength: 10 * 1024 * 1024,
-    maxBodyLength: 10 * 1024 * 1024,
-  });
+  let response;
+  try {
+    response = await axios.post(modelUrl, form, {
+      headers,
+      timeout: 25000,
+      maxContentLength: 10 * 1024 * 1024,
+      maxBodyLength: 10 * 1024 * 1024,
+    });
+  } catch (error) {
+    const status = error?.response?.status;
+    const responseData = error?.response?.data;
+    const detailText =
+      typeof responseData === 'string'
+        ? responseData
+        : responseData && typeof responseData === 'object'
+        ? JSON.stringify(responseData)
+        : error?.message || 'Unknown upstream error';
+
+    throw new Error(
+      `Skin model request failed (${status || 'no-status'}) url=${modelUrl} details=${detailText}`
+    );
+  }
 
   return normalizePrediction(response.data);
 }

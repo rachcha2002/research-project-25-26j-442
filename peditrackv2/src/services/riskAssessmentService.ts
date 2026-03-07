@@ -163,7 +163,20 @@ export const classifySkinImage = async (imageUri: string): Promise<SkinFindings>
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      const rawBody = await response.text().catch(() => '');
+      let details = rawBody;
+
+      // The backend returns JSON with { error, details }; prefer details when present.
+      try {
+        const parsed = rawBody ? JSON.parse(rawBody) : null;
+        if (parsed && typeof parsed === 'object') {
+          details = String(parsed.details || parsed.error || rawBody || '').trim();
+        }
+      } catch {
+        // Keep raw body as-is when it is not JSON.
+      }
+
+      throw new Error(`HTTP ${response.status}${details ? `: ${details}` : ''}`);
     }
 
     return await response.json();
