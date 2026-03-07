@@ -58,58 +58,96 @@ export default function ProfileCompletion() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-w-lg mx-auto mt-10 bg-white p-8 rounded shadow">
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+    <div className="bg-white dark:bg-gray-800 p-10 rounded-lg shadow-lg w-full" style={{ maxWidth: '1000px' }}>
+        <div className="text-center mb-8">
+          <div className="text-6xl mb-4">👣</div>
+          <h1 className="text-3xl mb-2 dark:text-white">Peditrack</h1>
+          <p className="text-gray-600 dark:text-gray-400">Sign in to your account</p>
+        </div>
+    <form onSubmit={handleSubmit} className="space-y-2 max-w-2xl mx-auto mt-10 bg-white p-8 rounded shadow">
       <h2 className="text-xl font-bold mb-4">Complete Your Profile</h2>
       {error && <div className="text-red-500">{error}</div>}
       {success && <div className="text-green-600">{success}</div>}
-      <div>
-        <label>Gender</label>
-        <select name="gender" value={form.gender} onChange={handleChange} required className="w-full border p-2 rounded">
-          <option value="">Select</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
-        </select>
+
+      <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ flex: 1 }}>
+          <label>Gender</label>
+          <select name="gender" value={form.gender} onChange={handleChange} required className="w-full border p-2 rounded">
+            <option value="">Select</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div style={{ flex: 1 }}>
+          <label>Date of Birth</label>
+          <input type="date" name="date_of_birth" value={form.date_of_birth} onChange={handleChange} required className="w-full border p-2 rounded" />
+        </div>
       </div>
-      <div>
-        <label>Date of Birth</label>
-        <input type="date" name="date_of_birth" value={form.date_of_birth} onChange={handleChange} required className="w-full border p-2 rounded" />
+
+      <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ flex: 1 }}>
+          <label>Phone Number</label>
+          <input type="text" name="phone_number" placeholder='07XXXXXXXX'
+           value={form.phone_number} onChange={handleChange} required className="w-full border p-2 rounded" />
+        </div>
+        <div style={{ flex: 1 }}>
+          <label>Country</label>
+          <input type="text" name="country" placeholder='Sri Lanka'
+          value={form.country} onChange={handleChange} required className="w-full border p-2 rounded" />
+        </div>
       </div>
-      <div>
-        <label>Phone Number</label>
-        <input type="text" name="phone_number" value={form.phone_number} onChange={handleChange} required className="w-full border p-2 rounded" />
+
+      <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ flex: 1 }}>
+          <label>License Issuing Authority</label>
+          <input type="text" name="license_issuing_authority" placeholder='Department of Health Sri Lanka'
+          value={form.license_issuing_authority} onChange={handleChange} required className="w-full border p-2 rounded" />
+        </div>
+        <div style={{ flex: 1 }}>
+          <label>License Country</label>
+          <input type="text" name="license_country" placeholder='Sri Lanka'
+          value={form.license_country} onChange={handleChange} required className="w-full border p-2 rounded" />
+        </div>
       </div>
-      <div>
-        <label>Country</label>
-        <input type="text" name="country" value={form.country} onChange={handleChange} required className="w-full border p-2 rounded" />
+
+      <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ flex: 1 }}>
+          <label>License Expiry Date</label>
+          <input type="date" name="license_expiry_date" value={form.license_expiry_date} onChange={handleChange} required className="w-full border p-2 rounded" />
+        </div>
+        <div style={{ flex: 1 }}>
+          <label>Specialization</label>
+          <input type="text" name="specialization" placeholder='Pediatrics, Cardiology'
+          value={form.specialization} onChange={handleChange} required className="w-full border p-2 rounded" />
+        </div>
       </div>
-      <div>
-        <label>License Issuing Authority</label>
-        <input type="text" name="license_issuing_authority" value={form.license_issuing_authority} onChange={handleChange} required className="w-full border p-2 rounded" />
+
+      <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ flex: 1 }}>
+          <label>Profile Photo</label>
+          <input type="file" id="profile_photo" name="profile_photo" accept="image/*" onChange={handleFileChange} required style={{ display: 'none' }} />
+          <button type="button" onClick={() => document.getElementById('profile_photo')?.click()} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', padding: '1.5rem 1rem', border: '2px dashed #c7d2fe', borderRadius: '0.5rem', backgroundColor: profilePhoto ? '#eef2ff' : '#f9fafb', color: '#6366f1', fontSize: '0.875rem', transition: 'all 0.2s' }}>
+            <span style={{ fontSize: '1.5rem' }}>📷</span>
+            {profilePhoto ? profilePhoto.name : 'Upload Photo'}
+          </button>
+        </div>
+        <div style={{ flex: 1 }}>
+          <label>Medical License Document</label>
+          <input type="file" id="medical_license_document" name="medical_license_document" accept="application/pdf,image/*" onChange={handleFileChange} required style={{ display: 'none' }} />
+          <button type="button" onClick={() => document.getElementById('medical_license_document')?.click()} style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', padding: '1.5rem 1rem', border: '2px dashed #c7d2fe', borderRadius: '0.5rem', backgroundColor: licenseDoc ? '#eef2ff' : '#f9fafb', color: '#6366f1', fontSize: '0.875rem', transition: 'all 0.2s' }}>
+            <span style={{ fontSize: '1.5rem' }}>📄</span>
+            {licenseDoc ? licenseDoc.name : 'Upload Document'}
+          </button>
+        </div>
       </div>
-      <div>
-        <label>License Country</label>
-        <input type="text" name="license_country" value={form.license_country} onChange={handleChange} required className="w-full border p-2 rounded" />
-      </div>
-      <div>
-        <label>License Expiry Date</label>
-        <input type="date" name="license_expiry_date" value={form.license_expiry_date} onChange={handleChange} required className="w-full border p-2 rounded" />
-      </div>
-      <div>
-        <label>Specialization</label>
-        <input type="text" name="specialization" value={form.specialization} onChange={handleChange} required className="w-full border p-2 rounded" />
-      </div>
-      <div>
-        <label>Profile Photo</label>
-        <input type="file" name="profile_photo" accept="image/*" onChange={handleFileChange} required className="w-full" />
-      </div>
-      <div>
-        <label>Medical License Document</label>
-        <input type="file" name="medical_license_document" accept="application/pdf,image/*" onChange={handleFileChange} required className="w-full" />
-      </div>
+
       <button type="submit" className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 transition-colors">
         Complete Profile
       </button>
     </form>
+    </div>
+  </div>
   );
 }
