@@ -57,7 +57,8 @@ const userSchema = new mongoose.Schema({
   stripeCustomerId: {
     type: String,
     unique: true,
-    sparse: true
+    sparse: true,
+    default: null
   },
   defaultBabyProfile: {
     type: mongoose.Schema.Types.ObjectId,
