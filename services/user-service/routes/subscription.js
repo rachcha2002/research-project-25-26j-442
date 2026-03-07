@@ -118,6 +118,34 @@ async function syncSubscriptionFromStripe(stripeSubscription, userId) {
 
   const isActive = ['active', 'trialing'].includes(stripeSubscription.status);
 
+  // Safely parse dates from Stripe (can be Unix timestamps, Date objects, or ISO strings)
+  const parseStripeDate = (value) => {
+    if (!value) {
+      console.log('parseStripeDate: no value provided, using current date');
+      return new Date();
+    }
+    // If it's a number (Unix timestamp in seconds)
+    if (typeof value === 'number') {
+      return new Date(value * 1000);
+    }
+    // If it's already a Date object
+    if (value instanceof Date) {
+      return value;
+    }
+    // If it's a string (ISO date string)
+    if (typeof value === 'string') {
+      const parsed = new Date(value);
+      if (!isNaN(parsed.getTime())) {
+        return parsed;
+      }
+    }
+    console.log('parseStripeDate: could not parse value:', value, typeof value);
+    return new Date(); // Default to now if all else fails
+  };
+
+  const currentPeriodStart = parseStripeDate(stripeSubscription.current_period_start);
+  const currentPeriodEnd = parseStripeDate(stripeSubscription.current_period_end);
+
   // Update subscription record
   const subscriptionData = {
     userId: userId,
@@ -125,8 +153,8 @@ async function syncSubscriptionFromStripe(stripeSubscription, userId) {
     stripeSubscriptionId: stripeSubscription.id,
     stripePriceId: stripeSubscription.items?.data[0]?.price?.id || null,
     status: stripeSubscription.status,
-    currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
-    currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+    currentPeriodStart,
+    currentPeriodEnd,
     cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
     autoRenew: !stripeSubscription.cancel_at_period_end,
     paymentMethodLast4,
@@ -143,7 +171,7 @@ async function syncSubscriptionFromStripe(stripeSubscription, userId) {
   // Update user record
   user.isPro = isActive;
   user.subscriptionPlan = isActive ? 'pro_monthly' : 'basic';
-  user.subscriptionExpiry = new Date(stripeSubscription.current_period_end * 1000);
+  user.subscriptionExpiry = currentPeriodEnd;
   user.$skipPasswordHash = true;
   await user.save();
 
@@ -717,7 +745,15 @@ router.post('/verify-session', auth, async (req, res) => {
     }
 
     if (session.subscription) {
-      const stripeSub = await stripe.subscriptions.retrieve(session.subscription);
+      const stripeSub = await stripe.subscriptions.retrieve(session.subscription, {
+        expand: ['default_payment_method']
+      });
+      console.log('Stripe subscription data:', JSON.stringify({
+        id: stripeSub.id,
+        status: stripeSub.status,
+        current_period_start: stripeSub.current_period_start,
+        current_period_end: stripeSub.current_period_end,
+      }));
       await syncSubscriptionFromStripe(stripeSub, req.userId);
     }
 
