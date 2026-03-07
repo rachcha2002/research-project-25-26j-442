@@ -1,6 +1,8 @@
 // Using Railway hosted backend
 // @deprecated This service is deprecated. Use geminiLiveVoiceService.ts instead.
 
+import { API_CONFIG } from '../config/config';
+
 /**
  * @deprecated This service is deprecated. Use geminiLiveVoiceService.ts for real-time voice conversations.
  * 
@@ -12,7 +14,7 @@
  * - Better voice quality
  */
 
-const API_BASE_URL = 'https://peditrack-chat-service-production-0d1d.up.railway.app/api';
+const API_BASE_URL = API_CONFIG.CHAT_SERVICE_URL;
 
 
 import * as FileSystem from 'expo-file-system/legacy';

@@ -1,7 +1,9 @@
 // Gemini Live Voice Service - Real-time WebSocket Audio Streaming
 // Using Railway hosted backend
 
-const WS_BASE_URL = 'wss://peditrack-chat-service-production-0d1d.up.railway.app/api/voice';
+import { API_CONFIG } from '../config/config';
+
+const WS_BASE_URL = API_CONFIG.CHAT_SERVICE_WS_URL;
 
 /**
  * Gemini Live Voice Service
