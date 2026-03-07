@@ -11,10 +11,12 @@ const MONTHLY_PRICE_CURRENCY = 'lkr';
 
 /**
  * Helper: Get or create a Stripe customer for a user
+ * @param {Object} user - User document
+ * @param {boolean} forceNew - Force create a new customer (e.g., for currency change)
  */
-async function getOrCreateStripeCustomer(user) {
+async function getOrCreateStripeCustomer(user, forceNew = false) {
   // Check if user already has a Stripe customer ID
-  if (user.stripeCustomerId) {
+  if (user.stripeCustomerId && !forceNew) {
     try {
       const customer = await stripe.customers.retrieve(user.stripeCustomerId);
       if (!customer.deleted) {
@@ -231,7 +233,7 @@ router.get('/redirect/cancel', (req, res) => {
  */
 router.post('/create-checkout', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.userId);
+    let user = await User.findById(req.userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -242,7 +244,7 @@ router.post('/create-checkout', auth, async (req, res) => {
     }
 
     // Get or create Stripe customer
-    const customer = await getOrCreateStripeCustomer(user);
+    let customer = await getOrCreateStripeCustomer(user);
 
     // Get or create the price
     const price = await getOrCreatePrice();
@@ -269,28 +271,47 @@ router.post('/create-checkout', auth, async (req, res) => {
     
     console.log('Stripe redirect URLs:', { successUrl, cancelUrl });
 
-    // Create Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      customer: customer.id,
-      payment_method_types: ['card'],
-      line_items: [{
-        price: price.id,
-        quantity: 1,
-      }],
-      mode: 'subscription',
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      subscription_data: {
+    // Helper function to create checkout session
+    const createCheckoutSession = async (customerId) => {
+      return stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [{
+          price: price.id,
+          quantity: 1,
+        }],
+        mode: 'subscription',
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        subscription_data: {
+          metadata: {
+            userId: user._id.toString(),
+          },
+        },
         metadata: {
           userId: user._id.toString(),
         },
-      },
-      metadata: {
-        userId: user._id.toString(),
-      },
-      // Save the payment method for future use
-      payment_method_collection: 'always',
-    });
+        // Save the payment method for future use
+        payment_method_collection: 'always',
+      });
+    };
+
+    let session;
+    try {
+      // Try to create checkout session with existing customer
+      session = await createCheckoutSession(customer.id);
+    } catch (stripeError) {
+      // Handle currency mismatch error - create new customer
+      if (stripeError.message && stripeError.message.includes('cannot combine currencies')) {
+        console.log('Currency mismatch detected, creating new Stripe customer for LKR');
+        // Refresh user and create new customer
+        user = await User.findById(req.userId);
+        customer = await getOrCreateStripeCustomer(user, true); // forceNew = true
+        session = await createCheckoutSession(customer.id);
+      } else {
+        throw stripeError;
+      }
+    }
 
     res.json({
       success: true,
