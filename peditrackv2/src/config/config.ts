@@ -63,10 +63,12 @@ export const API_CONFIG = {
     ? 'https://nutrition-share-feed-service-production.up.railway.app/api/file/uploads/'
     : 'https://nutrition-share-feed-service-production.up.railway.app/api/file/uploads',
 
-  // Chat/Voice Service API
-  CHAT_SERVICE_URL: __DEV__
-    ? 'https://peditrack-chat-service-production-0d1d.up.railway.app/api'
-    : 'https://peditrack-chat-service-production-0d1d.up.railway.app/api',
+
+  // Chat Service API
+  CHAT_SERVICE_URL: 'https://research-project-25-26j-442-production-dc5b.up.railway.app/api',
+
+  // Chat Service WebSocket URL (for Gemini Live Voice)
+  CHAT_SERVICE_WS_URL: 'wss://research-project-25-26j-442-production-dc5b.up.railway.app/api/voice',
 
   // Request timeout in milliseconds
   REQUEST_TIMEOUT: 30000,

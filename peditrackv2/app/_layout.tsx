@@ -36,6 +36,8 @@ export default function RootLayout() {
             <Stack.Screen name="emergency-response/assesment-report" options={{ headerShown: false }} />
             <Stack.Screen name="nutrition-tracker" options={{ headerShown: false }} />
             <Stack.Screen name="past-data" options={{ headerShown: false }} />
+            <Stack.Screen name="subscription-success" options={{ headerShown: false }} />
+            <Stack.Screen name="subscription-cancel" options={{ headerShown: false }} />
           </Stack>
         </BabyProvider>
       </AuthProvider>

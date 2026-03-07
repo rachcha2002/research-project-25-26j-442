@@ -14,6 +14,9 @@ const passport = require('./config/passport');
 
 const app = express();
 
+// Trust proxy for Railway/cloud deployment (needed for rate limiting with X-Forwarded-For)
+app.set('trust proxy', 1);
+
 // Rate limiting configuration
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes default
