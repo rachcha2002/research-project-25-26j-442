@@ -1,7 +1,7 @@
+import { API_CONFIG } from '../config/config';
 
-const API_BASE_URL = 'https://nutrition-share-feed-service-production.up.railway.app/api';
-export const FILE_BASE_URL = 'https://nutrition-share-feed-service-production.up.railway.app/api/file/uploads/';
-
+const API_BASE_URL = API_CONFIG.SOCIAL_SERVICE_URL;
+export const FILE_BASE_URL = API_CONFIG.SOCIAL_FILE_URL;
 export interface UserMeta {
     userId: string;
     name: string | null;

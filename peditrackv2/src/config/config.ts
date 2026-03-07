@@ -48,11 +48,21 @@ export const API_CONFIG = {
     ? `https://meal-recommendation-service-production.up.railway.app/`
     : 'https://your-production-meal-service.com',
 
-
   // Nutrition Extraction Service API (port 5560)
   NUTRITION_EXTRACTION_SERVICE_URL: __DEV__
     ? `https://nutrition-extraction-service-production.up.railway.app/`
     : 'https://your-production-nutrition-extraction-service.com',
+
+  // Nutrition Share / Social Feed Service (port 3007)
+  SOCIAL_SERVICE_URL: __DEV__
+    ? 'https://nutrition-share-feed-service-production.up.railway.app/api'
+    : 'https://nutrition-share-feed-service-production.up.railway.app/api',
+
+  // Social File Upload URL
+  SOCIAL_FILE_URL: __DEV__
+    ? 'https://nutrition-share-feed-service-production.up.railway.app/api/file/uploads/'
+    : 'https://nutrition-share-feed-service-production.up.railway.app/api/file/uploads',
+
   // Request timeout in milliseconds
   REQUEST_TIMEOUT: 30000,
 };

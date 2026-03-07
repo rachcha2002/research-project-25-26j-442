@@ -1,4 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'expo-router';
 import {
   View,
   Text,
@@ -23,6 +25,15 @@ import {
 } from '@/services/nutritionExtractionService';
 
 export default function NutritionTrackerScreen() {
+  const { user } = useAuth();
+  const router = useRouter();
+  
+  useEffect(() => {
+    if (!user?.isPro) {
+      router.replace('/profile/subscription?from=nutrition-tracker');
+    }
+  }, [user, router]);
+
   const { selectedBaby } = useBaby();
 
   const [imageUri, setImageUri] = useState<string | null>(null);
