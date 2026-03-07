@@ -120,37 +120,48 @@ async function syncSubscriptionFromStripe(stripeSubscription, userId) {
 
   // Safely parse dates from Stripe (can be Unix timestamps, Date objects, or ISO strings)
   const parseStripeDate = (value) => {
-    if (!value) {
-      console.log('parseStripeDate: no value provided, returning null');
+    if (value === null || value === undefined) {
       return null;
     }
     // If it's a number (Unix timestamp in seconds)
-    if (typeof value === 'number') {
+    if (typeof value === 'number' && value > 0) {
       return new Date(value * 1000);
     }
     // If it's already a Date object
-    if (value instanceof Date) {
+    if (value instanceof Date && !isNaN(value.getTime())) {
       return value;
     }
     // If it's a string (ISO date string)
-    if (typeof value === 'string') {
+    if (typeof value === 'string' && value.length > 0) {
       const parsed = new Date(value);
       if (!isNaN(parsed.getTime())) {
         return parsed;
       }
     }
     console.log('parseStripeDate: could not parse value:', value, typeof value);
-    return null; // Return null if unable to parse
+    return null;
   };
 
-  const currentPeriodStart = parseStripeDate(stripeSubscription.current_period_start);
+  // Parse dates from Stripe subscription
+  let currentPeriodStart = parseStripeDate(stripeSubscription.current_period_start);
   let currentPeriodEnd = parseStripeDate(stripeSubscription.current_period_end);
 
-  // For new subscriptions, if currentPeriodEnd is missing but start exists, calculate +1 month
-  if (!currentPeriodEnd && currentPeriodStart) {
+  // Fallback: if dates are missing, use payment date (now) and calculate +1 month
+  const paymentDate = new Date();
+  if (!currentPeriodStart) {
+    currentPeriodStart = paymentDate;
+  }
+  if (!currentPeriodEnd) {
     currentPeriodEnd = new Date(currentPeriodStart);
     currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1);
   }
+
+  console.log('Subscription dates:', {
+    rawStart: stripeSubscription.current_period_start,
+    rawEnd: stripeSubscription.current_period_end,
+    parsedStart: currentPeriodStart,
+    parsedEnd: currentPeriodEnd,
+  });
 
   // Update subscription record
   const subscriptionData = {
@@ -552,6 +563,24 @@ router.post('/pay-now', auth, async (req, res) => {
 
     await syncSubscriptionFromStripe(newSub, req.userId);
 
+    // Set payment date and next billing date explicitly
+    const paymentDate = new Date();
+    const nextBillingDate = new Date(paymentDate);
+    nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+
+    await Subscription.findOneAndUpdate(
+      { userId: req.userId },
+      {
+        lastPaymentDate: paymentDate,
+        currentPeriodStart: paymentDate,
+        currentPeriodEnd: nextBillingDate,
+      }
+    );
+
+    await User.findByIdAndUpdate(req.userId, {
+      subscriptionExpiry: nextBillingDate,
+    });
+
     res.json({
       success: true,
       message: 'Subscription created successfully with your saved card!',
@@ -640,7 +669,26 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         if (userId && session.subscription) {
           const stripeSub = await stripe.subscriptions.retrieve(session.subscription);
           await syncSubscriptionFromStripe(stripeSub, userId);
-          console.log(`✅ Checkout completed for user ${userId}`);
+          
+          // Set initial payment date and next billing date
+          const paymentDate = new Date();
+          const nextBillingDate = new Date(paymentDate);
+          nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+
+          await Subscription.findOneAndUpdate(
+            { userId },
+            {
+              lastPaymentDate: paymentDate,
+              currentPeriodStart: paymentDate,
+              currentPeriodEnd: nextBillingDate,
+            }
+          );
+
+          await User.findByIdAndUpdate(userId, {
+            subscriptionExpiry: nextBillingDate,
+          });
+
+          console.log(`✅ Checkout completed for user ${userId}, next billing: ${nextBillingDate}`);
         }
         break;
       }
@@ -654,15 +702,31 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
           if (userId) {
             await syncSubscriptionFromStripe(stripeSub, userId);
 
-            // Update last payment info
+            // Calculate payment date and next billing date
+            const paidAt = invoice.status_transitions?.paid_at;
+            const lastPaymentDate = paidAt ? new Date(paidAt * 1000) : new Date();
+            
+            // Calculate next billing date as exactly 1 month from payment
+            const nextBillingDate = new Date(lastPaymentDate);
+            nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+
+            // Update subscription with payment info and correct billing date
             await Subscription.findOneAndUpdate(
               { userId },
               {
-                lastPaymentDate: new Date(invoice.status_transitions?.paid_at * 1000 || Date.now()),
+                lastPaymentDate,
                 lastPaymentAmount: invoice.amount_paid / 100,
+                currentPeriodStart: lastPaymentDate,
+                currentPeriodEnd: nextBillingDate,
               }
             );
-            console.log(`💰 Invoice paid for user ${userId}`);
+
+            // Also update user's subscriptionExpiry
+            await User.findByIdAndUpdate(userId, {
+              subscriptionExpiry: nextBillingDate,
+            });
+
+            console.log(`💰 Invoice paid for user ${userId}, next billing: ${nextBillingDate}`);
           }
         }
         break;
