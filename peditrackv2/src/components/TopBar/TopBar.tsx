@@ -34,8 +34,12 @@ export const TopBar: React.FC<TopBarProps> = ({
 
   const refreshBadge = useCallback(async () => {
     if (!selectedBaby) return;
-    const { badgeCount: count } = await getTodayReminders(selectedBaby._id);
-    setBadgeCount(count);
+    try {
+      const { badgeCount: count } = await getTodayReminders(selectedBaby._id);
+      setBadgeCount(count);
+    } catch (err) {
+      console.log('Error refreshing badge', err);
+    }
   }, [selectedBaby]);
 
   useFocusEffect(

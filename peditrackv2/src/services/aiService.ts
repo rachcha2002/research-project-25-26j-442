@@ -5,9 +5,9 @@
  * Separate from riskAssessmentService.ts (that is a different clinical triage service).
  */
 import * as SecureStore from 'expo-secure-store';
-import { APP_CONFIG } from '../config/config';
+import { APP_CONFIG, API_CONFIG } from '../config/config';
 
-const API_BASE_URL = 'http://192.168.1.179:5001/api';
+const API_BASE_URL = API_CONFIG.HEALTH_SERVICE_URL;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared auth helper (same pattern as healthAnalyticsService.ts)

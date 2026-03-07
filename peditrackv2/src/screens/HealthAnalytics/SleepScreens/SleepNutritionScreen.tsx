@@ -282,6 +282,7 @@ export const SleepNutritionScreen: React.FC = () => {
         {/* Calendar */}
         <View style={styles.calendarContainer}>
           <Calendar
+            maxDate={toDateStr(new Date())}
             onDayPress={handleDayPress}
             markingType="custom"
             markedDates={markedDates}

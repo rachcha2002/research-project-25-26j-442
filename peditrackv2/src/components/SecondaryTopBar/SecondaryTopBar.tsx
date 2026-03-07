@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { useRouter, useFocusEffect } from 'expo-router';
@@ -33,6 +33,7 @@ export const SecondaryTopBar: React.FC<SecondaryTopBarProps> = ({
   onRightPress,
 }) => {
   const router = useRouter();
+  const insets = useSafeAreaInsets();
   const { user } = useAuth();
   const { selectedBaby } = useBaby();
   const [panelVisible, setPanelVisible] = useState(false);
@@ -41,8 +42,12 @@ export const SecondaryTopBar: React.FC<SecondaryTopBarProps> = ({
   // Refresh badge count whenever the selected baby changes
   const refreshBadge = useCallback(async () => {
     if (!selectedBaby) return;
-    const { badgeCount: count } = await getTodayReminders(selectedBaby._id);
-    setBadgeCount(count);
+    try {
+      const { badgeCount: count } = await getTodayReminders(selectedBaby._id);
+      setBadgeCount(count);
+    } catch (e) {
+      console.log('Error fetching secondary top bar badge count', e);
+    }
   }, [selectedBaby]);
 
   useFocusEffect(

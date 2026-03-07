@@ -27,12 +27,12 @@ export const API_CONFIG = {
 
   // Risk Assessment Service API (port 4000)
   RISK_ASSESSMENT_URL: __DEV__
-  ?`http://${COMPUTER_IP}:4000/api`
-  :`https://risk-assessment-service-production.up.railway.app/apii`,
+  ? `https://risk-assessment-service-production.up.railway.app/api`
+  : `https://risk-assessment-service-production.up.railway.app/api`,
 
   // Teleconsultation Service API (port 4001)
   TELECONSULTATION_URL: __DEV__
-    ? `http://${COMPUTER_IP}:4001/api/teleconsultation`
+    ? `https://teleconsultation-service-production.up.railway.app/api/teleconsultation`
     : 'https://your-production-risk-assessment.com/api',
 
   // Places Proxy API (port 4002)
@@ -62,6 +62,11 @@ export const API_CONFIG = {
   SOCIAL_FILE_URL: __DEV__
     ? 'https://nutrition-share-feed-service-production.up.railway.app/api/file/uploads/'
     : 'https://nutrition-share-feed-service-production.up.railway.app/api/file/uploads',
+
+  // Chat/Voice Service API
+  CHAT_SERVICE_URL: __DEV__
+    ? 'https://peditrack-chat-service-production-0d1d.up.railway.app/api'
+    : 'https://peditrack-chat-service-production-0d1d.up.railway.app/api',
 
   // Request timeout in milliseconds
   REQUEST_TIMEOUT: 30000,

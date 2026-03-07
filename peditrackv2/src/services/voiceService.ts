@@ -12,8 +12,9 @@
  * - Better voice quality
  */
 
-const API_BASE_URL = 'https://peditrack-chat-service-production-0d1d.up.railway.app/api';
+import { API_CONFIG } from '../config/config';
 
+const API_BASE_URL = API_CONFIG.CHAT_SERVICE_URL;
 
 import * as FileSystem from 'expo-file-system/legacy';
 
