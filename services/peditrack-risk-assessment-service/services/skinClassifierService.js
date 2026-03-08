@@ -1,15 +1,14 @@
 const axios = require('axios');
 const FormData = require('form-data');
 
-const DEFAULT_MODEL_NAME = 'efficientnet-b0';
+const DEFAULT_MODEL_NAME = 'MobileNetV2';
 
 const CLASS_LABELS = [
-  'eczema',
-  'urticaria',
-  'impetigo',
-  'chickenpox',
-  'cellulitis',
-  'measles_like_rash',
+  'Acne_Rosacea',
+  'Bullous_Disease',
+  'Cellulitis_Impetigo',
+  'Eczema_Atopic_Dermatitis',
+  'Fungal_Infections'
 ];
 
 function resolveModelUrl(rawUrl) {

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -59,16 +60,19 @@ const RISK_STYLES = {
     ],
   },
 };
+
 export const AssessmentResultScreen: React.FC = () => {
   const router = useRouter();
   const params = useLocalSearchParams();
   const { user, isAuthenticated } = useAuth();
+  const { width } = useWindowDimensions();
+  const isCompact = width < 380;
+  const isTablet = width >= 768;
 
   // Extract the result object passed from assessment screen
-  // TODO: Replace with backend result when available
   const result = params.result
     ? JSON.parse(params.result as string)
-    : { risk_level: "low", risk_score: 2.1 };
+    : { risk_level: "low", risk_score: 2.1, recommendations: [] };
 
   const resultChild = result.child || result.payload?.child || {};
 
@@ -78,19 +82,25 @@ export const AssessmentResultScreen: React.FC = () => {
   const risk: "low" | "medium" | "high" = (normalizedRisk === "low" || normalizedRisk === "medium" || normalizedRisk === "high")
     ? normalizedRisk as "low" | "medium" | "high"
     : "low";
+  
   const style = RISK_STYLES[risk];
-  // Use backend risk_score
-  const score = typeof result.risk_score === 'number' ? result.risk_score : (risk === 'low' ? 2.1 : risk === 'medium' ? 5.2 : 8.7);
+  
+  // Extract backend recommendations
+  const backendRecommendations = result.recommendations || [];
 
   return (
     <View style={styles.container}>
       <SecondaryTopBar />
       <ScrollView
         style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 20 }}
+        contentContainerStyle={{
+          padding: isCompact ? 14 : 20,
+          maxWidth: isTablet ? 620 : 520,
+          width: '100%',
+          alignSelf: 'center',
+        }}
         showsVerticalScrollIndicator={false}
       >
-
         {/* Tabs */}
         <View style={styles.tabs}>
           {(["low", "medium", "high"] as const).map((tab) => (
@@ -98,6 +108,7 @@ export const AssessmentResultScreen: React.FC = () => {
               key={tab}
               style={[
                 styles.tab,
+                { paddingHorizontal: isCompact ? 12 : 18, minWidth: isCompact ? 58 : 70 },
                 risk === tab && {
                   backgroundColor: RISK_STYLES[tab].color,
                   shadowColor: RISK_STYLES[tab].color,
@@ -129,10 +140,10 @@ export const AssessmentResultScreen: React.FC = () => {
                 { backgroundColor: style.background, borderColor: style.color },
               ]}
             >
-              <Ionicons name={style.icon as any} size={60} color={style.color} />
+              <Ionicons name={style.icon as any} size={isCompact ? 48 : 60} color={style.color} />
             </View>
           </View>
-          <Text style={[styles.riskLabel, { color: style.color }]}>
+          <Text style={[styles.riskLabel, { color: style.color, fontSize: isCompact ? 19 : 22 }]}>
             {style.label}
           </Text>
           <Text style={styles.timeText}>
@@ -149,31 +160,50 @@ export const AssessmentResultScreen: React.FC = () => {
         {/* What This Means Card */}
         <View style={[styles.infoCard, { borderLeftColor: style.color, borderLeftWidth: 4, shadowColor: style.color }]}> 
           <View style={styles.infoHeader}>
-            <Ionicons
-              name="information-circle"
-              size={22}
-              color={style.color}
-            />
+            <Ionicons name="information-circle" size={22} color={style.color} />
             <Text style={[styles.infoTitle, { color: style.color }]}>What This Means</Text>
           </View>
           <Text style={styles.infoBody}>{style.explain}</Text>
         </View>
 
+        {/* NEW: Dynamic Clinical Advisory from Backend */}
+        {backendRecommendations.length > 0 && (
+          <View style={styles.advisoryContainer}>
+            <Text style={styles.sectionTitle}>Clinical Advisory</Text>
+            {backendRecommendations.map((rec: any, idx: number) => {
+              // Map backend urgency to UI colors
+              const recColor = rec.urgency === 'critical' ? '#DC2626' : rec.urgency === 'moderate' ? '#EA580C' : '#6366F1';
+              const recBg = rec.urgency === 'critical' ? '#FEF2F2' : rec.urgency === 'moderate' ? '#FFF7ED' : '#EEF2FF';
+              
+              return (
+                <View key={`rec-${idx}`} style={[styles.advisoryCard, { backgroundColor: recBg, borderLeftColor: recColor }]}>
+                  <Ionicons name="medical" size={20} color={recColor} style={{ marginTop: 2 }} />
+                  <Text style={[styles.advisoryText, { color: '#334155' }]}>{rec.label}</Text>
+                </View>
+              );
+            })}
+          </View>
+        )}
 
-        {/* Recommended Actions */}
-        <Text style={styles.sectionTitle}>Recommended Actions</Text>
+        {/* Recommended App Actions */}
+        <Text style={styles.sectionTitle}>Next Steps</Text>
         {style.actions.map((a: { label: string; icon: string; color: string }, index: number) => {
-          // Connect teleconsultation for both medium/high risk
           const isTeleconsult = ((a.label === "Request Teleconsultation" && (risk === "medium" || risk === "high")) || (a.label === "Emergency Teleconsultation" && risk === "high"));
           const isNearbyHospital = a.label === "Find Nearby Hospital" && (risk === "medium" || risk === "high");
           const isFullReport = a.label === "View Full Report";
-          if (isTeleconsult) {
-            console.log('Teleconsultation action is attached for', a.label, 'risk:', risk);
-          }
+          
           return (
             <TouchableOpacity
               key={index}
-              style={[styles.actionCard, { borderLeftColor: a.color, borderLeftWidth: 4, shadowColor: a.color }]}
+              style={[
+                styles.actionCard,
+                {
+                  borderLeftColor: a.color,
+                  borderLeftWidth: 4,
+                  shadowColor: a.color,
+                  padding: isCompact ? 12 : 14,
+                },
+              ]}
               onPress={
                 isTeleconsult
                   ? async () => {
@@ -184,7 +214,6 @@ export const AssessmentResultScreen: React.FC = () => {
                           return;
                         }
 
-                        // Prepare teleconsultation payload
                         const telePayload = {
                           userId: user._id,
                           patient: {
@@ -198,27 +227,19 @@ export const AssessmentResultScreen: React.FC = () => {
                           risk_score: result.risk_score,
                           assessment_id: result.assessment_id || "",
                         };
-                        console.log('Teleconsultation payload:', telePayload);
                         const teleRequest = await requestTeleconsultation(telePayload);
-                        console.log('Teleconsultation request response:', teleRequest);
                         router.push({ pathname: "/emergency-response/teleconsultation" , params: { requestId: teleRequest._id } });
-                        console.log('Navigated to /emergency-response/teleconsultation with requestId:', teleRequest._id);
                       } catch (err) {
-                        console.error('Teleconsultation error:', err);
                         const message = err instanceof Error ? err.message : 'Unknown error';
                         if (message.includes('HTTP 403')) {
                           Alert.alert(
                             'Subscription Required',
-                            'An active subscription is required to request teleconsultation. Would you like to view subscription plans?',
+                            'An active subscription is required to request teleconsultation.',
                             [
                               { text: 'Not Now', style: 'cancel' },
                               { text: 'View Plans', onPress: () => router.push('/profile/subscription') },
                             ]
                           );
-                          return;
-                        }
-                        if (message.includes('HTTP 503')) {
-                          alert('Teleconsultation is temporarily unavailable. Please try again in a moment.');
                           return;
                         }
                         alert(`Failed to request teleconsultation. ${message}`);
@@ -230,10 +251,9 @@ export const AssessmentResultScreen: React.FC = () => {
                   ? () => {
                       const assessmentId = result.assessment_id || "";
                       if (!assessmentId) {
-                        alert("Assessment ID not available. Please complete the assessment again.");
+                        alert("Assessment ID not available.");
                         return;
                       }
-
                       router.push({
                         pathname: "/emergency-response/assesment-report",
                         params: { assessmentId },
@@ -248,11 +268,7 @@ export const AssessmentResultScreen: React.FC = () => {
               <View style={{ flex: 1, marginLeft: 12 }}>
                 <Text style={[styles.actionLabel, { color: a.color }]}>{a.label}</Text>
               </View>
-              <Ionicons
-                name="chevron-forward"
-                size={20}
-                color="#94A3B8"
-              />
+              <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
             </TouchableOpacity>
           );
         })}
@@ -270,167 +286,28 @@ export const AssessmentResultScreen: React.FC = () => {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F9FAFB",
-  },
-  tabs: {
-    flexDirection: "row",
-    justifyContent: "center",
-    marginBottom: 24,
-  },
-  tab: {
-    paddingVertical: 6,
-    paddingHorizontal: 18,
-    borderRadius: 20,
-    marginHorizontal: 8,
-    backgroundColor: "#E2E8F0",
-    minWidth: 70,
-    alignItems: 'center',
-  },
-  center: {
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  glowWrap: {
-    shadowColor: '#bbf7d0',
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.7,
-    shadowRadius: 32,
-    elevation: 8,
-    borderRadius: 80,
-    marginBottom: 0,
-  },
-  circle: {
-    width: 130,
-    height: 130,
-    borderRadius: 70,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 4,
-    marginBottom: 16,
-    backgroundColor: '#fff',
-  },
-  riskLabel: {
-    fontSize: 22,
-    fontWeight: "700",
-    marginBottom: 6,
-    textAlign: 'center',
-  },
-  scoreText: {
-    fontSize: 17,
-    fontWeight: "700",
-    marginBottom: 2,
-    textAlign: 'center',
-  },
-  timeText: {
-    fontSize: 13,
-    color: "#64748B",
-    marginTop: 4,
-    textAlign: 'center',
-  },
-  infoCard: {
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    padding: 16,
-    marginVertical: 10,
-    borderWidth: 1,
-    borderColor: "#E2E8F0",
-    shadowColor: '#bbf7d0',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 2,
-    flexDirection: 'column',
-  },
-  infoHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 6,
-  },
-  infoTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    marginLeft: 6,
-  },
-  infoBody: {
-    color: "#475569",
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 2,
-  },
-  sectionTitle: {
-    fontSize: 17,
-    fontWeight: "700",
-    marginTop: 18,
-    marginBottom: 8,
-    color: "#334155",
-  },
-  actionCard: {
-    backgroundColor: "#fff",
-    padding: 14,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    marginBottom: 10,
-    flexDirection: "row",
-    alignItems: "center",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 1,
-  },
-  actionIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f3f4f6',
-  },
-  actionLabel: {
-    fontSize: 15,
-    fontWeight: "600",
-  },
-  disclaimerCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: '#EEF2FF',
-    borderRadius: 10,
-    padding: 12,
-    marginTop: 18,
-    marginBottom: 8,
-  },
-  disclaimerText: {
-    fontSize: 13,
-    color: "#6366F1",
-    lineHeight: 18,
-    flex: 1,
-  },
-  footer: {
-    flexDirection: "row",
-    padding: 16,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderColor: "#E2E8F0",
-  },
-  saveBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: "#E2E8F0",
-    alignItems: "center",
-    marginRight: 10,
-  },
-  doneBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    borderRadius: 10,
-    backgroundColor: "#6366F1",
-    alignItems: "center",
-  },
-  footerText: {
-    fontWeight: "600",
-    fontSize: 15,
-  },
+  container: { flex: 1, backgroundColor: "#F9FAFB" },
+  tabs: { flexDirection: "row", justifyContent: "center", marginBottom: 24 },
+  tab: { paddingVertical: 6, paddingHorizontal: 18, borderRadius: 20, marginHorizontal: 8, backgroundColor: "#E2E8F0", minWidth: 70, alignItems: 'center' },
+  center: { alignItems: "center", marginBottom: 24 },
+  glowWrap: { shadowColor: '#bbf7d0', shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.7, shadowRadius: 32, elevation: 8, borderRadius: 80, marginBottom: 0 },
+  circle: { width: 130, height: 130, borderRadius: 70, alignItems: "center", justifyContent: "center", borderWidth: 4, marginBottom: 16, backgroundColor: '#fff' },
+  riskLabel: { fontSize: 22, fontWeight: "700", marginBottom: 6, textAlign: 'center' },
+  timeText: { fontSize: 13, color: "#64748B", marginTop: 4, textAlign: 'center' },
+  infoCard: { backgroundColor: "#fff", borderRadius: 12, padding: 16, marginVertical: 10, borderWidth: 1, borderColor: "#E2E8F0", shadowColor: '#bbf7d0', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 2, flexDirection: 'column' },
+  infoHeader: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
+  infoTitle: { fontSize: 16, fontWeight: "600", marginLeft: 6 },
+  infoBody: { color: "#475569", fontSize: 14, lineHeight: 20, marginTop: 2 },
+  sectionTitle: { fontSize: 17, fontWeight: "700", marginTop: 18, marginBottom: 8, color: "#334155" },
+  
+  // NEW STYLES FOR ADVISORY
+  advisoryContainer: { marginBottom: 10 },
+  advisoryCard: { flexDirection: 'row', padding: 14, borderRadius: 10, marginBottom: 8, borderLeftWidth: 4, alignItems: 'center' },
+  advisoryText: { flex: 1, marginLeft: 10, fontSize: 14, lineHeight: 20, fontWeight: '500' },
+  
+  actionCard: { backgroundColor: "#fff", padding: 14, borderRadius: 12, borderWidth: 1, borderColor: "#E5E7EB", marginBottom: 10, flexDirection: "row", alignItems: "center", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 8, elevation: 1 },
+  actionIconWrap: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3f4f6' },
+  actionLabel: { fontSize: 15, fontWeight: "600" },
+  disclaimerCard: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: '#EEF2FF', borderRadius: 10, padding: 12, marginTop: 18, marginBottom: 30 },
+  disclaimerText: { fontSize: 13, color: "#6366F1", lineHeight: 18, flex: 1 },
 });
