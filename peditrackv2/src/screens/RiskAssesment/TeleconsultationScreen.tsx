@@ -7,6 +7,7 @@ import {
   ScrollView,
   Switch,
   Alert,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -32,6 +33,9 @@ export const TeleconsultationScreen: React.FC = () => {
   const [request, setRequest] = React.useState<any>(null);
   const [assessment, setAssessment] = React.useState<any>(null);
   const autoJoinAttemptedRef = React.useRef(false);
+  const { width } = useWindowDimensions();
+  const isCompact = width < 380;
+  const isTablet = width >= 768;
 
   const handleJoinCall = React.useCallback(async () => {
     if (joining) return;
@@ -172,25 +176,32 @@ export const TeleconsultationScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <ScrollView  showsVerticalScrollIndicator={false}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: isCompact ? 14 : 20,
+          paddingBottom: 20,
+        }}
+      >
+        <View style={{ width: '100%', maxWidth: isTablet ? 620 : 520, alignSelf: 'center' }}>
         {/* Header */}
         <SecondaryTopBar />
-        <Text style={styles.headerTitle}>Teleconsultation</Text>
+        <Text style={[styles.headerTitle, { fontSize: isCompact ? 17 : 19 }]}>Teleconsultation</Text>
         {/* Queue Banner */}
-        <View style={styles.queueBanner}>
+        <View style={[styles.queueBanner, { paddingVertical: isCompact ? 18 : 22 }]}> 
           <Text style={styles.queueStatus}>{status === "pending" ? "WAITING IN QUEUE" : status === "accepted" ? "DOCTOR READY" : status === "cancelled" ? "CANCELLED" : "COMPLETED"}</Text>
           <Text style={styles.queueLabel}>Position in Queue</Text>
-          <Text style={styles.queueNumber}>{queuePosition !== null ? `#${queuePosition}` : "-"}</Text>
+          <Text style={[styles.queueNumber, { fontSize: isCompact ? 30 : 38 }]}>{queuePosition !== null ? `#${queuePosition}` : "-"}</Text>
           <Text style={styles.queueWait}>Est. wait: {estWait !== null ? `${estWait} minutes` : "-"}</Text>
         </View>
         {/* Request Card */}
         {request && (
-          <View style={styles.requestCard}>
+          <View style={[styles.requestCard, { padding: isCompact ? 12 : 16 }]}> 
             <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
               <Text style={styles.requestTitle}>Consultation Request For</Text>
               <View style={styles.avatar}><Text style={styles.avatarText}>{resolvedChildName?.[0]?.toUpperCase() || '?'}</Text></View>
             </View>
-            <Text style={styles.patientName}>{resolvedChildName}, Age {ageMonths !== null && ageMonths !== undefined ? (ageMonths / 12).toFixed(1) : '-'} yrs
+            <Text style={[styles.patientName, { fontSize: isCompact ? 15 : 17 }]}>{resolvedChildName}, Age {ageMonths !== null && ageMonths !== undefined ? (ageMonths / 12).toFixed(1) : '-'} yrs
               {assessment && assessment.risk_level && (
                 <Text style={{ color: assessment.risk_level === 'high' ? '#DC2626' : assessment.risk_level === 'medium' ? '#EA580C' : '#16A34A', fontWeight: '700' }}>
                   {`  (${assessment.risk_level.toUpperCase()} Priority)`}
@@ -243,12 +254,12 @@ export const TeleconsultationScreen: React.FC = () => {
         {status !== 'completed' && status !== 'cancelled' && (
           <>
             <Text style={styles.sectionTitle}>Need Immediate Help?</Text>
-            <View style={styles.helpRow}>
+            <View style={[styles.helpRow, { flexDirection: isCompact ? 'column' : 'row' }]}>
               <TouchableOpacity style={styles.helpBtn} onPress={() => {/* TODO: implement emergency call */}}>
                 <Ionicons name="call" size={20} color="#6366F1" />
                 <Text style={styles.helpBtnText}>Call 1990<Text style={styles.helpBtnSub}> Emergency</Text></Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.helpBtn} onPress={() => {/* TODO: implement live chat */}}>
+              <TouchableOpacity style={[styles.helpBtn, isCompact ? { marginTop: 8 } : null]} onPress={() => {/* TODO: implement live chat */}}>
                 <Ionicons name="call" size={20} color="#6366F1" />
                 <Text style={styles.helpBtnText}>Call 119<Text style={styles.helpBtnSub}> Emergency</Text></Text>
               </TouchableOpacity>
@@ -278,16 +289,16 @@ export const TeleconsultationScreen: React.FC = () => {
           </View>
         )}
         {/* Footer Buttons - dynamic */}
-        <View style={styles.footerRow}>
+        <View style={[styles.footerRow, { flexDirection: isCompact ? 'column' : 'row' }]}>
           {status === 'pending' && (
-            <TouchableOpacity style={styles.cancelBtn} onPress={handleCancelRequest} disabled={cancelling}>
+            <TouchableOpacity style={[styles.cancelBtn, isCompact ? { marginRight: 0 } : null]} onPress={handleCancelRequest} disabled={cancelling}>
               <Text style={styles.cancelBtnText}>{cancelling ? 'Cancelling...' : 'Cancel Request'}</Text>
             </TouchableOpacity>
           )}
           {status === 'accepted' && (
             !joining ? (
               <TouchableOpacity
-                style={styles.contactBtn}
+                style={[styles.contactBtn, isCompact ? { marginTop: 8 } : null]}
                 onPress={handleJoinCall}
               >
                 <Ionicons name="call" size={18} color="#fff" />
@@ -295,6 +306,7 @@ export const TeleconsultationScreen: React.FC = () => {
               </TouchableOpacity>
             ) : null
           )}
+        </View>
         </View>
       </ScrollView>
     </View>
@@ -305,8 +317,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F9FAFB",
-    paddingLeft: 20,
-    paddingRight: 20,
   },
   headerTitle: {
     fontSize: 19,

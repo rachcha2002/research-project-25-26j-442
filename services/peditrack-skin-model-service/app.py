@@ -1,7 +1,6 @@
 import json
 import io
 import os
-import pickle
 from pathlib import Path
 from typing import Any
 
@@ -10,9 +9,9 @@ import tensorflow as tf
 from fastapi import FastAPI, File, HTTPException, UploadFile
 from PIL import Image
 
-
-DEFAULT_MODEL_FILE = "peditrack_condition_classifier_final.keras"
-FALLBACK_MODEL_FILE = "best_condition_model.keras"
+# Updated to match the newly exported files
+DEFAULT_MODEL_FILE = "skin_condition_model.keras"
+DEFAULT_LABELS_FILE = "class_labels.json"
 DEFAULT_IMAGE_SIZE = (224, 224)
 
 
@@ -20,98 +19,67 @@ def _resolve_model_dir() -> Path:
     raw = os.getenv("MODEL_DIR", "")
     if raw:
         return Path(raw).expanduser().resolve()
-    return (Path(__file__).parent / "model-artifacts").resolve()
+    # Default to a 'models' directory or the current directory
+    return (Path(__file__).parent / "models").resolve()
 
 
 MODEL_DIR = _resolve_model_dir()
 MODEL_FILE = os.getenv("MODEL_FILE", DEFAULT_MODEL_FILE)
-MODEL_VERSION = os.getenv("MODEL_VERSION", "1.0.0")
+LABELS_FILE = os.getenv("LABELS_FILE", DEFAULT_LABELS_FILE)
+MODEL_VERSION = os.getenv("MODEL_VERSION", "2.0.0")
 
 
 def _load_model() -> tf.keras.Model:
-    primary = MODEL_DIR / MODEL_FILE
-    fallback = MODEL_DIR / FALLBACK_MODEL_FILE
+    model_path = MODEL_DIR / MODEL_FILE
+    
+    if not model_path.exists():
+        raise FileNotFoundError(f"Model file not found at: {model_path}")
 
-    if primary.exists():
-        model_path = primary
-    elif fallback.exists():
-        model_path = fallback
-    else:
-        # Backward-compatible search for legacy .h5 names.
-        legacy_primary = MODEL_DIR / "peditrack_condition_classifier_final.h5"
-        legacy_fallback = MODEL_DIR / "best_condition_model.h5"
-        if legacy_primary.exists():
-            model_path = legacy_primary
-        elif legacy_fallback.exists():
-            model_path = legacy_fallback
-        else:
-            raise FileNotFoundError(
-                "No model file found. Expected one of: "
-                f"{primary}, {fallback}, {legacy_primary}, {legacy_fallback}."
-            )
-
+    print(f"⚙️ Loading model from {model_path}...")
     return tf.keras.models.load_model(str(model_path))
 
 
-def _load_encoder() -> Any:
-    encoder_path = MODEL_DIR / "condition_encoder.pkl"
-    if not encoder_path.exists():
-        return None
-
-    with open(encoder_path, "rb") as f:
-        return pickle.load(f)
-
-
-def _load_mapping() -> dict:
-    mapping_path = MODEL_DIR / "condition_mapping.json"
-    if not mapping_path.exists():
+def _load_labels() -> dict:
+    labels_path = MODEL_DIR / LABELS_FILE
+    
+    if not labels_path.exists():
+        print(f"⚠️ Warning: Labels file not found at {labels_path}")
         return {}
 
-    with open(mapping_path, "r", encoding="utf-8") as f:
+    with open(labels_path, "r", encoding="utf-8") as f:
+        # Expected format: {"0": "Acne_Rosacea", "1": "Bullous_Disease", ...}
         return json.load(f)
 
 
 def preprocess_image(image_bytes: bytes) -> np.ndarray:
     image = Image.open(io.BytesIO(image_bytes))
 
+    # Ensure 3 channels
     image = image.convert("RGB")
     image = image.resize(DEFAULT_IMAGE_SIZE)
-    arr = np.array(image, dtype=np.float32)
-
-    # EfficientNet preprocessing: scales input as expected by model.
-    arr = tf.keras.applications.efficientnet.preprocess_input(arr)
+    
+    # Standard normalization for MobileNetV2 (matching the ImageDataGenerator)
+    arr = np.array(image, dtype=np.float32) / 255.0
+    
     return arr
 
 
+# Initialize model and labels on startup
 model = _load_model()
-encoder = _load_encoder()
-class_mapping = _load_mapping()
+class_labels_dict = _load_labels()
 
 
-def _class_names() -> list[str]:
-    if encoder is not None and hasattr(encoder, "classes_"):
-        return [str(c) for c in encoder.classes_]
-
-    # Supports mapping file shape: {"classes": [...], "num_classes": N}
-    if isinstance(class_mapping, dict) and isinstance(class_mapping.get("classes"), list):
-        return [str(c) for c in class_mapping["classes"]]
-
-    return []
-
-
-app = FastAPI(title="PediTrack Skin Model API", version="1.0.0")
+app = FastAPI(title="PediTrack Skin Model API", version=MODEL_VERSION)
 
 
 @app.get("/health")
 def health():
-    classes = _class_names()
     return {
         "status": "healthy",
-        "model": "efficientnet-b0",
+        "model": "MobileNetV2",
         "version": MODEL_VERSION,
         "model_dir": str(MODEL_DIR),
-        "label_source": "encoder" if encoder is not None else "condition_mapping.json",
-        "class_count": len(classes),
+        "class_count": len(class_labels_dict),
     }
 
 
@@ -125,46 +93,48 @@ async def predict_skin(image: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Empty image")
 
     try:
+        # Preprocess exactly as trained
         img = preprocess_image(raw)
         batch = np.expand_dims(img, axis=0)
 
+        # Make prediction
         preds = model.predict(batch, verbose=0)[0]
         top_idx = int(np.argmax(preds))
         confidence = float(preds[top_idx])
 
-        classes = _class_names()
-        if not classes:
+        if not class_labels_dict:
             raise ValueError(
-                "No class labels available. Add condition_encoder.pkl or define classes in condition_mapping.json"
+                "No class labels available. Ensure class_labels.json is loaded."
             )
 
-        if len(classes) != len(preds):
+        if len(class_labels_dict) != len(preds):
             raise ValueError(
-                f"Class count mismatch: labels={len(classes)} vs model_outputs={len(preds)}"
+                f"Class count mismatch: labels={len(class_labels_dict)} vs model_outputs={len(preds)}"
             )
 
-        class_name = classes[top_idx]
-        mapped_name = class_name
+        predicted_class = class_labels_dict.get(str(top_idx), f"Unknown_{top_idx}")
 
+        # Gather top 3 predictions for nuanced risk scoring
         top3_idx = np.argsort(preds)[-3:][::-1]
         top3 = []
         for idx in top3_idx:
-            label = classes[int(idx)]
             top3.append(
                 {
-                    "class": label,
+                    "class": class_labels_dict.get(str(idx), f"Unknown_{idx}"),
                     "confidence": float(preds[int(idx)]),
                 }
             )
 
+        # Output perfectly matches what the Node.js backend expects
         return {
-            "predicted_class": mapped_name,
+            "predicted_class": predicted_class,
             "confidence": confidence,
-            "model": "efficientnet-b0",
+            "model": "MobileNetV2",
             "version": MODEL_VERSION,
-            "labels": classes,
+            "labels": list(class_labels_dict.values()),
             "top3": top3,
         }
+        
     except HTTPException:
         raise
     except Exception as exc:

@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  useWindowDimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { SecondaryTopBar } from "@/components/SecondaryTopBar";
@@ -42,6 +43,9 @@ export const FullReportScreen: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isCreatingPdf, setIsCreatingPdf] = useState(false);
+  const { width } = useWindowDimensions();
+  const isCompact = width < 380;
+  const isTablet = width >= 768;
 
   useEffect(() => {
     const loadReport = async () => {
@@ -257,10 +261,18 @@ export const FullReportScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <SecondaryTopBar />
-      <ScrollView contentContainerStyle={{ padding: 18 }} showsVerticalScrollIndicator={false}>
-        <Text style={styles.headerTitle}>Assessment Full Report</Text>
+      <ScrollView
+        contentContainerStyle={{
+          padding: isCompact ? 14 : 18,
+          maxWidth: isTablet ? 700 : 560,
+          width: '100%',
+          alignSelf: 'center',
+        }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={[styles.headerTitle, { fontSize: isCompact ? 17 : 19 }]}>Assessment Full Report</Text>
         {/* Child Info */}
-        <View style={styles.card}>
+        <View style={[styles.card, { padding: isCompact ? 14 : 16 }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
             <Ionicons name="person-circle" size={36} color="#7C3AED" style={{ marginRight: 10 }} />
             <View>
@@ -271,7 +283,7 @@ export const FullReportScreen: React.FC = () => {
           <Text style={styles.reportDate}>Assessed: {new Date(assessment.date).toLocaleString()}</Text>
         </View>
         {/* Risk Summary */}
-        <View style={[styles.card, { borderLeftColor: riskColor, borderLeftWidth: 5 }]}> 
+        <View style={[styles.card, { borderLeftColor: riskColor, borderLeftWidth: 5, padding: isCompact ? 14 : 16 }]}> 
           <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
             <Ionicons name="warning" size={22} color={riskColor} style={{ marginRight: 8 }} />
             <Text style={[styles.riskLabel, { color: riskColor }]}>{assessment.risk} Priority</Text>
@@ -337,7 +349,7 @@ export const FullReportScreen: React.FC = () => {
           <View style={styles.contextRow}><Ionicons name="trending-down" size={15} color="#7C3AED" style={{ marginRight: 6 }} /><Text style={styles.contextText}>Trend: {assessment.context.trend || 'N/A'}</Text></View>
         </View>
         {/* Download/Share */}
-        <View style={styles.footerRow}>
+        <View style={[styles.footerRow, { flexDirection: isCompact ? 'column' : 'row' }]}>
           <TouchableOpacity
             style={[styles.footerBtn, isCreatingPdf && styles.disabledBtn]}
             onPress={handleDownloadPdf}
@@ -347,7 +359,11 @@ export const FullReportScreen: React.FC = () => {
             <Text style={styles.footerBtnText}>{isCreatingPdf ? "Preparing..." : "Download PDF"}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.footerBtn, isCreatingPdf && styles.disabledBtn]}
+            style={[
+              styles.footerBtn,
+              isCreatingPdf && styles.disabledBtn,
+              isCompact ? { marginTop: 8 } : null,
+            ]}
             onPress={handleSharePdf}
             disabled={isCreatingPdf}
           >
