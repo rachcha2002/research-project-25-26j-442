@@ -8,6 +8,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useBaby } from '@/contexts/BabyContext';
 import { addMedication, updateMedication, getMedicationById, Medication } from '@/services/healthAnalyticsService';
 import { scheduleMedicationReminders, cancelMedicationReminders } from '@/services/pushNotificationService';
+import { clearDismissedMedicationReminder } from '@/services/notificationService';
 import { SecondaryTopBar } from '@/components/SecondaryTopBar/SecondaryTopBar';
 
 // Updated: 2026-02-18
@@ -156,6 +157,8 @@ export const AddMedicationScreen: React.FC = () => {
         // Cancel old ones strictly before re-saving scheduling
         await cancelMedicationReminders(medicationId, initialReminderTimes);
         result = await updateMedication(medicationId, medicationData);
+        // Clear dismissed status so new reminders show up today
+        await clearDismissedMedicationReminder(medicationId, selectedBaby._id);
       } else {
         result = await addMedication(medicationData);
       }

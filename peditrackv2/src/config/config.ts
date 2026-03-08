@@ -9,7 +9,7 @@
 // For Physical Device: use your computer's IP address
 
 // Get your computer's IP by running 'ipconfig' (Windows) or 'ifconfig' (Mac/Linux)
-const COMPUTER_IP = '172.20.10.2'; // Update this with your actual IP
+const COMPUTER_IP = '192.168.1.2'; // Update this with your actual IP
 
 // Detect if running in Expo Go vs production
 const __DEV__ = process.env.NODE_ENV !== 'production';
@@ -27,8 +27,10 @@ export const API_CONFIG = {
 
   // Risk Assessment Service API (port 4000)
   RISK_ASSESSMENT_URL: __DEV__
-  ?`http://${COMPUTER_IP}:4000/api`
-  :`http://${COMPUTER_IP}:4000/api`,
+
+  ? `https://risk-assessment-service-production.up.railway.app/api`
+  : `https://risk-assessment-service-production.up.railway.app/api`,
+
 
   // Teleconsultation Service API (port 4001)
   TELECONSULTATION_URL: __DEV__
@@ -64,6 +66,13 @@ export const API_CONFIG = {
   SOCIAL_FILE_URL: __DEV__
     ? 'https://nutrition-share-feed-service-production.up.railway.app/api/file/uploads/'
     : 'https://nutrition-share-feed-service-production.up.railway.app/api/file/uploads',
+
+
+  // Chat Service API
+  CHAT_SERVICE_URL: 'https://research-project-25-26j-442-production-dc5b.up.railway.app/api',
+
+  // Chat Service WebSocket URL (for Gemini Live Voice)
+  CHAT_SERVICE_WS_URL: 'wss://research-project-25-26j-442-production-dc5b.up.railway.app/api/voice',
 
   // Request timeout in milliseconds
   REQUEST_TIMEOUT: 30000,

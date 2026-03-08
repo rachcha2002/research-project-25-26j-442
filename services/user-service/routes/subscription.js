@@ -11,10 +11,12 @@ const MONTHLY_PRICE_CURRENCY = 'lkr';
 
 /**
  * Helper: Get or create a Stripe customer for a user
+ * @param {Object} user - User document
+ * @param {boolean} forceNew - Force create a new customer (e.g., for currency change)
  */
-async function getOrCreateStripeCustomer(user) {
+async function getOrCreateStripeCustomer(user, forceNew = false) {
   // Check if user already has a Stripe customer ID
-  if (user.stripeCustomerId) {
+  if (user.stripeCustomerId && !forceNew) {
     try {
       const customer = await stripe.customers.retrieve(user.stripeCustomerId);
       if (!customer.deleted) {
@@ -116,6 +118,51 @@ async function syncSubscriptionFromStripe(stripeSubscription, userId) {
 
   const isActive = ['active', 'trialing'].includes(stripeSubscription.status);
 
+  // Safely parse dates from Stripe (can be Unix timestamps, Date objects, or ISO strings)
+  const parseStripeDate = (value) => {
+    if (value === null || value === undefined) {
+      return null;
+    }
+    // If it's a number (Unix timestamp in seconds)
+    if (typeof value === 'number' && value > 0) {
+      return new Date(value * 1000);
+    }
+    // If it's already a Date object
+    if (value instanceof Date && !isNaN(value.getTime())) {
+      return value;
+    }
+    // If it's a string (ISO date string)
+    if (typeof value === 'string' && value.length > 0) {
+      const parsed = new Date(value);
+      if (!isNaN(parsed.getTime())) {
+        return parsed;
+      }
+    }
+    console.log('parseStripeDate: could not parse value:', value, typeof value);
+    return null;
+  };
+
+  // Parse dates from Stripe subscription
+  let currentPeriodStart = parseStripeDate(stripeSubscription.current_period_start);
+  let currentPeriodEnd = parseStripeDate(stripeSubscription.current_period_end);
+
+  // Fallback: if dates are missing, use payment date (now) and calculate +1 month
+  const paymentDate = new Date();
+  if (!currentPeriodStart) {
+    currentPeriodStart = paymentDate;
+  }
+  if (!currentPeriodEnd) {
+    currentPeriodEnd = new Date(currentPeriodStart);
+    currentPeriodEnd.setMonth(currentPeriodEnd.getMonth() + 1);
+  }
+
+  console.log('Subscription dates:', {
+    rawStart: stripeSubscription.current_period_start,
+    rawEnd: stripeSubscription.current_period_end,
+    parsedStart: currentPeriodStart,
+    parsedEnd: currentPeriodEnd,
+  });
+
   // Update subscription record
   const subscriptionData = {
     userId: userId,
@@ -123,8 +170,8 @@ async function syncSubscriptionFromStripe(stripeSubscription, userId) {
     stripeSubscriptionId: stripeSubscription.id,
     stripePriceId: stripeSubscription.items?.data[0]?.price?.id || null,
     status: stripeSubscription.status,
-    currentPeriodStart: new Date(stripeSubscription.current_period_start * 1000),
-    currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+    currentPeriodStart,
+    currentPeriodEnd,
     cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end,
     autoRenew: !stripeSubscription.cancel_at_period_end,
     paymentMethodLast4,
@@ -141,7 +188,7 @@ async function syncSubscriptionFromStripe(stripeSubscription, userId) {
   // Update user record
   user.isPro = isActive;
   user.subscriptionPlan = isActive ? 'pro_monthly' : 'basic';
-  user.subscriptionExpiry = new Date(stripeSubscription.current_period_end * 1000);
+  user.subscriptionExpiry = currentPeriodEnd;
   user.$skipPasswordHash = true;
   await user.save();
 
@@ -231,7 +278,7 @@ router.get('/redirect/cancel', (req, res) => {
  */
 router.post('/create-checkout', auth, async (req, res) => {
   try {
-    const user = await User.findById(req.userId);
+    let user = await User.findById(req.userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -242,7 +289,7 @@ router.post('/create-checkout', auth, async (req, res) => {
     }
 
     // Get or create Stripe customer
-    const customer = await getOrCreateStripeCustomer(user);
+    let customer = await getOrCreateStripeCustomer(user);
 
     // Get or create the price
     const price = await getOrCreatePrice();
@@ -269,28 +316,47 @@ router.post('/create-checkout', auth, async (req, res) => {
     
     console.log('Stripe redirect URLs:', { successUrl, cancelUrl });
 
-    // Create Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      customer: customer.id,
-      payment_method_types: ['card'],
-      line_items: [{
-        price: price.id,
-        quantity: 1,
-      }],
-      mode: 'subscription',
-      success_url: successUrl,
-      cancel_url: cancelUrl,
-      subscription_data: {
+    // Helper function to create checkout session
+    const createCheckoutSession = async (customerId) => {
+      return stripe.checkout.sessions.create({
+        customer: customerId,
+        payment_method_types: ['card'],
+        line_items: [{
+          price: price.id,
+          quantity: 1,
+        }],
+        mode: 'subscription',
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        subscription_data: {
+          metadata: {
+            userId: user._id.toString(),
+          },
+        },
         metadata: {
           userId: user._id.toString(),
         },
-      },
-      metadata: {
-        userId: user._id.toString(),
-      },
-      // Save the payment method for future use
-      payment_method_collection: 'always',
-    });
+        // Save the payment method for future use
+        payment_method_collection: 'always',
+      });
+    };
+
+    let session;
+    try {
+      // Try to create checkout session with existing customer
+      session = await createCheckoutSession(customer.id);
+    } catch (stripeError) {
+      // Handle currency mismatch error - create new customer
+      if (stripeError.message && stripeError.message.includes('cannot combine currencies')) {
+        console.log('Currency mismatch detected, creating new Stripe customer for LKR');
+        // Refresh user and create new customer
+        user = await User.findById(req.userId);
+        customer = await getOrCreateStripeCustomer(user, true); // forceNew = true
+        session = await createCheckoutSession(customer.id);
+      } else {
+        throw stripeError;
+      }
+    }
 
     res.json({
       success: true,
@@ -497,6 +563,24 @@ router.post('/pay-now', auth, async (req, res) => {
 
     await syncSubscriptionFromStripe(newSub, req.userId);
 
+    // Set payment date and next billing date explicitly
+    const paymentDate = new Date();
+    const nextBillingDate = new Date(paymentDate);
+    nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+
+    await Subscription.findOneAndUpdate(
+      { userId: req.userId },
+      {
+        lastPaymentDate: paymentDate,
+        currentPeriodStart: paymentDate,
+        currentPeriodEnd: nextBillingDate,
+      }
+    );
+
+    await User.findByIdAndUpdate(req.userId, {
+      subscriptionExpiry: nextBillingDate,
+    });
+
     res.json({
       success: true,
       message: 'Subscription created successfully with your saved card!',
@@ -525,32 +609,6 @@ router.post('/cancel', auth, async (req, res) => {
   try {
     const subscription = await Subscription.findOne({ userId: req.userId });
     if (!subscription || !subscription.stripeSubscriptionId) {
-      // If the user manually got marked as Pro in DB, auto-heal their account status back to Free
-      const user = await User.findById(req.userId);
-      if (user && user.isPro) {
-        user.isPro = false;
-        user.subscriptionPlan = 'basic';
-        user.$skipPasswordHash = true;
-        await user.save();
-        
-        if (subscription) {
-          subscription.status = 'none';
-          subscription.cancelAtPeriodEnd = false;
-          subscription.autoRenew = false;
-          await subscription.save();
-        }
-
-        return res.json({
-          success: true,
-          message: 'Subscription successfully removed (downgraded to Free).',
-          subscription: {
-            status: 'none',
-            cancelAtPeriodEnd: false,
-            currentPeriodEnd: null,
-          }
-        });
-      }
-
       return res.status(404).json({ error: 'No active subscription found' });
     }
 
@@ -611,7 +669,26 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         if (userId && session.subscription) {
           const stripeSub = await stripe.subscriptions.retrieve(session.subscription);
           await syncSubscriptionFromStripe(stripeSub, userId);
-          console.log(`✅ Checkout completed for user ${userId}`);
+          
+          // Set initial payment date and next billing date
+          const paymentDate = new Date();
+          const nextBillingDate = new Date(paymentDate);
+          nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+
+          await Subscription.findOneAndUpdate(
+            { userId },
+            {
+              lastPaymentDate: paymentDate,
+              currentPeriodStart: paymentDate,
+              currentPeriodEnd: nextBillingDate,
+            }
+          );
+
+          await User.findByIdAndUpdate(userId, {
+            subscriptionExpiry: nextBillingDate,
+          });
+
+          console.log(`✅ Checkout completed for user ${userId}, next billing: ${nextBillingDate}`);
         }
         break;
       }
@@ -625,15 +702,31 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
           if (userId) {
             await syncSubscriptionFromStripe(stripeSub, userId);
 
-            // Update last payment info
+            // Calculate payment date and next billing date
+            const paidAt = invoice.status_transitions?.paid_at;
+            const lastPaymentDate = paidAt ? new Date(paidAt * 1000) : new Date();
+            
+            // Calculate next billing date as exactly 1 month from payment
+            const nextBillingDate = new Date(lastPaymentDate);
+            nextBillingDate.setMonth(nextBillingDate.getMonth() + 1);
+
+            // Update subscription with payment info and correct billing date
             await Subscription.findOneAndUpdate(
               { userId },
               {
-                lastPaymentDate: new Date(invoice.status_transitions?.paid_at * 1000 || Date.now()),
+                lastPaymentDate,
                 lastPaymentAmount: invoice.amount_paid / 100,
+                currentPeriodStart: lastPaymentDate,
+                currentPeriodEnd: nextBillingDate,
               }
             );
-            console.log(`💰 Invoice paid for user ${userId}`);
+
+            // Also update user's subscriptionExpiry
+            await User.findByIdAndUpdate(userId, {
+              subscriptionExpiry: nextBillingDate,
+            });
+
+            console.log(`💰 Invoice paid for user ${userId}, next billing: ${nextBillingDate}`);
           }
         }
         break;
@@ -722,7 +815,15 @@ router.post('/verify-session', auth, async (req, res) => {
     }
 
     if (session.subscription) {
-      const stripeSub = await stripe.subscriptions.retrieve(session.subscription);
+      const stripeSub = await stripe.subscriptions.retrieve(session.subscription, {
+        expand: ['default_payment_method']
+      });
+      console.log('Stripe subscription data:', JSON.stringify({
+        id: stripeSub.id,
+        status: stripeSub.status,
+        current_period_start: stripeSub.current_period_start,
+        current_period_end: stripeSub.current_period_end,
+      }));
       await syncSubscriptionFromStripe(stripeSub, req.userId);
     }
 
@@ -737,56 +838,6 @@ router.post('/verify-session', auth, async (req, res) => {
   } catch (error) {
     console.error('Verify session error:', error);
     res.status(500).json({ error: 'Failed to verify checkout session' });
-  }
-});
-
-/**
- * @route   POST /api/subscription/apply-demo-coupon
- * @desc    Upgrades user to PRO for free using a demo coupon code
- * @access  Private
- */
-router.post('/apply-demo-coupon', auth, async (req, res) => {
-  try {
-    const { code } = req.body;
-    if (code !== '18473') {
-      return res.status(400).json({ error: 'Invalid coupon code' });
-    }
-
-    const user = await User.findById(req.userId);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    user.isPro = true;
-    user.subscriptionPlan = 'pro_monthly';
-    user.$skipPasswordHash = true;
-    await user.save();
-
-    // Create a mock subscription record
-    const subscriptionData = {
-      userId: req.userId,
-      stripeCustomerId: 'demo_cust_' + Math.random().toString(36).substring(7),
-      stripeSubscriptionId: null, // intentionally null so cancel auto-heal handles it
-      status: 'active',
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-      autoRenew: false,
-      cancelAtPeriodEnd: true, // Will automatically expire
-      paymentMethodBrand: 'Demo',
-      paymentMethodLast4: '0000',
-    };
-
-    await Subscription.findOneAndUpdate(
-      { userId: req.userId },
-      subscriptionData,
-      { upsert: true, new: true }
-    );
-
-    res.json({
-      success: true,
-      message: 'Demo PRO activated successfully!',
-    });
-  } catch (error) {
-    console.error('Demo coupon error:', error);
-    res.status(500).json({ error: 'Failed to apply demo coupon' });
   }
 });
 
