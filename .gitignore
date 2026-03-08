@@ -36,7 +36,10 @@ wheels/
 *.egg
 
 # RAG Service
-services/peditrack-rag-service/vector_store/
+# Allow the baked vector store so Railway Docker builds include it
+!services/peditrack-rag-service/vector_store/
+!services/peditrack-rag-service/vector_store/faiss_index
+!services/peditrack-rag-service/vector_store/metadata.json
 services/peditrack-rag-service/logs/
 services/peditrack-rag-service/venv/
 
@@ -60,8 +63,6 @@ logs
 # OS
 Thumbs.db
 .DS_Store
-services/peditrack-rag-service/vector_store/faiss_index
 
 __pycache__/
-
 
