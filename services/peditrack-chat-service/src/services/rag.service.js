@@ -5,7 +5,7 @@ class RAGService {
         this.baseURL = process.env.RAG_SERVICE_URL || 'http://localhost:3002';
         this.client = axios.create({
             baseURL: this.baseURL,
-            timeout: 10000,
+            timeout: 90000, // 90s — reranker on Railway CPU takes ~20-25s per query
             headers: { 'Content-Type': 'application/json' }
         });
         // Tighter timeout for voice path — must not block the first audio token
