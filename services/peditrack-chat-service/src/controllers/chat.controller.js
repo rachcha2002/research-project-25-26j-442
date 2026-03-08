@@ -334,10 +334,143 @@ async function clearHistory(req, res) {
     }
 }
 
+/**
+ * POST /chat/with-rag
+ * Returns a response generated WITH RAG context retrieval.
+ * Useful for comparing against the no-RAG variant.
+ */
+async function sendMessageWithRag(req, res) {
+    try {
+        const { message, conversationId, userId, language } = req.body;
+
+        if (!message || message.trim().length === 0) {
+            return res.status(400).json({ success: false, error: 'Message is required' });
+        }
+
+        const convId = conversationId || uuidv4();
+        const history = conversationStore.getConversation(convId) || [];
+
+        history.push({ role: 'user', content: message, timestamp: new Date().toISOString() });
+
+        const messages = history.map(msg => ({ role: msg.role, content: msg.content }));
+
+        const llmService = getLLMService();
+        const startTime = Date.now();
+        const result = await llmService.generateResponse(messages, {
+            useRAG: true,
+            ragTopK: 6,
+            ragThreshold: 0.35,
+            temperature: 0.7,
+            maxTokens: 1000,
+            language: language || 'en'
+        });
+        const latencyMs = Date.now() - startTime;
+
+        // Fetch the raw retrieved docs for transparency
+        let retrievedDocs = [];
+        try {
+            const ragService = require('../services/rag.service').getRagService();
+            const ragResult = await ragService.retrieveDocuments(message, 6, 0.35);
+            if (ragResult.success && ragResult.documents) {
+                retrievedDocs = ragResult.documents.map(d => ({
+                    source: d.source || d.metadata?.source,
+                    score: d.score,
+                    snippet: (d.text || d.content || '').slice(0, 200)
+                }));
+            }
+        } catch (_) {}
+
+        const assistantMessage = {
+            role: 'assistant',
+            content: result.response,
+            timestamp: new Date().toISOString(),
+            ragUsed: true
+        };
+        history.push(assistantMessage);
+        conversationStore.saveConversation(convId, history);
+
+        res.json({
+            success: true,
+            mode: 'with_rag',
+            conversationId: convId,
+            message: result.response,
+            metadata: {
+                model: result.model,
+                ragUsed: true,
+                latencyMs,
+                retrievedDocuments: retrievedDocs,
+                timestamp: assistantMessage.timestamp
+            }
+        });
+    } catch (error) {
+        console.error('❌ with-rag endpoint error:', error);
+        res.status(500).json({ success: false, error: error.message || 'Failed to process message' });
+    }
+}
+
+/**
+ * POST /chat/without-rag
+ * Returns a response generated WITHOUT RAG — pure LLM only.
+ * Useful for comparing against the RAG-enhanced variant.
+ */
+async function sendMessageWithoutRag(req, res) {
+    try {
+        const { message, conversationId, userId, language } = req.body;
+
+        if (!message || message.trim().length === 0) {
+            return res.status(400).json({ success: false, error: 'Message is required' });
+        }
+
+        const convId = conversationId || uuidv4();
+        const history = conversationStore.getConversation(convId) || [];
+
+        history.push({ role: 'user', content: message, timestamp: new Date().toISOString() });
+
+        const messages = history.map(msg => ({ role: msg.role, content: msg.content }));
+
+        const llmService = getLLMService();
+        const startTime = Date.now();
+        const result = await llmService.generateResponse(messages, {
+            useRAG: false,
+            temperature: 0.7,
+            maxTokens: 1000,
+            language: language || 'en'
+        });
+        const latencyMs = Date.now() - startTime;
+
+        const assistantMessage = {
+            role: 'assistant',
+            content: result.response,
+            timestamp: new Date().toISOString(),
+            ragUsed: false
+        };
+        history.push(assistantMessage);
+        conversationStore.saveConversation(convId, history);
+
+        res.json({
+            success: true,
+            mode: 'without_rag',
+            conversationId: convId,
+            message: result.response,
+            metadata: {
+                model: result.model,
+                ragUsed: false,
+                latencyMs,
+                timestamp: assistantMessage.timestamp
+            }
+        });
+    } catch (error) {
+        console.error('❌ without-rag endpoint error:', error);
+        res.status(500).json({ success: false, error: error.message || 'Failed to process message' });
+    }
+}
+
 module.exports = {
     sendMessage,
     sendMessageWithImage,
     streamMessage,
     getHistory,
-    clearHistory
+    clearHistory,
+    sendMessageWithRag,
+    sendMessageWithoutRag
 };
