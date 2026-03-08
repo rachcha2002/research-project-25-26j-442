@@ -135,6 +135,7 @@ class MultiProviderLLMService {
 
             // Retrieve relevant context from RAG if enabled
             let ragUsed = false;
+            let retrievedDocuments = [];
             if (useRAG && this._isMedicalQuery(userMessage.content)) {
                 try {
                     console.log('🔍 Using RAG for context enhancement...');
@@ -152,6 +153,11 @@ class MultiProviderLLMService {
                         systemPrompt = this._enhanceSystemPromptWithRAG(systemPrompt, cappedContext);
                         console.log(`✅ Enhanced prompt with ${ragResult.count} documents`);
                         ragUsed = true;
+                        retrievedDocuments = (ragResult.documents || []).map(d => ({
+                            source:  d.source  || d.metadata?.source,
+                            score:   d.score,
+                            snippet: (d.text || d.content || '').slice(0, 200)
+                        }));
                     } else {
                         console.log('⚠️  No relevant RAG context found, using base prompt');
                     }
@@ -190,7 +196,8 @@ class MultiProviderLLMService {
                 response: response.content,
                 provider: this.provider,
                 model: this.model.modelName,
-                ragUsed: ragUsed
+                ragUsed: ragUsed,
+                retrievedDocuments: retrievedDocuments
             };
 
         } catch (error) {

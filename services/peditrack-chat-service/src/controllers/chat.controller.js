@@ -366,19 +366,8 @@ async function sendMessageWithRag(req, res) {
         });
         const latencyMs = Date.now() - startTime;
 
-        // Fetch the raw retrieved docs for transparency
-        let retrievedDocs = [];
-        try {
-            const ragService = require('../services/rag.service').getRagService();
-            const ragResult = await ragService.retrieveDocuments(message, 6, 0.35);
-            if (ragResult.success && ragResult.documents) {
-                retrievedDocs = ragResult.documents.map(d => ({
-                    source: d.source || d.metadata?.source,
-                    score: d.score,
-                    snippet: (d.text || d.content || '').slice(0, 200)
-                }));
-            }
-        } catch (_) {}
+        // Use docs already retrieved by the LLM service (no second round-trip)
+        const retrievedDocs = result.retrievedDocuments || [];
 
         const assistantMessage = {
             role: 'assistant',
