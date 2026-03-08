@@ -11,6 +11,7 @@ import {
   Platform,
   Image,
   ActivityIndicator,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -158,6 +159,9 @@ export const EmergencyAssessmentScreen: React.FC = () => {
   // Optional photo (placeholder)
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { width } = useWindowDimensions();
+  const isCompact = width < 380;
+  const isTablet = width >= 768;
 
   // UI Helpers
   const toggleSymptom = (key: string) => {
@@ -315,9 +319,20 @@ export const EmergencyAssessmentScreen: React.FC = () => {
   ];
 
   return (
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          {
+            padding: isCompact ? 14 : 18,
+            maxWidth: isTablet ? 680 : 520,
+            width: '100%',
+            alignSelf: 'center',
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         <SecondaryTopBar  />
-        <Text style={styles.title}>Emergency Assessment</Text>
+        <Text style={[styles.title, { fontSize: isCompact ? 17 : 18 }]}>Emergency Assessment</Text>
 
         {/* Demographics (Profile Info) */}
         <View style={styles.card}>
@@ -333,7 +348,7 @@ export const EmergencyAssessmentScreen: React.FC = () => {
         </View>
 
         {/* Vital Signs (Modern Card) */}
-        <View style={styles.sectionCard}>
+        <View style={[styles.sectionCard, { padding: isCompact ? 14 : 18, borderRadius: isCompact ? 14 : 18 }]}>
           <View style={styles.sectionHeaderRow}>
             <Ionicons name="pulse" size={20} color={Colors.danger} style={{ marginRight: 8 }} />
             <Text style={[styles.cardTitle, { color: Colors.danger }]}>Vital Signs</Text>
@@ -391,7 +406,7 @@ export const EmergencyAssessmentScreen: React.FC = () => {
         </View>
 
         {/* Symptoms (Collapsible Groups) */}
-        <View style={styles.sectionCard}>
+        <View style={[styles.sectionCard, { padding: isCompact ? 14 : 18, borderRadius: isCompact ? 14 : 18 }]}>
           <Text style={styles.cardTitle}>Symptoms</Text>
           {symptomGroups.map((group) => (
             <View key={group.key} style={styles.symptomGroupCard}>
@@ -480,7 +495,7 @@ export const EmergencyAssessmentScreen: React.FC = () => {
         </View>
 
         {/* Danger Signs (Modern Card) */}
-        <View style={styles.sectionCard}>
+        <View style={[styles.sectionCard, { padding: isCompact ? 14 : 18, borderRadius: isCompact ? 14 : 18 }]}>
           <View style={styles.sectionHeaderRow}>
             <Ionicons name="alert" size={20} color={Colors.danger} style={{ marginRight: 8 }} />
             <Text style={[styles.cardTitle, { color: Colors.danger }]}>Danger Signs (ETAT)</Text>
@@ -503,7 +518,7 @@ export const EmergencyAssessmentScreen: React.FC = () => {
         </View>
 
         {/* Feeding & Hydration (Modern Card) */}
-        <View style={styles.sectionCard}>
+        <View style={[styles.sectionCard, { padding: isCompact ? 14 : 18, borderRadius: isCompact ? 14 : 18 }]}>
           <View style={styles.sectionHeaderRow}>
             <Ionicons name="restaurant" size={20} color={Colors.primary} style={{ marginRight: 8 }} />
             <Text style={[styles.cardTitle, { color: Colors.primary }]}>Feeding & Hydration</Text>
@@ -555,7 +570,7 @@ export const EmergencyAssessmentScreen: React.FC = () => {
         </View>
 
         {/* Context & History (Modern Card) */}
-        <View style={styles.sectionCard}>
+        <View style={[styles.sectionCard, { padding: isCompact ? 14 : 18, borderRadius: isCompact ? 14 : 18 }]}>
           <View style={styles.sectionHeaderRow}>
             <Ionicons name="book" size={20} color={Colors.success} style={{ marginRight: 8 }} />
             <Text style={[styles.cardTitle, { color: Colors.success }]}>Context & History</Text>

@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Image,
+  useWindowDimensions,
 } from "react-native";
 import { WebView } from "react-native-webview";
 import { Ionicons } from "@expo/vector-icons";
@@ -25,6 +26,9 @@ const tabOptions = ["All Facilities", "Open Now"] as const;
 type NearbyTab = (typeof tabOptions)[number];
 
 export const NearbyHospitalsScreen: React.FC = () => {
+  const { width } = useWindowDimensions();
+  const isCompact = width < 380;
+  const isTablet = width >= 768;
   const [selectedTab, setSelectedTab] = React.useState<NearbyTab>("All Facilities");
   const [hospitals, setHospitals] = React.useState<NearbyHospital[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -175,18 +179,25 @@ export const NearbyHospitalsScreen: React.FC = () => {
     <View style={styles.container}>
       <ScrollView
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingHorizontal: isCompact ? 14 : 18,
+          paddingBottom: 20,
+          maxWidth: isTablet ? 720 : 560,
+          width: '100%',
+          alignSelf: 'center',
+        }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={() => loadNearbyHospitals(true)} />
         }
       >
         <SecondaryTopBar />
-        <Text style={styles.headerTitle}>Nearby Health Facilities</Text>
+        <Text style={[styles.headerTitle, { fontSize: isCompact ? 17 : 19 }]}>Nearby Health Facilities</Text>
         {/* Tabs */}
         <View style={styles.tabs}>
           {tabOptions.map((tab) => (
             <TouchableOpacity
               key={tab}
-              style={[styles.tab, selectedTab === tab && styles.tabActive]}
+              style={[styles.tab, { paddingHorizontal: isCompact ? 12 : 18 }, selectedTab === tab && styles.tabActive]}
               onPress={() => setSelectedTab(tab)}
             >
               <Text style={[styles.tabText, selectedTab === tab && styles.tabTextActive]}>{tab}</Text>
@@ -232,7 +243,7 @@ export const NearbyHospitalsScreen: React.FC = () => {
         {filteredHospitals.map((h) => {
           const status = statusMeta(h.status);
           return (
-          <View key={h.name} style={styles.hospitalCard}>
+          <View key={h.name} style={[styles.hospitalCard, { padding: isCompact ? 12 : 16 }]}>
             {h.imageUrl ? (
               <Image source={{ uri: h.imageUrl }} style={styles.facilityImage} resizeMode="cover" />
             ) : (

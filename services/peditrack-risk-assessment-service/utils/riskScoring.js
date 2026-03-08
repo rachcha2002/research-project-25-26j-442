@@ -6,15 +6,13 @@ const RISK_RANK = {
   high: 3,
 };
 
-// Keep these 6 labels aligned with your EfficientNet-B0 training classes.
+// Aligned with your MobileNetV2 training classes (from class_labels.json)
 const SKIN_CLASS_RISK_MAP = {
-  // Model labels currently produced by condition_mapping.json
-  Acne_Rosacea: 'low',
-  Atopic_Dermatitis: 'low',
   Bullous_Disease: 'high',
   Cellulitis_Impetigo: 'high',
-  Eczema: 'low',
-  Fungal_Infections: 'medium',
+  Eczema_Atopic_Dermatitis: 'low',
+  Fungal_Infections: 'low',
+  Acne_Rosacea: 'low',
 };
 
 function getHigherRisk(a, b) {
@@ -25,40 +23,39 @@ function getHigherRisk(a, b) {
 
 function getSkinModelRisk(skin_findings) {
   if (!skin_findings || typeof skin_findings !== 'object') {
-    return { risk_level: null, reasons: [] };
+    return { risk_level: null, reasons: [], unconfident_skin: false };
   }
 
-  const predictedClass =
-    typeof skin_findings.predicted_class === 'string' ? skin_findings.predicted_class : null;
-  const confidence =
-    typeof skin_findings.confidence === 'number' ? skin_findings.confidence : null;
+  const predictedClass = typeof skin_findings.predicted_class === 'string' ? skin_findings.predicted_class : null;
+  const confidence = typeof skin_findings.confidence === 'number' ? skin_findings.confidence : null;
 
   if (!predictedClass) {
-    return { risk_level: null, reasons: [] };
+    return { risk_level: null, reasons: [], unconfident_skin: false };
   }
 
   const mappedRisk = SKIN_CLASS_RISK_MAP[predictedClass] || 'medium';
   const reasons = [];
+  const confidencePercentage = confidence !== null ? Math.round(confidence * 100) : 'Unknown';
 
-  if (confidence !== null) {
+  // If confidence is extremely low (<40%), flag it so we can trigger a specific recommendation
+  if (confidence !== null && confidence < 0.40) {
     reasons.push(
-      `Skin model predicted ${predictedClass} (${Math.round(confidence * 100)}% confidence)`
+      `Image analysis inconclusive (confidence: ${confidencePercentage}%). Relying strictly on vital signs.`
     );
-  } else {
-    reasons.push(`Skin model predicted ${predictedClass}`);
+    return { risk_level: 'low', reasons, unconfident_skin: true };
   }
 
-  // Confidence guard: low-confidence predictions are treated conservatively.
-  if (confidence !== null && confidence < 0.55) {
-    reasons.push('Skin model confidence is low; risk adjusted conservatively');
-    return { risk_level: getHigherRisk(mappedRisk, 'medium'), reasons };
+  reasons.push(`Skin model predicted ${predictedClass} (${confidencePercentage}% confidence)`);
+
+  if (confidence !== null && confidence < 0.55 && mappedRisk === 'low') {
+    reasons.push('Skin model confidence is borderline; risk adjusted conservatively for review.');
+    return { risk_level: 'medium', reasons, unconfident_skin: false };
   }
 
-  return { risk_level: mappedRisk, reasons };
+  return { risk_level: mappedRisk, reasons, unconfident_skin: false };
 }
 
 function calculateEDPEWS(vitals) {
-  // Example scoring (simplified):
   let score = 0;
   let reasons = [];
 
@@ -127,7 +124,6 @@ function checkETAT(danger_signs) {
 }
 
 function generateRecommendations(risk_level, reasons) {
-  // Example recommendations
   if (risk_level === 'high') {
     return [{ code: 'ER', label: 'Seek emergency care immediately', urgency: 'critical' }];
   } else if (risk_level === 'medium') {
@@ -141,6 +137,8 @@ function assessRisk(payload) {
   const { vitals = {}, danger_signs = [], skin_findings = null } = payload || {};
   const edpews = calculateEDPEWS(vitals);
   const etatFlag = checkETAT(danger_signs);
+  
+  // Get the skin risk and the new unconfident flag
   const skinRisk = getSkinModelRisk(skin_findings);
 
   let risk_level = 'low';
@@ -158,6 +156,15 @@ function assessRisk(payload) {
 
   const mergedReasons = [...edpews.reasons, ...skinRisk.reasons];
   const recommendations = generateRecommendations(risk_level, mergedReasons);
+
+  // INJECT UNCONFIDENT SKIN RECOMMENDATION HERE
+  if (skinRisk.unconfident_skin) {
+    recommendations.push({
+      code: 'CLINICAL_SKIN_EVAL',
+      label: 'Unable to confidently identify the skin condition from the provided image. Please seek an in-person evaluation from a healthcare provider for an accurate diagnosis.',
+      urgency: 'moderate' 
+    });
+  }
 
   return {
     risk_score: edpews.score,

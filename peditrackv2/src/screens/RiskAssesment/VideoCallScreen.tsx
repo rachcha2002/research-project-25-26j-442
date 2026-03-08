@@ -30,7 +30,6 @@ const VideoTiles: React.FC<{ onRemoteNameChange: (name: string | null) => void }
       onRemoteNameChange(null);
       return;
     }
-
     const remoteName =
       remoteTrack.participant.name ||
       remoteTrack.participant.identity ||

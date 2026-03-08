@@ -27,13 +27,13 @@ export const API_CONFIG = {
 
   // Risk Assessment Service API (port 4000)
   RISK_ASSESSMENT_URL: __DEV__
-  ?`https://risk-assessment-service-production.up.railway.app/api`
-  :`https://your-production-risk-assessment.com/api`,
+  ?`http://${COMPUTER_IP}:4000/api`
+  :`http://${COMPUTER_IP}:4000/api`,
 
   // Teleconsultation Service API (port 4001)
   TELECONSULTATION_URL: __DEV__
     ? `https://teleconsultation-service-production.up.railway.app/api/teleconsultation`
-    : 'https://your-production-risk-assessment.com/api',
+    : `http://${COMPUTER_IP}:4001/api/teleconsultation`,
 
   // Places Proxy API (port 4002)
   PLACES_PROXY_URL: __DEV__
