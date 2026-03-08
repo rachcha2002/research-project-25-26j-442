@@ -30,8 +30,10 @@ ENV/
 env.bak/
 venv.bak/
 
-# Vector Store (generated files)
-vector_store/
+# Vector Store — commit the built index so Railway gets it via COPY in Dockerfile
+# To exclude large re-ingestion runs, only the final index files are needed:
+# vector_store/faiss_index and vector_store/metadata.json
+# vector_store/   <-- no longer ignored
 *.faiss
 *.index
 

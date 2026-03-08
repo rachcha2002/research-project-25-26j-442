@@ -87,14 +87,39 @@ class MultiProviderLLMService {
     }
 
     /**
+     * Build a context-aware RAG query from the last two user turns.
+     * Follow-up questions ("what about for newborns?") get useful context
+     * only when combined with the prior turn's topic.
+     */
+    _buildRagQuery(messages) {
+        const userTurns = messages
+            .filter(m => m.role === 'user')
+            .map(m => m.content.trim());
+        if (userTurns.length >= 2) {
+            // Last prior turn + current turn → richer semantic query
+            return `${userTurns[userTurns.length - 2]} ${userTurns[userTurns.length - 1]}`;
+        }
+        return userTurns[userTurns.length - 1] || '';
+    }
+
+    /**
+     * Skip RAG for trivial conversational messages that carry no medical intent.
+     * Prevents unnecessary network calls and bad context injection.
+     */
+    _isMedicalQuery(text) {
+        if (!text || text.trim().length < 15) return false;   // "ok", "thanks", "yes", etc.
+        return true;
+    }
+
+    /**
      * Generate a chat completion with RAG context
      */
     async generateResponse(messages, options = {}) {
         try {
             const {
                 useRAG = this.useRAG,
-                ragTopK = 5,
-                ragThreshold = 0.0,
+                ragTopK = 3,
+                ragThreshold = 0.35,
                 temperature,
                 maxTokens,
                 language = 'en'
@@ -110,26 +135,32 @@ class MultiProviderLLMService {
 
             // Retrieve relevant context from RAG if enabled
             let ragUsed = false;
-            if (useRAG) {
+            if (useRAG && this._isMedicalQuery(userMessage.content)) {
                 try {
                     console.log('🔍 Using RAG for context enhancement...');
+                    // Use conversation-aware query for better retrieval on follow-ups
+                    const ragQuery = this._buildRagQuery(messages);
                     const ragResult = await this.ragService.retrieveDocuments(
-                        userMessage.content,
+                        ragQuery,
                         ragTopK,
                         ragThreshold
                     );
 
-                    if (ragResult.success && ragResult.context) {
-                        systemPrompt = this._enhanceSystemPromptWithRAG(systemPrompt, ragResult.context);
+                    if (ragResult.success && ragResult.count > 0) {
+                        // Cap context length to avoid diluting the system prompt
+                        const cappedContext = ragResult.context.substring(0, 2500);
+                        systemPrompt = this._enhanceSystemPromptWithRAG(systemPrompt, cappedContext);
                         console.log(`✅ Enhanced prompt with ${ragResult.count} documents`);
                         ragUsed = true;
                     } else {
-                        console.log('⚠️  No RAG context available, using base prompt');
+                        console.log('⚠️  No relevant RAG context found, using base prompt');
                     }
                 } catch (error) {
                     console.warn('⚠️  RAG service error, continuing without RAG:', error.message);
                     // Continue without RAG context
                 }
+            } else if (useRAG) {
+                console.log('⏭️  Skipping RAG for short/trivial message');
             }
 
             // Convert to LangChain messages
@@ -175,8 +206,8 @@ class MultiProviderLLMService {
         try {
             const {
                 useRAG = this.useRAG,
-                ragTopK = 5,
-                ragThreshold = 0.0,
+                ragTopK = 3,
+                ragThreshold = 0.35,
                 language = 'en'
             } = options;
 
@@ -188,23 +219,27 @@ class MultiProviderLLMService {
             let systemPrompt = this._getSystemPrompt(language);
 
             // Retrieve RAG context if enabled
-            if (useRAG) {
+            if (useRAG && this._isMedicalQuery(userMessage.content)) {
                 try {
                     console.log('🔍 Using RAG for streaming response...');
+                    const ragQuery = this._buildRagQuery(messages);
                     const ragResult = await this.ragService.retrieveDocuments(
-                        userMessage.content,
+                        ragQuery,
                         ragTopK,
                         ragThreshold
                     );
 
-                    if (ragResult.success && ragResult.context) {
-                        systemPrompt = this._enhanceSystemPromptWithRAG(systemPrompt, ragResult.context);
+                    if (ragResult.success && ragResult.count > 0) {
+                        const cappedContext = ragResult.context.substring(0, 2500);
+                        systemPrompt = this._enhanceSystemPromptWithRAG(systemPrompt, cappedContext);
                         console.log(`✅ Enhanced prompt with ${ragResult.count} documents`);
                     }
                 } catch (error) {
                     console.warn('⚠️  RAG service error in streaming, continuing without RAG:', error.message);
                     // Continue without RAG context
                 }
+            } else if (useRAG) {
+                console.log('⏭️  Skipping RAG for short/trivial message');
             }
 
             // Convert to LangChain messages
@@ -260,10 +295,16 @@ STRICT RULES:
     _enhanceSystemPromptWithRAG(basePrompt, ragContext) {
         return `${basePrompt}
 
-RELEVANT KNOWLEDGE BASE CONTEXT:
+KNOWLEDGE BASE CONTEXT (retrieved for this conversation):
 ${ragContext}
 
-Use the above context to provide more accurate and specific answers. If the context is relevant to the user's question, incorporate it into your response. If not relevant, rely on your general knowledge.`;
+INSTRUCTIONS FOR USING THIS CONTEXT:
+- Sources tagged [LOCAL] come from local health guidelines and are the most relevant to this user — prioritise them when they address the question.
+- You are the expert. Critically evaluate each source before using it.
+- If a source is clearly relevant and accurate, incorporate it naturally into your response.
+- If a source is only partially relevant, use only the specific part that applies.
+- If a source seems off-topic, contradictory, or of doubtful accuracy for this question, ignore it entirely and rely on your medical knowledge.
+- Never cite source numbers or mention the knowledge base to the user. Just answer naturally.`;
     }
 
     /**

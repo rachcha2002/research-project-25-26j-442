@@ -1,0 +1,863 @@
+[
+  {
+    "id": "CHDR_001",
+    "lankan": true,
+    "context_tags": ["growth_monitoring", "documentation", "CHDR"],
+    "content": {
+      "mandatory_action": "It is important to check baby's growth regularly and have it marked in the CHDR.",
+      "weighing_schedule": "The child should be weighed every month until the 2nd birthday.",
+      "length_milestones": "Length should be measured at least at 4, 9, 12, and 18 months."
+    }
+  },
+  {
+    "id": "CHDR_002",
+    "lankan": true,
+    "context_tags": ["clinical_resources", "midwife", "consultation"],
+    "content": {
+      "parental_resource": "Parents are encouraged to read the yellow pages in the CHDR for guidance.",
+      "support_system": "Ask your Public Health Midwife or doctor to explain anything you do not understand or want to know more about."
+    }
+  },
+  {
+    "id": "CHDR_003",
+    "lankan": true,
+    "context_tags": ["growth_faltering", "special_advice", "clinical_intervention"],
+    "content": {
+      "alert_conditions": "According to the CHDR, if the child is overweight, underweight, or has growth faltering, special nutritional advice is required.",
+      "professional_referral": "Parents must take advice from healthcare staff if growth trends deviate from the standard curve."
+    }
+  },
+  {
+    "id": "CHDR_004",
+    "lankan": true,
+    "context_tags": ["breastfeeding", "complementary_feeding", "180_days"],
+    "content": {
+      "ebf_duration": "Exclusive breastfeeding is required until the completion of 6 months (180 days).",
+      "transition_protocol": "Immediately after 180 days, complementary foods should be introduced in addition to breast milk.",
+      "extended_breastfeeding": "Breast milk should be continued for 2 years and beyond."
+    }
+  },
+  {
+    "id": "CHDR_005",
+    "lankan": true,
+    "context_tags": ["mental_development", "9_12_months", "milestones"],
+    "content": {
+      "physical_milestones": "Between 9-12 months, the child should be able to sit without help and stand by holding onto furniture.",
+      "communication": "The child begins to imitate sounds and can pronounce simple words with meaning.",
+      "cognition": "The child can understand simple instructions, such as 'clap hands' or 'wave goodbye'."
+    }
+  },
+  {
+    "id": "CHDR_006",
+    "lankan": true,
+    "context_tags": ["cognitive_stimulation", "12_months", "parental_tips"],
+    "content": {
+      "mobility": "Provide the child with safe opportunities to walk around the house.",
+      "play_and_learning": "Allow the child to turn pages in a book and involve them in family meal times.",
+      "language_development": "Use correct words when describing objects to the child and talk about things seen in daily life."
+    }
+  },
+  {
+    "id": "CHDR_007",
+    "lankan": true,
+    "context_tags": ["mental_development", "12_18_months", "milestones"],
+    "content": {
+      "motor_skills": "The child can walk without support and can throw a small ball.",
+      "vocabulary": "The child should be able to say at least 2-3 words.",
+      "body_awareness": "The child can identify at least one part of their body (nose, mouth, eyes) when asked."
+    }
+  },
+  {
+    "id": "CHDR_008",
+    "lankan": true,
+    "context_tags": ["cognitive_stimulation", "18_months", "parental_tips"],
+    "content": {
+      "physical_activity": "Allow the child to climb stairs under supervision.",
+      "self_care": "Give the child opportunities to try taking off their own clothes.",
+      "communication_style": "Ask simple questions and use clear, simple language to explain things."
+    }
+  },
+  {
+    "id": "CHDR_009",
+    "lankan": true,
+    "context_tags": ["mental_development", "18_months_2_years", "milestones"],
+    "content": {
+      "walking": "The child can walk and run without help.",
+      "construction_play": "The child can build a tower using 2-3 blocks.",
+      "language": "The child uses about 10 words and can form a simple sentence of at least 2 words (e.g., 'Daddy come')."
+    }
+  },
+  {
+    "id": "CHDR_010",
+    "lankan": true,
+    "context_tags": ["mental_development", "2_years", "parental_tips"],
+    "content": {
+      "balance": "Help the child learn to stand on one foot to improve balance.",
+      "creativity": "Provide opportunities for the child to draw circles, straight lines, and faces.",
+      "hygiene": "Encourage the child to start using the toilet, but do not use force."
+    }
+  },
+  {
+    "id": "CHDR_011",
+    "lankan": true,
+    "context_tags": ["mental_development", "2_3_years", "milestones"],
+    "content": {
+      "advanced_motor": "The child can run and climb stairs without help.",
+      "art_skills": "The child can draw a circle or a curved shape.",
+      "complex_speech": "The child can build sentences with 3 or more words."
+    }
+  },
+  {
+    "id": "CHDR_012",
+    "lankan": true,
+    "context_tags": ["cognitive_stimulation", "3_years", "parental_tips"],
+    "content": {
+      "active_play": "Give the child a chance to jump using one foot.",
+      "sorting": "Allow the child to play with toys that can be grouped by color or shape.",
+      "social_skills": "Encourage the child to wash their own feet and hands."
+    }
+  },
+  {
+    "id": "CHDR_013",
+    "lankan": true,
+    "context_tags": ["mental_development", "3_4_years", "milestones"],
+    "content": {
+      "stability": "The child can stand on one foot.",
+      "dressing": "The child can put on shoes and clothes, although they may struggle with buttons.",
+      "literacy_prep": "The child can copy simple patterns and counts up to three objects."
+    }
+  },
+  {
+    "id": "CHDR_014",
+    "lankan": true,
+    "context_tags": ["immunization_schedule", "BCG", "newborn"],
+    "content": {
+      "timing": "BCG vaccine is given at birth.",
+      "protection": "Protects against tuberculosis."
+    }
+  },
+  {
+    "id": "CHDR_015",
+    "lankan": true,
+    "context_tags": ["immunization_schedule", "2_months", "vaccines"],
+    "content": {
+      "doses": "Polio (OPV) 1 and Pentavalent 1 are administered.",
+      "protection": "Protects against Polio, Diphtheria, Whooping Cough, Tetanus, Hepatitis B, and Hib."
+    }
+  },
+  {
+    "id": "CHDR_016",
+    "lankan": true,
+    "context_tags": ["immunization_schedule", "4_months", "vaccines"],
+    "content": {
+      "doses": "Polio (OPV) 2, fIPV (Fractional Inactivated Polio Vaccine), and Pentavalent 2 are administered."
+    }
+  },
+  {
+    "id": "SL_GUIDE_087",
+    "lankan": true,
+    "context_tags": ["CHDR", "growth_monitoring", "milestones"],
+    "content": {
+      "growth_checks": "Growth should be checked monthly until the 2nd birthday and marked in the CHDR.",
+      "length_checks": "Length is measured at 4, 9, 12, and 18 months."
+    }
+  },
+  {
+    "id": "SL_GUIDE_088",
+    "lankan": true,
+    "context_tags": ["responsive_feeding", "cognitive_development", "mealtime"],
+    "content": {
+      "parental_interaction": "During meals, point out food names, colors, and tastes to stimulate brain development.",
+      "child_experience": "Active interaction makes the child love meal times while enhancing learning."
+    }
+  },
+  {
+    "id": "SL_GUIDE_089",
+    "lankan": true,
+    "context_tags": ["discipline", "parenting_style", "communication"],
+    "content": {
+      "positive_reinforcement": "Use positive words and encourage the child instead of negative commands like 'don't do that'.",
+      "shaming_warning": "Avoid talking about the child's faults to others in front of the child."
+    }
+  },
+  {
+    "id": "SL_GUIDE_090",
+    "lankan": true,
+    "context_tags": ["discipline", "physical_punishment", "consequences"],
+    "content": {
+      "punishment_warning": "Physical punishment (hitting, pulling ears) is not an effective method of discipline and causes mental issues.",
+      "behavioral_focus": "Reject the bad behavior, but do not reject the child."
+    }
+  },
+  {
+    "id": "SL_GUIDE_091",
+    "lankan": true,
+    "context_tags": ["newborn_care", "postpartum", "first_hour"],
+    "content": {
+      "skin_to_skin": "Hold the baby close immediately after birth to keep them warm and encourage breastfeeding within the first hour.",
+      "disease_protection": "Colostrum (first milk) protects the baby from various diseases."
+    }
+  },
+  {
+    "id": "SL_GUIDE_092",
+    "lankan": true,
+    "context_tags": ["safety", "infant", "warning_signs"],
+    "content": {
+      "urgent_symptoms": "Seek immediate medical help if the baby is unusually quiet, crying excessively, or refusing to breastfeed.",
+      "umbilical_care": "Keep the umbilical cord clean and dry."
+    }
+  },
+  {
+    "id": "SL_GUIDE_093",
+    "lankan": true,
+    "context_tags": ["6_9_months", "texture", "variety"],
+    "content": {
+      "intro_phase": "Start with 2-3 teaspoons of well-mashed rice at 6 months.",
+      "diversity_7_months": "Introduce dhal, pumpkin, carrot, liver, and fish gradually."
+    }
+  },
+  {
+    "id": "SL_GUIDE_094",
+    "lankan": true,
+    "context_tags": ["illness_feeding", "recovery", "nutrition"],
+    "content": {
+      "fever_management": "Control fever before offering food as a feverish child will refuse it.",
+      "extra_nutrition": "During recovery, give an extra meal and extra breastfeeds for 2 weeks."
+    }
+  },
+  {
+    "id": "SL_GUIDE_095",
+    "lankan": true,
+    "context_tags": ["9_11_months", "feeding_pattern", "rice_curry"],
+    "content": {
+      "serving_style": "Rice and curries can be served separately and mixed while feeding.",
+      "portion": "Provide 3/4 tea cup of food, 3-4 times a day."
+    }
+  },
+  {
+    "id": "SL_GUIDE_096",
+    "lankan": true,
+    "context_tags": ["1_2_years", "portion_size", "daily_req"],
+    "content": {
+      "main_meals": "3 main meals a day, each slightly more than a tea cup.",
+      "diversity": "Include 5 different types of vegetables and fruits daily."
+    }
+  },
+  {
+    "id": "SL_GUIDE_097",
+    "lankan": true,
+    "context_tags": ["vitamin_a", "megadose", "schedule"],
+    "content": {
+      "schedule": "Vitamin A megadose is given every 6 months starting from age 6 months until 5 years.",
+      "worm_treatment": "Worm treatment is provided every 6 months starting from age 18 months."
+    }
+  },
+  {
+    "id": "CHDR_017",
+    "lankan": true,
+    "context_tags": ["immunization_schedule", "6_months", "vaccines"],
+    "content": {
+      "doses": "Polio (OPV) 3 and Pentavalent 3 are administered."
+    }
+  },
+  {
+    "id": "CHDR_018",
+    "lankan": true,
+    "context_tags": ["immunization_schedule", "9_months", "vaccines"],
+    "content": {
+      "dose": "Measles, Mumps, and Rubella (MMR) 1 is administered."
+    }
+  },
+  {
+    "id": "CHDR_019",
+    "lankan": true,
+    "context_tags": ["immunization_schedule", "12_months", "vaccines"],
+    "content": {
+      "dose": "Japanese Encephalitis (JE) vaccine is administered."
+    }
+  },
+  {
+    "id": "CHDR_020",
+    "lankan": true,
+    "context_tags": ["immunization_schedule", "18_months", "vaccines"],
+    "content": {
+      "doses": "Polio (OPV) 4 and DPT (Triple) booster are administered."
+    }
+  },
+  {
+    "id": "CHDR_021",
+    "lankan": true,
+    "context_tags": ["immunization_schedule", "3_years", "vaccines"],
+    "content": {
+      "dose": "Measles, Mumps, and Rubella (MMR) 2 is administered."
+    }
+  },
+  {
+    "id": "CHDR_022",
+    "lankan": true,
+    "context_tags": ["immunization_schedule", "5_years", "vaccines"],
+    "content": {
+      "doses": "Polio (OPV) 5 and DT (Double) booster are administered."
+    }
+  },
+  {
+    "id": "CHDR_023",
+    "lankan": true,
+    "context_tags": ["vaccination_side_effects", "clinical_advice", "CHDR"],
+    "content": {
+      "common_effects": "Mild fever or swelling at the injection site is normal and does not require special treatment.",
+      "severe_reactions": "Severe reactions are very rare, but if they occur, contact the Public Health Midwife or doctor."
+    }
+  },
+  {
+    "id": "CHDR_024",
+    "lankan": true,
+    "context_tags": ["CHDR", "registration", "Public_Health_Midwife"],
+    "content": {
+      "registration": "As soon as you return home after delivery, inform the Public Health Midwife of your area.",
+      "visit_schedule": "The midwife will visit the home on day 10, between days 11-28, and on day 42 to provide advice."
+    }
+  },
+  {
+    "id": "CHDR_025",
+    "lankan": true,
+    "context_tags": ["CHDR", "exclusive_breastfeeding", "nutritional_adequacy"],
+    "content": {
+      "breast_milk_composition": "Breast milk contains all the nutrients needed for the baby's growth during the first 6 months.",
+      "feeding_frequency": "Feed the baby as often as they desire, both day and night."
+    }
+  },
+  {
+    "id": "CHDR_026",
+    "lankan": true,
+    "context_tags": ["mental_development", "parental_interaction", "sensory_stimulation"],
+    "content": {
+      "bonding": "Hold the baby with love and sing songs/lullabies to them.",
+      "visual_stim": "Keep colorful toys within the baby's eye level to improve focus."
+    }
+  },
+  {
+    "id": "CHDR_027",
+    "lankan": true,
+    "context_tags": ["discipline", "time_out", "behavioral_management"],
+    "content": {
+      "technique": "If a child is out of control, giving them 'time' (removing them from the situation to a quiet space) can help them calm down.",
+      "consistency": "Both parents must agree on the methods used to discipline the child."
+    }
+  },
+  {
+    "id": "CHDR_028",
+    "lankan": true,
+    "context_tags": ["1_2_years", "dietary_requirements", "egg"],
+    "content": {
+      "portion": "A child aged 1-2 years should consume 1 egg per day."
+    }
+  },
+  {
+    "id": "CHDR_029",
+    "lankan": true,
+    "context_tags": ["1_2_years", "dietary_requirements", "sprats"],
+    "content": {
+      "portion": "6-8 sprats should be included in the daily diet."
+    }
+  },
+  {
+    "id": "CHDR_030",
+    "lankan": true,
+    "context_tags": ["1_2_years", "dietary_requirements", "protein"],
+    "content": {
+      "meat_fish": "Two matchbox-sized pieces of fish, chicken, meat, or liver daily.",
+      "kunissan": "Alternatively, 2 tablespoons of Kunissan (small shrimp) can be given."
+    }
+  },
+  {
+    "id": "CHDR_031",
+    "lankan": true,
+    "context_tags": ["1_2_years", "dietary_requirements", "pulses"],
+    "content": {
+      "portion": "3-6 tablespoons of cooked dhal, green gram, or cowpea daily."
+    }
+  },
+  {
+    "id": "CHDR_032",
+    "lankan": true,
+    "context_tags": ["1_2_years", "dietary_requirements", "vegetables"],
+    "content": {
+      "variety": "3-6 tablespoons of different types of vegetables.",
+      "greens": "Half a tea cup of green leafy vegetables daily."
+    }
+  },
+  {
+    "id": "CHDR_033",
+    "lankan": true,
+    "context_tags": ["1_2_years", "dietary_requirements", "dairy"],
+    "content": {
+      "milk_products": "1 cup of curd or yogurt daily.",
+      "cheese": "A matchbox-sized piece of cheese."
+    }
+  },
+  {
+    "id": "CHDR_034",
+    "lankan": true,
+    "context_tags": ["1_2_years", "dietary_requirements", "carbohydrates"],
+    "content": {
+      "staples": "2 cups of rice, milk rice, string hoppers, hoppers, or thosai throughout the day."
+    }
+  },
+  {
+    "id": "CHDR_035",
+    "lankan": true,
+    "context_tags": ["1_2_years", "dietary_requirements", "fruit"],
+    "content": {
+      "portion": "Fruit twice a day (e.g., one medium banana and one orange)."
+    }
+  },
+  {
+    "id": "CHDR_036",
+    "lankan": true,
+    "context_tags": ["snack_definition", "nutrients", "pediatrics"],
+    "content": {
+      "definition": "Snacks are nutritious foods rich in energy and nutrients, taken in small amounts.",
+      "purpose": "They give extra energy and nutrients in a small volume of food."
+    }
+  },
+  {
+    "id": "CHDR_037",
+    "lankan": true,
+    "context_tags": ["snack_examples", "local_foods", "Sri_Lanka"],
+    "content": {
+      "examples": "Boiled potato with butter, boiled egg, yogurt, or local yams with coconut."
+    }
+  },
+  {
+    "id": "CHDR_038",
+    "lankan": true,
+    "context_tags": ["6_weeks_3_months", "mental_development", "milestones"],
+    "content": {
+      "posture": "The baby can lift their head and chest when lying on their stomach.",
+      "focus": "The baby can follow a moving object with their eyes.",
+      "social": "The baby begins to recognize and smile at their mother."
+    }
+  },
+  {
+    "id": "CHDR_039",
+    "lankan": true,
+    "context_tags": ["3_6_months", "mental_development", "milestones"],
+    "content": {
+      "posture": "The baby can hold their head up steadily while sitting.",
+      "hand_eye": "The baby can reach for and hold objects with both hands.",
+      "vocalization": "The baby begins to make 'cooing' sounds and laughs out loud."
+    }
+  },
+  {
+    "id": "CHDR_040",
+    "lankan": true,
+    "context_tags": ["6_9_months", "mental_development", "milestones"],
+    "content": {
+      "mobility": "The baby can sit by themselves and may start to crawl.",
+      "manipulation": "The baby can transfer an object from one hand to the other.",
+      "cognition": "The baby begins to understand that hidden objects still exist (object permanence)."
+    }
+  },
+  {
+    "id": "CHDR_041",
+    "lankan": true,
+    "context_tags": ["formula_milk", "clinical_restriction", "long_term_health"],
+    "content": {
+      "adverse_effects": "Formula milk in the 1st year can have adverse long-term health effects.",
+      "introduction": "The decision to introduce formula milk should only be made by a doctor."
+    }
+  },
+  {
+    "id": "CHDR_042",
+    "lankan": true,
+    "context_tags": ["growth_monitoring", "weight", "frequency"],
+    "content": {
+      "monitoring_frequency": "Weigh the child every month regardless of age if growth issues are present."
+    }
+  },
+  {
+    "id": "CHDR_043",
+    "lankan": true,
+    "context_tags": ["discipline", "consistency", "parenting"],
+    "content": {
+      "parental_agreement": "It is vital for both parents to have a consensus on discipline methods."
+    }
+  },
+  {
+    "id": "CHDR_044",
+    "lankan": true,
+    "context_tags": ["6_months", "complementary_feeding", "rice"],
+    "content": {
+      "first_food": "Very well mashed rice mixed with expressed breast milk.",
+      "initial_amount": "2-3 tea spoons per serving."
+    }
+  },
+  {
+    "id": "CHDR_045",
+    "lankan": true,
+    "context_tags": ["egg_introduction", "yolk", "7_months"],
+    "content": {
+      "yolk_first": "Start with a small bit of boiled egg yolk first, two weeks after starting solid foods.",
+      "white_later": "Introduce boiled egg white about one week after the yolk."
+    }
+  },
+  {
+    "id": "CHDR_046",
+    "lankan": true,
+    "context_tags": ["8_months", "texture", "finger_foods"],
+    "content": {
+      "texture": "Coarsely chopped texture for main meals.",
+      "finger_foods": "Soft center portion of a hopper, bread with butter, or ripe avocado."
+    }
+  },
+  {
+    "id": "CHDR_047",
+    "lankan": true,
+    "context_tags": ["8_months", "safety", "supervision"],
+    "content": {
+      "supervision": "Do not leave the baby alone with finger foods."
+    }
+  },
+  {
+    "id": "CHDR_048",
+    "lankan": true,
+    "context_tags": ["9_11_months", "portion_size", "cups"],
+    "content": {
+      "amount": "3/4 tea cup of food at each meal."
+    }
+  },
+  {
+    "id": "CHDR_049",
+    "lankan": true,
+    "context_tags": ["illness_feeding", "fats", "coconut_milk"],
+    "content": {
+      "additives": "Add oil or thick coconut milk as usual to keep meals energy-dense during illness."
+    }
+  },
+  {
+    "id": "CHDR_050",
+    "lankan": true,
+    "context_tags": ["7_months", "portion", "tea_cups"],
+    "content": {
+      "amount": "1/2 tea cup of coarsely mashed rice per meal."
+    }
+  },
+  {
+    "id": "CHDR_051",
+    "lankan": true,
+    "context_tags": ["7_months", "hydration", "water"],
+    "content": {
+      "hydration": "Offer sips of boiled, cooled water after main meals or snacks."
+    }
+  },
+  {
+    "id": "CHDR_052",
+    "lankan": true,
+    "context_tags": ["7_months_1_week", "portion", "tea_cups"],
+    "content": {
+      "amount": "Half a tea cup of food, 2-3 times a day."
+    }
+  },
+  {
+    "id": "CHDR_053",
+    "lankan": true,
+    "context_tags": ["7_months_1_week", "fruit", "teaspoons"],
+    "content": {
+      "fruit_portion": "About 4 teaspoons of well-mashed fruit after main meals or as a snack."
+    }
+  },
+  {
+    "id": "CHDR_054",
+    "lankan": true,
+    "context_tags": ["7_months_2_weeks", "portion", "tea_cups"],
+    "content": {
+      "amount": "Half a tea cup of coarsely chopped food, 2-3 times a day."
+    }
+  },
+  {
+    "id": "CHDR_055",
+    "lankan": true,
+    "context_tags": ["7_months_2_weeks", "fruit", "teaspoons"],
+    "content": {
+      "fruit_portion": "4-5 tea spoons of scraped fruit after main meals."
+    }
+  },
+  {
+    "id": "CHDR_056",
+    "lankan": true,
+    "context_tags": ["7_months_2_weeks", "snacks", "frequency"],
+    "content": {
+      "frequency": "1-2 snacks a day between main meals."
+    }
+  },
+  {
+    "id": "CHDR_057",
+    "lankan": true,
+    "context_tags": ["4_5_years", "milestones", "speech"],
+    "content": {
+      "language": "The child can use complex sentences and express past, present, and future."
+    }
+  },
+  {
+    "id": "CHDR_058",
+    "lankan": true,
+    "context_tags": ["4_5_years", "milestones", "motor"],
+    "content": {
+      "motor_skills": "The child can jump on one foot and draw a simple person with head and body."
+    }
+  },
+  {
+    "id": "CHDR_059",
+    "lankan": true,
+    "context_tags": ["responsive_feeding", "interaction", "brain_stim"],
+    "content": {
+      "tip": "Maintain eye-to-eye contact when talking lovingly to the baby during feeds."
+    }
+  },
+  {
+    "id": "CHDR_060",
+    "lankan": true,
+    "context_tags": ["infant_safety", "feeding", "distractions"],
+    "content": {
+      "environment": "Feed the baby in a designated place with minimum distraction.",
+      "movement_warning": "Do not feed the baby while they are walking around the house or garden."
+    }
+  },
+  {
+    "id": "CHDR_061",
+    "lankan": true,
+    "context_tags": ["1_2_years", "main_meals", "frequency"],
+    "content": {
+      "frequency": "Three main meals per day plus 1-2 snacks."
+    }
+  },
+  {
+    "id": "CHDR_062",
+    "lankan": true,
+    "context_tags": ["infant_nutrition", "energy_density", "oil"],
+    "content": {
+      "tip": "Temper food with 1-2 tea spoons of oil or butter to increase energy content."
+    }
+  },
+  {
+    "id": "CHDR_063",
+    "lankan": true,
+    "context_tags": ["iron_deficiency", "brain_development", "animal_foods"],
+    "content": {
+      "rationale": "Animal foods provide iron which is critical for brain development in the first 2 years."
+    }
+  },
+  {
+    "id": "CHDR_064",
+    "lankan": true,
+    "context_tags": ["7_months", "texture", "mashing"],
+    "content": {
+      "texture": "Transition from very well mashed to coarsely mashed rice by age 7 months."
+    }
+  },
+  {
+    "id": "CHDR_065",
+    "lankan": true,
+    "context_tags": ["9_months", "main_meals", "frequency"],
+    "content": {
+      "frequency": "3-4 main meals per day."
+    }
+  }
+,
+  {
+    "id": "CHDR_066",
+    "lankan": true,
+    "context_tags": ["breastfeeding", "newborn_care", "colostrum"],
+    "content": {
+      "initial_breastfeeding": "Initiate breastfeeding within the first hour of birth.",
+      "colostrum_benefit": "Colostrum (initial milk) is essential as it protects the baby from various diseases.",
+      "exclusive_duration": "Provide only breast milk until the completion of 6 months; no other liquids are necessary."
+    }
+  },
+  {
+    "id": "CHDR_067",
+    "lankan": true,
+    "context_tags": ["midwife_care", "postpartum_visits", "registration"],
+    "content": {
+      "midwife_registration": "Inform the area Public Health Midwife immediately after returning home following delivery.",
+      "visit_timeline": "The midwife typically visits on day 10, between days 11-28, and on day 42 to examine the mother and baby."
+    }
+  },
+  {
+    "id": "CHDR_068",
+    "lankan": true,
+    "context_tags": ["infant_hygiene", "umbilical_care", "bathing"],
+    "content": {
+      "umbilical_cord": "The umbilical cord must be kept clean and dry at all times.",
+      "daily_cleaning": "If the baby is healthy, they should be cleaned or bathed daily."
+    }
+  },
+  {
+    "id": "CHDR_069",
+    "lankan": true,
+    "context_tags": ["warning_signs", "medical_emergency", "infant_health"],
+    "content": {
+      "danger_signs": "Seek immediate medical care if the baby shows unusual silence, excessive crying, refusal to breastfeed, or a foul-smelling umbilical cord.",
+      "temperature_alerts": "Fever or abnormally low body temperature are critical warning signs in a newborn."
+    }
+  },
+  {
+    "id": "CHDR_070",
+    "lankan": true,
+    "context_tags": ["immunization", "BCG", "vaccine_schedule"],
+    "content": {
+      "BCG_vaccine": "Administered at birth to protect against tuberculosis.",
+      "side_effects": "Mild fever or swelling at the injection site is normal and does not require special treatment."
+    }
+  },
+  {
+    "id": "CHDR_071",
+    "lankan": true,
+    "context_tags": ["immunization", "booster_doses", "school_age"],
+    "content": {
+      "18_month_booster": "OPV 4 and the DPT (Triple) booster are given at 18 months.",
+      "5_year_booster": "OPV 5 and the DT (Double) vaccine are administered upon completion of 5 years.",
+      "11_year_vaccine": "The ATD vaccine (Adult Tetanus and Diphtheria) is given at 11 years."
+    }
+  },
+  {
+    "id": "CHDR_072",
+    "lankan": true,
+    "context_tags": ["dental_health", "teething", "first_tooth"],
+    "content": {
+      "teething_age": "The first milk tooth usually appears between 6-12 months (average 9 months).",
+      "full_set": "A child typically has a full set of 20 milk teeth by 2.5 years of age.",
+      "dental_delay": "If no teeth appear by 12 months, consult a dental surgeon."
+    }
+  },
+  {
+    "id": "CHDR_073",
+    "lankan": true,
+    "context_tags": ["dental_hygiene", "brushing_habits", "fluoride"],
+    "content": {
+      "brushing_initiation": "Start brushing as soon as the first tooth emerges, twice a day.",
+      "fluoride_toothpaste": "Use a small smear of fluoride toothpaste after the child reaches 12 months of age.",
+      "parental_assistance": "Parents should assist with brushing until the child is about 7 years old."
+    }
+  },
+  {
+    "id": "CHDR_074",
+    "lankan": true,
+    "context_tags": ["oral_health_prevention", "cavities", "diet"],
+    "content": {
+      "sugar_restriction": "Limit sugary foods to minimize the risk of tooth decay (cavities).",
+      "night_feeding": "Avoid letting the child sleep while breastfeeding or bottle feeding to prevent tooth decay."
+    }
+  },
+  {
+    "id": "CHDR_075",
+    "lankan": true,
+    "context_tags": ["discipline", "parental_conduct", "positive_parenting"],
+    "content": {
+      "behavioral_focus": "Address and reject the bad behavior, but never reject the child.",
+      "consistent_rules": "Both parents must agree on and maintain consistent disciplinary methods.",
+      "physical_punishment_warning": "Physical punishment like hitting or pulling ears is ineffective and harmful to a child's mental health."
+    }
+  },
+  {
+    "id": "CDC_076",
+    "lankan": true,
+    "context_tags": ["CDC_licensing", "legal_requirement", "validity"],
+    "content": {
+      "license_mandate": "A child development center must obtain a license or temporary permit from the Provincial Department of Probation and Child Care Services before establishing[cite: 191].",
+      "validity_period": "A license for a child development center is valid for only three years from the date of approval[cite: 195].",
+      "renewal_timeline": "Renewal applications must be submitted at least three months prior to the expiry of the existing license[cite: 207]."
+    }
+  },
+  {
+    "id": "CDC_077",
+    "lankan": true,
+    "context_tags": ["staffing_ratios", "caregiver_requirements", "age_groups"],
+    "content": {
+      "under_5_ratio": "There must be at least 1 staff member for every 5 children under 5 years of age[cite: 314].",
+      "over_6_ratio": "There must be at least 3 staff members for every 25 children over 6 years of age[cite: 315].",
+      "gender_policy": "Only female caregivers and managers should be recruited for centers providing care for girls[cite: 233]."
+    }
+  },
+  {
+    "id": "CDC_078",
+    "lankan": true,
+    "context_tags": ["infrastructure_standards", "bedroom_space", "beds"],
+    "content": {
+      "internal_space": "Each child must be provided with 40 sq. ft. of internal bedroom space[cite: 536].",
+      "bed_spacing": "The distance between two beds should be two feet, with one foot of extra space around each bed[cite: 542].",
+      "mosquito_nets": "A mosquito net must be provided for every bed[cite: 541]."
+    }
+  },
+  {
+    "id": "CDC_079",
+    "lankan": true,
+    "context_tags": ["sanitation_facilities", "toilets", "bathrooms"],
+    "content": {
+      "toilet_ratio": "One toilet must be provided for every 8 children[cite: 560].",
+      "bathroom_ratio": "There should be at least one bathroom for every 10 children, equipped with one shower and one wash basin[cite: 577].",
+      "privacy_locks": "Every toilet and bathroom must have a lockable door[cite: 574, 578]."
+    }
+  },
+  {
+    "id": "CDC_080",
+    "lankan": true,
+    "context_tags": ["institutionalization_policy", "child_rights", "social_integration"],
+    "content": {
+      "last_resort": "Institutionalization should be considered a last resort only after all possible alternatives fail[cite: 418].",
+      "economic_prohibition": "Institutionalization must never occur solely due to economic problems[cite: 420].",
+      "adoption_review": "For orphaned or abandoned children under 14, the possibility of adoption should be considered[cite: 428]."
+    }
+  },
+  {
+    "id": "CDC_081",
+    "lankan": true,
+    "context_tags": ["monitoring_and_grading", "NCPA_supervision", "intervention"],
+    "content": {
+      "annual_monitoring": "Monitoring of child development centers is conducted annually by the National Child Protection Authority[cite: 988].",
+      "grading_system": "Centers are classified into Red (immediate intervention), Yellow (needs improvement), and Green (satisfactory) categories based on supervision marks[cite: 993].",
+      "red_category_followup": "Red Category centers must be supervised again within two weeks of the initial assessment[cite: 996]."
+    }
+  },
+  {
+    "id": "CDC_082",
+    "lankan": true,
+    "context_tags": ["safety_protocols", "hazardous_environments", "security"],
+    "content": {
+      "liquor_restriction": "Liquor outlets must not be located within 100 meters of a child development center[cite: 503].",
+      "perimeter_security": "There should be a high wall or protective fence around the center to prevent unauthorized entry[cite: 676].",
+      "security_personnel": "A security guard must be present at all times to ensure child safety[cite: 678]."
+    }
+  },
+  {
+    "id": "CDC_083",
+    "lankan": true,
+    "context_tags": ["educational_standards", "compulsory_schooling", "special_needs"],
+    "content": {
+      "school_attendance": "All children of compulsory school age (16 years or less) must be sent to school regularly[cite: 879].",
+      "vocational_training": "Children beyond compulsory education age should be referred for vocational training courses at their discretion[cite: 862].",
+      "disability_access": "Designing of premises should be accessible to children with disabilities in accordance with national regulations[cite: 533]."
+    }
+  },
+  {
+    "id": "CDC_084",
+    "lankan": true,
+    "context_tags": ["staff_ethics", "conduct_rules", "prohibited_substances"],
+    "content": {
+      "role_models": "Staff members must always serve as role models for the children[cite: 323].",
+      "substance_ban": "It is strictly prohibited for staff to bring drugs, tobacco, or alcohol into the center premises[cite: 326].",
+      "confidentiality": "Staff members are obligated to protect all confidential information regarding the children[cite: 251]."
+    }
+  },
+  {
+    "id": "CDC_085",
+    "lankan": true,
+    "context_tags": ["nutrition_and_menus", "dietary_diversity", "meal_oversight"],
+    "content": {
+      "menu_display": "The daily menu for the children must be kept on display in the center[cite: 619].",
+      "child_participation": "At least five children above age 10 should participate in making decisions regarding daily menus[cite: 622].",
+      "monitoring_meals": "Staff must closely monitor children during meal times[cite: 634]."
+    }
+  }
+]

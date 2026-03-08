@@ -1,0 +1,969 @@
+
+[
+  {
+    "id": "female_growth_CHDR_001",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["growth_charts", "weight_for_age", "monitoring"],
+    "content": {
+      "chart_description": "The female weight-for-age chart is used to track physical growth from birth to 5 years. It uses color-coded zones to indicate nutritional status.",
+      "green_zone": "Represents the standard or 'normal' growth range for a healthy female child.",
+      "yellow_zone": "Indicates the child is 'underweight' or at risk of growth faltering, requiring nutritional intervention.",
+      "red_zone": "Indicates 'severe underweight' or acute malnutrition, requiring immediate medical referral."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_002",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["height_for_age", "stunting", "female_pediatrics"],
+    "content": {
+      "stunting_indicator": "Height-for-age is the primary indicator to identify 'stunting' (chronic malnutrition) in girls.",
+      "measurement_frequency": "Length is measured at 4, 9, and 18 months. Height is measured every 6 months after the age of two.",
+      "clinical_action": "If a girl's height falls below the -2SD line, she is classified as stunted and must be referred for a specialist pediatric review."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_003",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["birth_weight", "newborn", "standards"],
+    "content": {
+      "standard_birth_weight": "A healthy birth weight for a female newborn in Sri Lanka is typically between 2.5kg and 3.5kg.",
+      "low_birth_weight_lbw": "Females born under 2.5kg are classified as LBW and require intensive growth monitoring in the first 6 months.",
+      "iron_supplementation": "LBW and preterm female infants must start iron supplements from 2 months of age to prevent anaemia."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_004",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["growth_faltering", "weight_trends", "clinic"],
+    "content": {
+      "weight_curve_analysis": "A flat or downward curve on the weight chart (even if still in the green zone) is a sign of growth faltering.",
+      "monthly_weighing": "Girls must be weighed monthly until their 2nd birthday at the local weighing post or clinic.",
+      "caregiver_education": "Public Health Midwives must teach mothers of girls how to plot the weight point accurately to see the trend."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_005",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["exclusive_breastfeeding", "6_months", "nutritional_base"],
+    "content": {
+      "ebf_standard": "Exclusive breastfeeding for exactly 180 days is the foundation for optimal growth in female infants.",
+      "growth_boost": "Breast milk contains specific antibodies that reduce the risk of respiratory infections in girls, preserving their growth potential.",
+      "no_water_rule": "Even in hot Sri Lankan weather, no additional water or 'kahata' should be given to female infants before 6 months."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_006",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["vitamin_a_megadose", "female_health", "immunity"],
+    "content": {
+      "megadose_schedule": "Female children receive 100,000 IU of Vitamin A at 9 months, 18 months, and 3 years.",
+      "maternal_postpartum": "Mothers of female newborns receive a 200,000 IU mega dose within 2 weeks of delivery to boost the Vitamin A content in breast milk."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_007",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["anaemia_prevention", "iron_rich_foods", "complementary_feeding"],
+    "content": {
+      "iron_need": "From 7 months, girls should receive daily iron-rich foods like liver, sprats, and pulses mixed with Vitamin C (lemon/lime).",
+      "anaemia_risk": "Nearly 30% of female children under five in SL suffer from iron deficiency, which can permanently impact cognitive growth."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_008",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["mental_development", "milestones", "0_3_months"],
+    "content": {
+      "vision": "By 3 months, a female infant should be able to follow a moving object with her eyes.",
+      "social_smile": "The social smile (recognizing the mother) should be evident by 6-8 weeks.",
+      "neck_control": "She should be able to hold her head steady for a short period when held upright."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_009",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["mental_development", "milestones", "6_9_months"],
+    "content": {
+      "sitting": "A healthy female infant should sit without support by 8-9 months.",
+      "object_permanence": "She begins to look for objects that are hidden from view.",
+      "vocalization": "She starts making repetitive sounds like 'ba-ba' or 'da-da'."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_010",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["mental_development", "milestones", "12_18_months"],
+    "content": {
+      "walking": "Girls typically begin walking without support between 12 and 15 months.",
+      "vocabulary": "She should be able to say at least 2-3 meaningful words (e.g., 'Amma', 'Bothale').",
+      "instruction_following": "She should be able to follow simple one-step commands like 'give me the ball'."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_011",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["dental_growth", "teething", "first_tooth"],
+    "content": {
+      "teething_average": "The first milk tooth in girls usually appears around 9 months.",
+      "full_set": "A full set of 20 milk teeth is expected by 30 months (2.5 years).",
+      "delay_alert": "If no teeth are visible by 12 months, a dental consultation is required."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_012",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["immunization", "booster_schedule", "5_years"],
+    "content": {
+      "final_booster": "At completion of 5 years, girls receive the OPV 5 and DT (Double Tetanus/Diphtheria) vaccine.",
+      "school_entry": "The immunization section of the CHDR must be completed and certified for school admission in Sri Lanka."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_013",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["bmi_for_age", "overweight_prevention", "female_obesity"],
+    "content": {
+      "bmi_chart": "Used from age 2 to 5 years to monitor the weight-to-height ratio.",
+      "overweight_line": "If a girl's BMI plots above the +2SD line, she is classified as overweight and requires a clinical diet review.",
+      "activity_recommendation": "Overweight girls should be encouraged to participate in active play like running and jumping for at least 60 minutes a day."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_014",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["head_circumference", "brain_growth", "infant_girls"],
+    "content": {
+      "measurement_period": "Head circumference is measured from birth to 2 years.",
+      "growth_standard": "Rapid growth in head circumference in the first year indicates healthy brain development.",
+      "abnormal_growth": "Sudden increases or decreases across percentile lines require immediate referral for neurodevelopmental assessment."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_015",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["thriposha", "supplementary_feeding", "eligibility"],
+    "content": {
+      "infant_eligibility": "Girls with growth faltering or who are underweight (in the yellow zone) receive Thriposha from 6 months to 5 years.",
+      "maternal_eligibility": "Breastfeeding mothers of female infants receive Thriposha for the first 6 months to ensure milk quality."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_016",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["physical_growth", "2_years_milestone", "height_standard"],
+    "content": {
+      "height_prediction": "Height at 2 years is often a rough indicator of adult height potential.",
+      "stunting_irreversibility": "Height deficits occurring before age 2 are difficult to correct later, making early growth monitoring vital for girls."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_017",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["hygiene", "nappy_rash", "care_routine"],
+    "content": {
+      "genital_hygiene": "Female infants should be cleaned from 'front to back' after a bowel movement to prevent urinary tract infections (UTIs).",
+      "nappy_care": "Wet nappies should be changed immediately to prevent skin irritation which can cause distress and affect feeding."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_018",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["clinical_monitoring", "CHDR_color_coding", "weight"],
+    "content": {
+      "purple_zone_warning": "If a girl's weight enters the purple zone (obesity), the PHM must investigate consumption of sugary snacks and formula milk."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_019",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["adolescent_transition", "early_signs", "female_physiology"],
+    "content": {
+      "prep_puberty": "Healthy growth in the 4-5 year period prepares the female body for the later nutritional demands of puberty."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_020",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["cognitive_milestones", "social_interaction", "3_years"],
+    "content": {
+      "sentence_structure": "By age 3, a girl should be able to speak sentences with 3 or more words.",
+      "play_behavior": "She begins to engage in imaginative play (e.g., 'playing house' or 'feeding a doll')."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_021",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["growth_charts", "percentiles", "clinical_terms"],
+    "content": {
+      "SD_lines": "The lines on the CHDR charts represent Standard Deviations (SD) from the median growth of the WHO reference population.",
+      "Median_line": "The 0 line is the median. Most healthy girls will grow between the -2SD and +2SD lines."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_022",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["field_weighing_posts", "phm_role", "community_health"],
+    "content": {
+      "weighing_location": "Girls over 6 months are weighed at 'Field Weighing Posts' by the Public Health Midwife (PHM).",
+      "record_keeping": "Parents must carry the CHDR to every weighing session without fail."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_023",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["vaccination_side_effects", "fever", "management"],
+    "content": {
+      "common_reactions": "Mild fever after the Pentavalent vaccine is normal. If fever is high, Paracetamol can be given as per PHM's weight-based dosage."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_024",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["chdr_education", "yellow_pages", "parental_instruction"],
+    "content": {
+      "manual_reference": "Parents are instructed to read the 'Yellow Pages' of the CHDR which contain localized guidance on feeding and milestones."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_025",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["responsive_feeding", "cognitive_link", "female_infants"],
+    "content": {
+      "eye_contact": "Maintaining eye-to-eye contact during feeding a girl stimulates her brain's social processing centers."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_026",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["nutritional_requirement", "energy_density", "coconut_oil"],
+    "content": {
+      "fat_additives": "To ensure steady weight gain on the green curve, add 1-2 teaspoons of coconut oil or butter to the girl's mashed rice."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_027",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["developmental_red_flags", "referral", "hearing"],
+    "content": {
+      "hearing_check": "If a female infant does not startle to loud noises or turn her head to her mother's voice by 3 months, she needs a hearing screening."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_028",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["deworming", "18_months", "growth_protection"],
+    "content": {
+      "worm_treatment": "Girls receive deworming treatment every 6 months starting from age 18 months to prevent nutrient loss."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_029",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["motor_skills", "fine_motor", "milestones"],
+    "content": {
+      "pincer_grasp": "By 9-10 months, a girl should be able to pick up small objects (like a piece of boiled carrot) using her thumb and index finger."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_030",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["dental_hygiene", "toothpaste", "fluoride"],
+    "content": {
+      "brushing_girls": "Start brushing with a smear of fluoride toothpaste as soon as the first tooth appears, typically around 9 months."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_031",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["je_vaccine", "12_months", "encephalitis"],
+    "content": {
+      "japanese_encephalitis": "Administered at 12 months to protect against brain infections."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_032",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["mmr_vaccine", "9_months", "rubella"],
+    "content": {
+      "mmr_1": "Given at 9 months. Protecting girls against Rubella is especially critical for their future reproductive health."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_033",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["physical_activity", "balance", "3_years"],
+    "content": {
+      "standing_foot": "By age 3-4, a girl should be able to stand on one foot for a few seconds."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_034",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["clothing", "growth_indicator", "parent_observation"],
+    "content": {
+      "clothes_fit": "If a girl's clothes don't feel tight over a 4-month period, it may indicate a height growth delay despite stable weight."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_035",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["dietary_diversity", "5_groups", "daily_meals"],
+    "content": {
+      "meal_diversity": "For optimal growth, a girl's daily diet must include items from at least 4-5 food groups (cereals, proteins, dairy, vegetables, fruits)."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_036",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["weight_loss", "illness", "recovery"],
+    "content": {
+      "illness_impact": "Weight loss during a bout of diarrhea or fever is common; provide an extra meal daily for 2 weeks after recovery to 'catch up'."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_037",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["formula_milk_warning", "long_term_health"],
+    "content": {
+      "formula_milk_risks": "Introduction of formula milk in the first year for girls is linked to an increased risk of obesity in later childhood."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_038",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["mental_health", "parental_bond", "bonding"],
+    "content": {
+      "cuddling": "Physical affection and cuddling female infants release hormones that support physiological growth and immune function."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_039",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["stunting_prevalence", "national_stats", "sri_lanka"],
+    "content": {
+      "female_stunting": "National data shows that stunting rates for girls often increase significantly after the 6th month due to improper weaning."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_040",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["caregiver_support", "phm_registration", "postpartum"],
+    "content": {
+      "midwife_visits": "The PHM must visit the home of a female newborn on days 10, 28, and 42 to monitor early growth and maternal health."
+    }
+  }
+,
+  {
+    "id": "female_growth_CHDR_041",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["preterm_charts", "pink_background", "INTERGROWTH-21st"],
+    "content": {
+      "preterm_standard": "Preterm female infants (born before 37 weeks) use specific growth charts with a pink background based on the INTERGROWTH-21st standards.",
+      "transition_rule": "The pink preterm charts are used exclusively until the infant completes 6 months of corrected age, after which they transition to the standard WHO charts.",
+      "plotting_metric": "Measurements for preterm girls must be plotted against the exact gestational age in weeks and days."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_042",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["psychosocial_screening", "red_flags", "18_months"],
+    "content": {
+      "autism_screening": "At the 18-month clinical visit, the CHDR includes a specific checklist for psychosocial development to screen for early signs of Autism Spectrum Disorder (ASD).",
+      "social_red_flags": "If a girl does not point to objects of interest or shows no interest in other children by 18 months, an immediate referral to a consultant pediatrician is required."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_043",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["dental_health", "tooth_eruption", "sequence"],
+    "content": {
+      "eruption_order": "In girls, the lower central incisors usually appear first (6-10 months), followed by the upper central incisors (8-12 months).",
+      "molars": "The first molars typically emerge between 13-19 months, facilitating the transition to more complex family foods."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_044",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["school_medical_inspection", "smi", "grades"],
+    "content": {
+      "inspection_schedule": "Girls undergo School Medical Inspections (SMI) in Grade 1, Grade 4, Grade 7, and Grade 10.",
+      "screening_focus": "Inspections focus on identifying scoliosis, nutritional deficiencies, vision impairment, and goiter (iodine deficiency).",
+      "record_entry": "The results of these medical inspections must be recorded in the School Medical Inspection section (A-Part) of the CHDR."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_045",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["hpv_vaccine", "adolescent_girls", "grade_6"],
+    "content": {
+      "hpv_schedule": "The Human Papillomavirus (HPV) vaccine is administered to girls in Grade 6 to prevent cervical cancer.",
+      "dosage": "It consists of two doses given 6 months apart, and completion must be verified in the adolescent health section of the CHDR."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_046",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["weight_for_length", "wasting_indicator", "acute_malnutrition"],
+    "content": {
+      "wasting_check": "The weight-for-length chart (up to 2 years) is used to identify 'wasting' or thinness.",
+      "clinical_threshold": "A girl plotting below the -3SD line on weight-for-length is diagnosed with Severe Acute Malnutrition (SAM) and requires therapeutic feeding."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_047",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["iodine_deficiency", "goiter_screening", "adolescence"],
+    "content": {
+      "goiter_check": "During school medical exams, the PHM/Doctor checks for enlargement of the thyroid gland, which is statistically more prevalent in adolescent girls in certain regions of Sri Lanka."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_048",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["color_vision", "screening", "grade_1"],
+    "content": {
+      "vision_testing": "Color vision is screened specifically during the Grade 1 medical inspection to identify congenital color blindness early."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_049",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["menstrual_hygiene", "adolescent_health", "yellow_pages"],
+    "content": {
+      "menarche_guidance": "The adolescent section of the 'Yellow Pages' provides culturally sensitive information on managing the first period (menarche) and maintaining iron levels."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_050",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["umbilical_care", "danger_signs", "neonatal"],
+    "content": {
+      "stump_infection": "If the umbilical stump in a female newborn becomes red, swollen, or produces a foul smell, it is a danger sign requiring immediate hospital admission."
+    }
+  }
+,
+  {
+    "id": "female_growth_CHDR_051",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["stool_color_guide", "biliary_atresia", "neonatal_screening"],
+    "content": {
+      "purpose": "The CHDR contains a pictorial stool color card to screen for Biliary Atresia, a serious liver condition in newborns.",
+      "normal_colors": "Stool colors ranging from yellow to green are considered normal and healthy.",
+      "abnormal_colors": "Pale yellow, white, or clay-colored stools are 'alarm colors' indicating a lack of bile.",
+      "urgent_action": "If a female newborn passes clay-colored stools, she must be taken to a pediatric surgeon immediately."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_052",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["immunization", "fIPV", "polio_schedule"],
+    "content": {
+      "fIPV_timing": "Fractional Inactivated Polio Vaccine (fIPV) is administered at 2 months and 4 months of age.",
+      "administration": "It is given intradermally on the upper arm, separate from the Pentavalent injection site.",
+      "rationale": "This provides enhanced protection against Polio Type 2 alongside the standard Oral Polio Vaccine (OPV) drops."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_053",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["adolescent_BMI", "5_19_years", "female_obesity"],
+    "content": {
+      "adolescent_chart": "The CHDR includes BMI-for-age charts specifically for girls from age 5 to 19 years.",
+      "obesity_threshold": "A BMI plotting above +2SD is classified as 'Obese'; above +1SD is 'Overweight'.",
+      "thinness_threshold": "A BMI below -2SD is classified as 'Thinness', requiring investigation for iron deficiency or eating disorders."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_054",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["clinical_referral", "growth_deviation", "PHM_role"],
+    "content": {
+      "referral_triggers": "Immediate referral is required if a girl's weight point crosses two major SD lines downward or if she remains in the red zone for two consecutive months.",
+      "referral_pathway": "PHM refers to the Medical Officer of Health (MOH) or the area Pediatrician.",
+      "back-referral": "Specialists use the back-referral section of the CHDR to advise the PHM on specific nutritional plans for the girl."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_055",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["vitamin_a", "maternal_postpartum", "female_newborn"],
+    "content": {
+      "maternal_mega_dose": "Postpartum mothers receive a 200,000 IU Vitamin A capsule once, within 14 days of the daughter's birth.",
+      "breastfeeding_link": "This dose ensures the nursing girl receives high concentrations of Vitamin A through breast milk for early eye health and immunity."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_056",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["pentavalent_vaccine", "dpt_hepb_hib", "schedule"],
+    "content": {
+      "composition": "The Pentavalent vaccine protects girls against Diphtheria, Pertussis, Tetanus, Hepatitis B, and Haemophilus Influenzae Type B.",
+      "schedule": "Administered at 2, 4, and 6 months of age.",
+      "local_reactions": "Redness or a small lump at the injection site (thigh) is common and usually resolves without treatment."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_057",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["infant_vision", "red_reflex", "neonatal_screening"],
+    "content": {
+      "vision_checks": "The PHM/Doctor performs a 'Red Reflex' test during newborn visits to screen for congenital cataracts or retinoblastoma.",
+      "parental_observation": "Mothers are advised to notice if the daughter's eyes appear 'pearly white' in photographs, which is a critical warning sign."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_058",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["physical_growth", "stunting_irreversibility", "2_years"],
+    "content": {
+      "critical_window": "The first 1000 days (conception to age 2) are the 'window of opportunity' for female growth.",
+      "long_term_risk": "Short stature in adult women in Sri Lanka is often a direct result of untreated stunting before age 2, increasing risks during future childbirth."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_059",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["dental_caries", "feeding_habits", "night_bottles"],
+    "content": {
+      "cavity_prevention": "The CHDR warns against 'Nursing Bottle Caries' caused by giving sugary tea or formula in a bottle, especially at night.",
+      "cleaning_method": "Before teeth emerge, the mother should clean the daughter's gums daily with a clean, damp cloth."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_060",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["psychosocial", "stranger_anxiety", "milestones"],
+    "content": {
+      "stranger_anxiety": "Typically develops in girls around 7-9 months; this is a sign of healthy emotional attachment to the primary caregiver.",
+      "social_referencing": "By 12 months, she should look at her mother's face to check for reactions when encountering something new."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_061",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["deworming", "nutritional_loss", "18_months"],
+    "content": {
+      "worm_infection_signs": "Pica (eating soil), lethargy, and unexplained weight loss in girls may indicate worm infestation.",
+      "prevention_routine": "Mebendazole is given every 6 months to all girls from 18 months to 5 years, regardless of symptoms."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_062",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["heart_screening", "murmurs", "neonatal"],
+    "content": {
+      "cardiac_check": "During the first month, the MO/MOH checks the daughter's heart sounds for murmurs.",
+      "urgent_symptom": "If the girl turns 'blue' (cyanosis) during breastfeeding or crying, it is an emergency indicator of a possible heart defect."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_063",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["school_health", "scoliosis_screening", "adolescent_girls"],
+    "content": {
+      "scoliosis_check": "Screening for abnormal spinal curvature is a priority for girls during the Grade 7 medical inspection.",
+      "referral": "Early detection of scoliosis in adolescent girls allows for non-surgical corrective measures before growth stops."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_064",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["growth_charts", "percentile_interpretation", "SD"],
+    "content": {
+      "median_definition": "The '0' line on the chart represents the median weight/height for a healthy population of girls.",
+      "SD_zones": "The zones between +2SD and -2SD are considered normal growth variances."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_065",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["thriposha_composition", "fortified_food", "underweight"],
+    "content": {
+      "nutrient_profile": "Thriposha provides high-quality protein, iron, and folic acid tailored to the needs of growing girls in Sri Lanka.",
+      "preparation": "It is best consumed as 'Aggala' or mixed with milk; boiling is not recommended as it may degrade certain heat-sensitive vitamins."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_066",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["immunization_certification", "school_admission", "legal"],
+    "content": {
+      "admission_rule": "The immunization section (B-Part) of the CHDR must be signed by a medical officer to prove the girl is fit for school entry.",
+      "missing_doses": "If a girl has missed vaccines, a 'catch-up' schedule must be completed before Grade 1 entry."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_067",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["breastfeeding_position", "latching", "growth_support"],
+    "content": {
+      "positioning_tip": "Correct latching is essential to prevent nipple pain and ensure the girl receives the nutrient-rich 'hindmilk'.",
+      "burping": "The girl should be burped after every feed to prevent colic and possetting (spitting up), which can lead to weight loss."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_068",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["color_blindness", "screening", "Grade_1"],
+    "content": {
+      "Ishihara_test": "Girls are screened for color vision deficiencies in Grade 1 using standardized charts.",
+      "prevalence": "While less common in girls than boys, early detection is vital for classroom learning modifications."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_069",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["anaemia_symptoms", "pica", "nutrient_deficiency"],
+    "content": {
+      "behavioral_signs": "A girl who is pale, tires easily, or eats unusual items (chalk, paper) is likely suffering from iron deficiency anaemia."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_070",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["weight_for_age", "plotting_error", "verification"],
+    "content": {
+      "plotting_accuracy": "If a girl shows a sudden, massive jump or drop in weight, the PHM must re-weigh the child immediately to rule out equipment error."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_071",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["puberty_education", "Grade_6", "menstrual_health"],
+    "content": {
+      "menstrual_hygiene": "School medical teams provide girls in Grade 6 and 7 with education on sanitary products and the importance of continued physical activity during periods."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_072",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["emergency_signs", "neonatal", "female_infant"],
+    "content": {
+      "lethargy": "If a female newborn becomes excessively sleepy and difficult to wake for feeds, she must be taken to the ETU immediately."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_073",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["developmental_milestones", "language", "2_years"],
+    "content": {
+      "vocabulary_2yrs": "By age 2, a girl should have a vocabulary of about 50 words and be able to combine two words (e.g., 'Amma yanna')."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_074",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["hygiene", "skin_care", "baby_powder"],
+    "content": {
+      "powder_warning": "The use of baby powder in the nappy area for girls is discouraged due to risks of inhalation and localized irritation."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_075",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["weight_monitoring", "travel", "chdr_portability"],
+    "content": {
+      "travel_protocol": "If traveling within Sri Lanka for more than a month, parents must take the CHDR and visit the local clinic in the new area for the daughter's weighing."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_076",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["nutrition", "protein_sources", "local_foods"],
+    "content": {
+      "animal_protein": "Egg, fish, and soft-cooked liver are prioritized protein sources for girls starting from 7 months."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_077",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["motor_milestones", "stair_climbing", "18_months"],
+    "content": {
+      "stairs": "By 18-21 months, a girl should be able to walk up stairs while holding a hand or the railing."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_078",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["mental_development", "imitation", "9_months"],
+    "content": {
+      "imitation_skills": "A 9-10 month old girl begins to imitate actions like clapping ('Appudi') or waving goodbye ('Tata')."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_079",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["immunization", "BCG_scar", "newborn"],
+    "content": {
+      "scar_verification": "The PHM checks for the BCG scar on the daughter's left arm at 6 weeks. If no scar is present, a re-vaccination may be required."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_080",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["health_card_security", "replacement", "legal"],
+    "content": {
+      "loss_of_card": "If the CHDR is lost, parents must report to the MOH office immediately for a replacement; the card is a vital legal and medical document."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_081",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["female_puberty", "growth_spurt", "nutrition"],
+    "content": {
+      "growth_acceleration": "Girls typically experience their peak growth spurt just before menarche. Adequate Calcium and Vitamin D are vital during this phase."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_082",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["oral_rehydration", "diarrhea", "growth_protection"],
+    "content": {
+      "ORS_use": "During diarrhea, Jeewani (ORS) should be given to the girl after every loose motion to prevent dehydration and subsequent weight fall."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_083",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["cognitive_milestones", "sorting", "3_years"],
+    "content": {
+      "sorting_objects": "By age 3, a girl can sort toys by color or shape, indicating developing logical skills."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_084",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["physical_safety", "burn_prevention", "environment"],
+    "content": {
+      "home_safety": "The CHDR advises keeping hot fluids and lamps (kuppi lamp) out of reach, as burns are a leading cause of childhood injury in SL."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_085",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["iron_rich_greens", "gotukola", "cooking_tips"],
+    "content": {
+      "leafy_greens": "Finely shredded Gotukola or Mukunuwenna should be added to the daughter's meals daily to boost iron levels."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_086",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["infant_sleep", "sudden_death_prevention", "positioning"],
+    "content": {
+      "back_to_sleep": "Girls should always be placed on their backs to sleep on a firm surface to prevent SIDS."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_087",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["dental_health", "fluorosis", "prevention"],
+    "content": {
+      "toothpaste_amount": "Only a pea-sized amount of toothpaste should be used for girls over age 3 to prevent swallowing too much fluoride."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_088",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["growth_indicators", "clothes_size", "long_term"],
+    "content": {
+      "size_stagnation": "If a girl stays in the same dress size for a year, it is a clinical red flag for growth even if weight is stable."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_089",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["immunization", "MMR_2", "3_years"],
+    "content": {
+      "measles_rubella": "The second MMR dose is given at 3 years to ensure long-term immunity."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_090",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["mental_development", "drawing", "4_years"],
+    "content": {
+      "drawing_skills": "By age 4, a girl should be able to draw a person with at least 3 body parts (head, trunk, limbs)."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_091",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["goiter_screening", "Grade_10", "iodine"],
+    "content": {
+      "thyroid_check": "Final goiter screening in the CHDR occurs in Grade 10 to ensure adolescent iodine sufficiency."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_092",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["hygiene", "hand_washing", "Grade_1"],
+    "content": {
+      "self_care": "During Grade 1 medicals, the ability to wash hands properly with soap is verified as a hygiene milestone."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_093",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["growth_charts", "corrected_age", "preterm"],
+    "content": {
+      "plotting_preterm": "For a girl born at 32 weeks, her 4-month weight is plotted at the '2-month' corrected age mark on the chart."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_094",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["nutrition", "snack_timing", "appetite"],
+    "content": {
+      "snack_rules": "Healthy snacks should be given at least 2 hours before a main meal to avoid spoiling the girl's appetite."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_095",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["mental_milestones", "toilet_training", "2_years"],
+    "content": {
+      "toilet_readiness": "Girls often show readiness for toilet training (staying dry for 2 hours) between 24 and 30 months."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_096",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["clinical_monitoring", "heart_rate", "infants"],
+    "content": {
+      "pulse_check": "During MOH clinics, femoral pulses are checked in female infants to rule out Coarctation of the Aorta."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_097",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["language_milestones", "pronunciation", "3_years"],
+    "content": {
+      "speech_clarity": "By age 3, a girl's speech should be understandable to strangers about 75% of the time."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_098",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["weight_for_height", "wasting", "acutely_ill"],
+    "content": {
+      "acute_check": "If a girl has a sudden appetite loss and appears thin, weight-for-height must be checked to assess for wasting."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_099",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["mental_development", "sharing", "3_years"],
+    "content": {
+      "social_play": "A 3-year-old girl begins to understand the concept of 'taking turns' with other children."
+    }
+  },
+  {
+    "id": "female_growth_CHDR_100",
+    "lankan": true,
+    "gender": "female",
+    "context_tags": ["chdr_final", "transition_to_adult_records", "19_years"],
+    "content": {
+      "end_of_chdr": "The CHDR female record concludes at age 19, after which the young woman transitions to standard adult health records."
+    }
+  }
+]
