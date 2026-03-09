@@ -14,6 +14,23 @@ class RAGService {
             timeout: 4000,
             headers: { 'Content-Type': 'application/json' }
         });
+
+        // In-memory result cache — avoids repeated slow reranker calls for identical queries
+        this._cache = new Map();
+        this._cacheTTL = parseInt(process.env.RAG_CACHE_TTL_MS) || 300000; // 5 minutes
+    }
+
+    /** Build a stable cache key from query + retrieval params */
+    _getCacheKey(query, topK, threshold) {
+        return `${query.trim().toLowerCase()}|${topK}|${threshold}`;
+    }
+
+    /** Evict all expired entries (called when cache grows large) */
+    _pruneCache() {
+        const now = Date.now();
+        for (const [key, entry] of this._cache) {
+            if (now >= entry.expires) this._cache.delete(key);
+        }
     }
 
     /**
@@ -24,6 +41,14 @@ class RAGService {
      * @returns {Promise<Object>} Retrieved documents and context
      */
     async retrieveDocuments(query, topK = 6, similarityThreshold = 0.0) {
+        // Serve from cache when available — eliminates the reranker round-trip
+        const cacheKey = this._getCacheKey(query, topK, similarityThreshold);
+        const cached = this._cache.get(cacheKey);
+        if (cached && Date.now() < cached.expires) {
+            console.log('⚡ RAG: Cache hit — skipping retrieval');
+            return cached.result;
+        }
+
         try {
             console.log(`📚 RAG: Retrieving documents for query: "${query.substring(0, 50)}..."`);
 
@@ -35,12 +60,16 @@ class RAGService {
 
             if (response.data.success) {
                 console.log(`✅ RAG: Retrieved ${response.data.count} documents`);
-                return {
+                const result = {
                     success: true,
                     documents: response.data.documents,
                     context: response.data.context,
                     count: response.data.count
                 };
+                // Store in cache; prune if the map is getting large
+                this._cache.set(cacheKey, { result, expires: Date.now() + this._cacheTTL });
+                if (this._cache.size > 200) this._pruneCache();
+                return result;
             } else {
                 throw new Error('RAG retrieval failed');
             }

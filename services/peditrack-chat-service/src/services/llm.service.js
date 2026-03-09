@@ -169,8 +169,15 @@ class MultiProviderLLMService {
                 console.log('⏭️  Skipping RAG for short/trivial message');
             }
 
+            // Trim history to last 10 messages (5 turns) before sending to LLM.
+            // The full history is preserved in conversationStore — this only reduces LLM token count.
+            const MAX_CONTEXT_MESSAGES = 10;
+            const contextMessages = messages.length > MAX_CONTEXT_MESSAGES
+                ? messages.slice(-MAX_CONTEXT_MESSAGES)
+                : messages;
+
             // Convert to LangChain messages
-            const langchainMessages = this.convertToLangChainMessages(messages, systemPrompt);
+            const langchainMessages = this.convertToLangChainMessages(contextMessages, systemPrompt);
 
             // Override temperature/maxTokens if provided
             if (temperature !== undefined) {
@@ -249,8 +256,14 @@ class MultiProviderLLMService {
                 console.log('⏭️  Skipping RAG for short/trivial message');
             }
 
+            // Trim history to last 10 messages (5 turns) before sending to LLM.
+            const MAX_CONTEXT_MESSAGES = 10;
+            const contextMessages = messages.length > MAX_CONTEXT_MESSAGES
+                ? messages.slice(-MAX_CONTEXT_MESSAGES)
+                : messages;
+
             // Convert to LangChain messages
-            const langchainMessages = this.convertToLangChainMessages(messages, systemPrompt);
+            const langchainMessages = this.convertToLangChainMessages(contextMessages, systemPrompt);
 
             // Stream from LLM
             console.log(`📡 Streaming from ${this.provider}...`);
