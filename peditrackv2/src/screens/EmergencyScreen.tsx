@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
@@ -35,6 +35,16 @@ const teleStatusText = (status: string) => {
 export const EmergencyScreen: React.FC = () => {
   const { user } = useAuth();
   const [recentActivity, setRecentActivity] = React.useState<RecentActivityItem[]>([]);
+  const { width } = useWindowDimensions();
+
+  const isCompact = width < 380;
+  const isTablet = width >= 768;
+  const contentMaxWidth = isTablet ? 560 : 420;
+  const sectionHorizontalPadding = isCompact ? 14 : 20;
+  const actionCardPadding = isCompact ? 16 : 25;
+  const actionCardGap = isCompact ? 12 : 18;
+  const iconSize = isCompact ? 28 : 32;
+  const iconCircleSize = isCompact ? 46 : 54;
 
   const handleOpenActivity = (item: RecentActivityItem) => {
     if (item.type === 'Teleconsultation' && item.requestId) {
@@ -126,44 +136,45 @@ export const EmergencyScreen: React.FC = () => {
       <View >
         <ScrollView
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContainer}
         >
           <SecondaryTopBar />
           {/* Main Actions */}
-          <View style={styles.actionsWrap}>
+          <View style={[styles.actionsWrap, { maxWidth: contentMaxWidth, padding: sectionHorizontalPadding, gap: actionCardGap }]}>
             {/* ...existing code for action cards... */}
-            <TouchableOpacity style={[styles.actionCard, { borderLeftColor: Colors.primary.DEFAULT }]} onPress={() => router.push('/emergency-response/assessment' as any)}>
-              <View style={[styles.iconCircle, { backgroundColor: Colors.primary.DEFAULT + '22' }]}> 
-                <MaterialCommunityIcons name="clipboard-text-search-outline" size={32} color={Colors.primary.DEFAULT} />
+            <TouchableOpacity style={[styles.actionCard, { borderLeftColor: Colors.primary.DEFAULT, padding: actionCardPadding, gap: actionCardGap }]} onPress={() => router.push('/emergency-response/assessment' as any)}>
+              <View style={[styles.iconCircle, { backgroundColor: Colors.primary.DEFAULT + '22', width: iconCircleSize, height: iconCircleSize, borderRadius: iconCircleSize / 2 }]}> 
+                <MaterialCommunityIcons name="clipboard-text-search-outline" size={iconSize} color={Colors.primary.DEFAULT} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.actionTitle, { color: Colors.primary.DEFAULT }]}>Risk Assessment</Text>
-                <Text style={styles.actionDesc}>Quickly assess your child's emergency risk</Text>
+                <Text style={[styles.actionTitle, { color: Colors.primary.DEFAULT, fontSize: isCompact ? 16 : 18 }]}>Risk Assessment</Text>
+                <Text style={[styles.actionDesc, { fontSize: isCompact ? 13 : 14 }]}>Quickly assess your child's emergency risk</Text>
               </View>
               <Ionicons name="chevron-forward" size={22} color="#94A3B8" />
             </TouchableOpacity>
-            <View style={[styles.actionCard, { borderLeftColor: '#F43F5E' }]} >
-              <View style={[styles.iconCircle, { backgroundColor: '#F43F5E22' }]}> 
-                <MaterialCommunityIcons name="video-account" size={32} color="#F43F5E" />
+            <View style={[styles.actionCard, { borderLeftColor: '#F43F5E', padding: actionCardPadding, gap: actionCardGap }]} >
+              <View style={[styles.iconCircle, { backgroundColor: '#F43F5E22', width: iconCircleSize, height: iconCircleSize, borderRadius: iconCircleSize / 2 }]}> 
+                <MaterialCommunityIcons name="video-account" size={iconSize} color="#F43F5E" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.actionTitle, { color: '#F43F5E' }]}>Teleconsultation</Text>
-                <Text style={styles.actionDesc}>Connect instantly with a pediatrician</Text>
-                <Text style={[styles.actionDesc, { color: '#c19a1b' }]}>Premium Feature</Text>
+                <Text style={[styles.actionTitle, { color: '#F43F5E', fontSize: isCompact ? 16 : 18 }]}>Teleconsultation</Text>
+                <Text style={[styles.actionDesc, { fontSize: isCompact ? 13 : 14 }]}>Connect instantly with a pediatrician</Text>
+                <Text style={[styles.actionDesc, { color: '#c19a1b', fontSize: isCompact ? 13 : 14 }]}>Premium Feature</Text>
               </View>
             </View>
-            <TouchableOpacity style={[styles.actionCard, { borderLeftColor: '#6366F1' }]} onPress={() => router.push('/emergency-response/nearby-hospitals' as any)}>
-              <View style={[styles.iconCircle, { backgroundColor: '#6366F122' }]}> 
-                <Ionicons name="medkit" size={32} color="#6366F1" />
+            <TouchableOpacity style={[styles.actionCard, { borderLeftColor: '#6366F1', padding: actionCardPadding, gap: actionCardGap }]} onPress={() => router.push('/emergency-response/nearby-hospitals' as any)}>
+              <View style={[styles.iconCircle, { backgroundColor: '#6366F122', width: iconCircleSize, height: iconCircleSize, borderRadius: iconCircleSize / 2 }]}> 
+                <Ionicons name="medkit" size={iconSize} color="#6366F1" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.actionTitle, { color: '#6366F1' }]}>Nearby Hospitals</Text>
-                <Text style={styles.actionDesc}>Find the closest healthcare facilities</Text>
+                <Text style={[styles.actionTitle, { color: '#6366F1', fontSize: isCompact ? 16 : 18 }]}>Nearby Hospitals</Text>
+                <Text style={[styles.actionDesc, { fontSize: isCompact ? 13 : 14 }]}>Find the closest healthcare facilities</Text>
               </View>
               <Ionicons name="chevron-forward" size={22} color="#94A3B8" />
             </TouchableOpacity>
           </View>
           {/* Recent Activity */}
-          <View style={styles.recentActivityWrap}>
+          <View style={[styles.recentActivityWrap, { maxWidth: contentMaxWidth, padding: isCompact ? 14 : 20 }]}>
             <Text style={styles.recentActivityTitle}>Recent Activity</Text>
             {recentActivity.length === 0 && (
               <Text style={styles.recentEmpty}>No recent teleconsultations or assessment reports yet.</Text>
@@ -176,11 +187,11 @@ export const EmergencyScreen: React.FC = () => {
                   color={item.type === 'Assessment' ? Colors.primary.DEFAULT : '#F43F5E'}
                   style={{ marginRight: 8 }}
                 />
-                <View style={{ flex: 1 }}>
+                <View style={styles.recentTextWrap}>
                   <Text style={styles.recentType}>{item.type}</Text>
                   <Text style={styles.recentSummary}>{item.summary}</Text>
                 </View>
-                <Text style={styles.recentDate}>{item.date}</Text>
+                <Text style={[styles.recentDate, { minWidth: isCompact ? 56 : 70 }]} numberOfLines={1}>{item.date}</Text>
                 <Ionicons name="chevron-forward" size={16} color="#94A3B8" style={{ marginLeft: 6 }} />
               </TouchableOpacity>
             ))}
@@ -196,6 +207,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
     
+  },
+  scrollContainer: {
+    paddingBottom: 24,
   },
   emergencyHeader: {
     flexDirection: "row",
@@ -323,6 +337,10 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       marginBottom: 10,
       gap: 4,
+    },
+    recentTextWrap: {
+      flex: 1,
+      minWidth: 0,
     },
     recentType: {
       fontSize: 14,

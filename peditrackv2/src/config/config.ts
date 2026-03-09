@@ -35,7 +35,7 @@ export const API_CONFIG = {
   // Teleconsultation Service API (port 4001)
   TELECONSULTATION_URL: __DEV__
     ? `https://teleconsultation-service-production.up.railway.app/api/teleconsultation`
-    : 'https://your-production-risk-assessment.com/api',
+    : `http://${COMPUTER_IP}:4001/api/teleconsultation`,
 
   // Places Proxy API (port 4002)
   PLACES_PROXY_URL: __DEV__
@@ -49,12 +49,12 @@ export const API_CONFIG = {
 
   // Meal Recommendation Service API (port 5050)
   MEAL_RECOMMENDATION_SERVICE_URL: __DEV__
-    ? `https://meal-recommendation-service-production.up.railway.app/`
+    ? `https://meal-recommendation-service-production.up.railway.app`
     : 'https://your-production-meal-service.com',
 
   // Nutrition Extraction Service API (port 5560)
   NUTRITION_EXTRACTION_SERVICE_URL: __DEV__
-    ? `https://nutrition-extraction-service-production.up.railway.app/`
+    ? `https://nutrition-extraction-service-production.up.railway.app`
     : 'https://your-production-nutrition-extraction-service.com',
 
   // Nutrition Share / Social Feed Service (port 3007)
