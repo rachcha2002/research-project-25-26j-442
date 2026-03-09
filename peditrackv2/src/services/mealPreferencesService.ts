@@ -40,7 +40,7 @@ export const getMealPreference = async ({
 export const createMealPreference = async (
   payload: MealPreference,
 ): Promise<MealPreference> => {
-  const response = await fetch(`${BASE_URL}/meal-preferences`, {
+  const response = await fetch(`${BASE_URL}/meal-preferences/`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -52,7 +52,7 @@ export const createMealPreference = async (
 export const updateMealPreference = async (
   payload: MealPreference,
 ): Promise<MealPreference> => {
-  const response = await fetch(`${BASE_URL}/meal-preferences`, {
+  const response = await fetch(`${BASE_URL}/meal-preferences/`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
