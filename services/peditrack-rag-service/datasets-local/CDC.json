@@ -1,0 +1,283 @@
+[
+    {
+    "id": "SL_CDC_001",
+    "lankan": true,
+    "source": "National Guidelines and Minimum Standards for Child Development Centres in Sri Lanka",
+    "authority": [
+      "National Child Protection Authority (NCPA)",
+      "Ministry of Women, Child Affairs and Social Empowerment"
+    ],
+    "context_tags": ["metadata", "legal_framework", "definitions"],
+    "content": {
+      "title": "National Guidelines and Minimum Standards for Child Development Centres in Sri Lanka [cite: 1]",
+      "definition": "A child development centre (children's home) is an organization providing love, protection, and accommodation to children looked after by persons other than their relations[cite: 171]. It must be licensed by the Provincial Department of Probation and Childcare[cite: 172].",
+      "target_group": "Children defined as any person below 18 years of age[cite: 185].",
+      "objectives": [
+        "Ensuring protection and developmental needs are met[cite: 161].",
+        "Enhancing professional service quality[cite: 163].",
+        "Establishing a safe, child-friendly environment[cite: 169]."
+      ]
+    }
+  },
+  {
+    "id": "SL_CDC_002",
+    "lankan": true,
+    "context_tags": ["legal", "registration", "licensing"],
+    "content": {
+      "licensing_rules": "Applicants must obtain a license or temporary permit before establishing a center[cite: 191]. Licenses are valid for 3 years[cite: 195].",
+      "management_committee": "Must consist of at least five members, with at least three being permanent residents of the area[cite: 194].",
+      "rejection_criteria": "If child safety is endangered or standards aren't met, the Provincial Commissioner can revoke the license and transfer children to safer locations[cite: 217, 218, 219]."
+    }
+  },
+  {
+    "id": "SL_CDC_003",
+    "lankan": true,
+    "context_tags": ["staffing", "caregiver_qualifications", "safety"],
+    "content": {
+      "hiring_standards": "Staff must have prior approval from the Provincial Department of Probation and Child Care, renewable every 2 years[cite: 227]. Performance is reviewed after a 9-month probation[cite: 232].",
+      "manager_qualifications": "Must be aged 30-60, a Sri Lankan citizen, and hold NVQ Level 6 in Child Development[cite: 255, 256, 260, 261].",
+      "caregiver_qualifications": "Must be aged 22-60 and hold NVQ Level 4 in Child Development[cite: 279, 282].",
+      "gender_policy": "Only female managers and caregivers are recruited for centers providing care for girls[cite: 233].",
+      "ratios": [
+        "1 staff member for every 5 children under age 5[cite: 314].",
+        "3 staff members for every 25 children over age 6[cite: 315]."
+      ]
+    }
+  },
+  {
+    "id": "SL_CDC_004",
+    "lankan": true,
+    "context_tags": ["pediatric_health", "medical_care", "nutrition"],
+    "content": {
+      "first_aid": "Every building must have a fully supplied, locked first aid box accessible only to staff[cite: 760, 762]. One staff member on duty must be trained in first aid for infants and children[cite: 768].",
+      "medical_monitoring": [
+        "Children 0-5 years must be seen by Family Health Midwives; weight and height measured monthly[cite: 773].",
+        "Every child under 5 must have a health growth card[cite: 775].",
+        "Annual medical exams and bi-annual dental checkups are mandatory[cite: 778, 781]."
+      ],
+      "nutrition": "Daily menus must be displayed[cite: 619]. Food must be tailored to age, health, and religious needs[cite: 623, 626, 627].",
+      "immunization": "Centers must refer children for age-appropriate immunization and maintain records[cite: 782]."
+    }
+  },
+  {
+    "id": "SL_CDC_005",
+    "lankan": true,
+    "context_tags": ["environment", "safety", "play_standards"],
+    "content": {
+      "physical_space": "Each child requires 40 sq. ft. of internal bedroom space[cite: 536]. One toilet is required for every 8 children[cite: 560].",
+      "hazardous_substances": "Drugs, tobacco, and toxic cleaning materials are strictly prohibited on premises[cite: 326, 719]. Furniture must be lead-paint free[cite: 728].",
+      "security": "Centers must have a protective fence/wall and 24-hour security guards[cite: 676, 679].",
+      "sanitation": "Waste must be sorted into separate bins: biodegradable, plastic, paper, and glass[cite: 751, 752, 753, 754]."
+    }
+  },
+  {
+    "id": "SL_CDC_006",
+    "lankan": true,
+    "context_tags": ["child_protection", "discipline", "social_integration"],
+    "content": {
+      "prohibited_punishments": [
+        "Physical punishment, emotional harassment, or psychological abuse are strictly forbidden[cite: 336, 924].",
+        "Depriving children of food, sleep, or medical care as punishment is prohibited[cite: 925, 926, 929].",
+        "Locking children in rooms or name-calling is prohibited[cite: 931, 939]."
+      ],
+      "social_integration": "Institutionalization is a last resort; economic problems are never a valid reason for admission[cite: 418, 420]. Child victims and juvenile offenders must be kept in separate centers[cite: 423].",
+      "education": "Regular schooling is compulsory for children 16 years and under[cite: 879]."
+    }
+  },
+  {
+    "id": "SL_CDC_007",
+    "lankan": true,
+    "context_tags": ["infrastructure", "sanitation", "water_safety"],
+    "content": {
+      "toilet_standards": "One toilet must be provided for every 8 children[cite: 560]. Toilets should be mopped and kept dry to prevent slipping[cite: 573].",
+      "bath_facilities": "At least one bathroom (with shower and wash basin) for every 10 children[cite: 577]. Separate facilities are mandatory for boys and girls[cite: 585].",
+      "water_safety": "Centers must have an adequate supply of safe drinking water[cite: 639]. If using a well, it must be cleaned/emptied at least once a year[cite: 641].",
+      "potty_training": "For infants, at least one potty for every three children is required[cite: 565]. Nappies are required for children under 2 years[cite: 563]."
+    }
+  },
+  {
+    "id": "SL_CDC_008",
+    "lankan": true,
+    "context_tags": ["health_protocol", "medication_safety", "immunization"],
+    "content": {
+      "medication_storage": "All medicines must be securely locked and inaccessible to children[cite: 811]. They must be kept in original packaging and clearly labeled[cite: 814].",
+      "medical_exams": "A full medical examination is required within 2 weeks of a child's admission[cite: 792].",
+      "emergency_protocol": "The nearest hospital must be identified for emergencies, and children must be transported immediately if urgent care is needed[cite: 785, 786].",
+      "malnutrition": "Malnourished children must be referred to a nutrition center to improve their status[cite: 783]."
+    }
+  },
+  {
+    "id": "SL_CDC_009",
+    "lankan": true,
+    "context_tags": ["infant_care", "toddler_development", "early_childhood"],
+    "content": {
+      "infant_groups": "Babies (4 months to 1 year) should be cared for in groups of maximum three babies per group[cite: 818].",
+      "feeding_safety": "The temperature of prepared milk must be checked before feeding[cite: 824]. Feeding milk via a cup is recommended over bottles[cite: 826].",
+      "posture_care": "While awake, an infant's or toddler's posture should be changed at least once every 30 minutes[cite: 821, 836].",
+      "toddler_stimulation": "Sensory kinetic stimulation through singing, rhythmic actions, and nature-based play is required for ages 1-3[cite: 828, 830]."
+    }
+  },
+  {
+    "id": "SL_CDC_010",
+    "lankan": true,
+    "context_tags": ["adolescent_care", "vocational_training", "independence"],
+    "content": {
+      "secondary_education": "Children aged 11-18 should engage in activities for personality development, life skills, and leadership[cite: 860].",
+      "vocational_support": "Children beyond compulsory education age should be referred to vocational training courses offered by recognized government institutions[cite: 862].",
+      "leaving_protection": "Management must assist children in finding employment and suitable accommodation once they reach 18 years[cite: 484].",
+      "transition_monitoring": "The Provincial Department of Probation must monitor children for at least one year after they leave the center[cite: 488]."
+    }
+  },
+  {
+    "id": "SL_CDC_011",
+    "lankan": true,
+    "context_tags": ["safety_hazards", "environmental_protection", "fire_safety"],
+    "content": {
+      "lead_safety": "Walls and furniture must not be coated with lead-based paints or toxic coatings[cite: 728].",
+      "fire_protection": "Fire extinguishers in working condition must be available in every building[cite: 725].",
+      "hazardous_zones": "Liquor outlets must not be located within 100 meters of the center[cite: 503]. Center must be free of unprotected wells, open ponds, and sharp objects[cite: 504].",
+      "animal_safety": "Only cats, dogs, and fish are allowed as pets, and they must be properly vaccinated[cite: 699, 701]."
+    }
+  },
+  {
+    "id": "SL_CDC_012",
+    "lankan": true,
+    "context_tags": ["monitoring", "inspections", "complaint_handling"],
+    "content": {
+      "anonymous_complaints": "Children must be given the opportunity to make anonymous complaints or suggestions about staff or other children[cite: 964].",
+      "grading_system": "Centers are categorized by color: Red (Immediate intervention/Serious threat), Yellow (Conditions to improve), and Green (Satisfactory).",
+      "inspection_frequency": "The National Child Protection Authority (NCPA) performs annual monitoring of all centers[cite: 988].",
+      "staff_suspension": "If a staff member is charged with abuse, they must be suspended and prohibited from the premises until the investigation is complete[cite: 972, 973]."
+    }
+  },
+  {
+    "id": "SL_CDC_013",
+    "lankan": true,
+    "context_tags": ["documentation", "records", "personal_files"],
+    "content": {
+      "child_personal_files": "The Manager must maintain updated files for every child, including photographs, birth/age certificates, court orders, and immunization reports[cite: 387, 388, 391, 395].",
+      "mandatory_records": "Centers must maintain a guests' log book, register of public officers, inventory, daily meal plans, and a complaints log[cite: 358, 359, 364, 368, 370].",
+      "access_control": "Only the Manager, Probation Officers, and NCPA officials are permitted to access children's personal records[cite: 409].",
+      "medical_history": "All chronic health problems, allergies, and developmental needs must be documented in the child's file[cite: 401, 403]."
+    }
+  },
+  {
+    "id": "SL_CDC_014",
+    "lankan": true,
+    "context_tags": ["social_integration", "family_reunification", "adoption"],
+    "content": {
+      "last_resort_policy": "Institutionalization must only be considered as a last resort if all alternative options fail[cite: 418].",
+      "adoption_eligibility": "For orphaned or abandoned children under 14, the possibility of adoption must be considered[cite: 428].",
+      "time_limits": "Orphaned children under 14 should not stay in a center for more than two years; family reunification or foster care must be prioritized[cite: 431, 432].",
+      "emergency_admission": "In emergencies, children may be admitted with written approval from the Commissioner, but a court order must be obtained within three working days[cite: 421, 422]."
+    }
+  },
+  {
+    "id": "SL_CDC_015",
+    "lankan": true,
+    "context_tags": ["child_placement_committee", "cpc", "care_plan"],
+    "content": {
+      "cpc_composition": "The committee includes the Provincial Commissioner, Probation Officer, Child Rights Promotion Officer, and the child's parents/relatives[cite: 456, 457, 458, 461].",
+      "care_plan_timeline": "A care plan to integrate the child back into society within 3 years must be prepared within two weeks of admission[cite: 465, 466].",
+      "child_involvement": "The involvement of the child is mandatory when preparing their specific care plan[cite: 468].",
+      "review_frequency": "The committee must meet every three months to review each child's development plan[cite: 469]."
+    }
+  },
+  {
+    "id": "SL_CDC_016",
+    "lankan": true,
+    "context_tags": ["safety_surroundings", "emergency_protocols", "missing_child"],
+    "content": {
+      "missing_child_protocol": "If a child is missing, the Manager must immediately inform the police, parents/guardians, and the Child Replacement Committee[cite: 490, 491, 493, 495].",
+      "well_safety": "Wells used for water must be kept closed when not in use; children must be supervised near them at all times[cite: 714].",
+      "electrical_safety": "All wiring must be insulated, and electrical equipment in child-accessible areas must be covered[cite: 694, 696].",
+      "staircase_safety": "Staircases used by infants and toddlers must be secured with a gate or door and have firmly fixed railings[cite: 740, 741]."
+    }
+  },
+  {
+    "id": "SL_CDC_017",
+    "lankan": true,
+    "context_tags": ["transportation", "court_safety", "judicial_process"],
+    "content": {
+      "court_transport": "Court or police vehicles should not be used to transport children to court[cite: 685].",
+      "segregation_from_criminals": "Children must not be transported together with adult criminals from police stations or prisons[cite: 686].",
+      "escort_requirement": "The Center Manager or a childcare provider and the assigned probation officer must accompany the child to court[cite: 684]."
+    }
+  },
+  {
+    "id": "SL_CDC_018",
+    "lankan": true,
+    "context_tags": ["clothing", "personal_hygiene", "supplies"],
+    "content": {
+      "mandatory_items": "Each child must have a towel, at least 3 school uniforms, 4 sets of normal clothing, and 2 sets of bedding[cite: 706].",
+      "cultural_sensitivity": "Clothing provided must be acceptable to the child's cultural values, religion, and gender[cite: 709].",
+      "laundry_facilities": "The center must provide adequate facilities for washing clothes; staff must iron clothes for children under 14[cite: 710, 711].",
+      "personal_preference": "Children's preferences must be taken into account when providing footwear and personal needs[cite: 705]."
+    }
+  },
+  {
+    "id": "SL_CDC_019",
+    "lankan": true,
+    "context_tags": ["religious_freedom", "cultural_activities", "holidays"],
+    "content": {
+      "religious_integrity": "A child's religion must never be changed before or after admission to a center[cite: 434].",
+      "celebrations": "Facilities must be provided to celebrate Sinhala and Hindu New Year, Deepavali, Christmas, Vesak, Ramadan, and World Children's Day[cite: 914].",
+      "personal_milestones": "Children must be given the opportunity to celebrate birthdays and personal achievements[cite: 916]."
+    }
+  },
+  {
+    "id": "SL_CDC_020",
+    "lankan": true,
+    "context_tags": ["communication", "privacy", "visitation"],
+    "content": {
+      "visitation_rights": "Children are encouraged to contact parents and relatives; facilities for private meetings must be provided at reasonable times[cite: 941, 943].",
+      "confidentiality": "Staff are obliged to protect all confidential information regarding children[cite: 251].",
+      "telephone_access": "Children must have access to make or receive personal calls and mail from parents or friends recommended by the Probation Officer[cite: 953].",
+      "dignity_in_donations": "Children should not be exposed directly to donors in a way that harms their dignity[cite: 955]."
+    }
+  },
+  {
+    "id": "SL_CDC_021",
+    "lankan": true,
+    "context_tags": ["monitoring_grading", "ncpa_standards", "evaluation"],
+    "content": {
+      "supervision_grading": "Centers are assessed on a 10-point scale and categorized by color: Red (1-3.9), Yellow (4-6.9), and Green (7-10)[cite: 993].",
+      "red_category_action": "Red category centers require immediate intervention and a follow-up inspection within two weeks[cite: 993, 997].",
+      "yellow_category_action": "Yellow category centers require improvements and a re-supervision within 6 months[cite: 993, 1004].",
+      "green_category_action": "Green category centers are satisfactory and subject to standard annual monitoring[cite: 993]."
+    }
+  },
+  {
+    "id": "SL_CDC_022",
+    "lankan": true,
+    "context_tags": ["special_needs", "disability_access", "special_care"],
+    "content": {
+      "special_needs_placement": "Children with special needs must be placed in centers that have the specific capacity to provide specialized care[cite: 435].",
+      "accessibility_law": "Building designs must be accessible to children with disabilities in accordance with Disabled Persons Regulation No. 1 of 2006[cite: 533].",
+      "disability_equipment": "Centers must provide necessary personal assistance, medicines, and equipment for children with disabilities[cite: 787].",
+      "education_for_disabled": "Children with disabilities must be sent to appropriate schools or special education classes[cite: 882, 885]."
+    }
+  },
+  {
+    "id": "SL_CDC_023",
+    "lankan": true,
+    "context_tags": ["staff_ethics", "prohibited_substances", "conduct"],
+    "content": {
+      "substance_prohibition": "Staff are strictly prohibited from bringing or using drugs, tobacco, or alcohol on center premises[cite: 326, 340].",
+      "role_modeling": "Staff members are required to act as role models and maintain friendly, daily discussions with each child[cite: 323, 324].",
+      "confidentiality_breach": "Failure to protect child privacy or perform duties satisfactorily is grounds for immediate termination of service[cite: 241, 251].",
+      "conflict_of_interest": "Staff members are not permitted to work for or partner with any other child development center[cite: 311]."
+    }
+  },
+  {
+    "id": "SL_CDC_024",
+    "lankan": true,
+    "context_tags": ["recreational_equipment", "media_usage", "library"],
+    "content": {
+      "mandatory_recreation_items": "Centers must provide at least three musical instruments, a television, a radio, board games, and art materials[cite: 900].",
+      "computer_policy": "Computer use is limited to 45 minutes for learning purposes; internet access must be password protected with security precautions[cite: 905, 906].",
+      "reading_materials": "A library suitable for the children's age is required, including daily newspapers and a weekly children's newspaper in the child's language[cite: 892, 895].",
+      "sports_safety": "Every child should engage in outdoor or indoor sports daily, provided the weather is good[cite: 663]."
+    }
+  }
+]

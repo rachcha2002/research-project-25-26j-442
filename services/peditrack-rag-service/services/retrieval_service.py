@@ -49,27 +49,48 @@ class RetrievalService:
         
         logger.info(f"Retrieving documents for query: '{query[:50]}...' (top_k={top_k}, threshold={similarity_threshold})")
         
+        # Local-data boost: fetch extra candidates so we always surface lankan docs
+        # even when they narrowly fall outside the base top_k.
+        LANKAN_BOOST = float(os.getenv("LANKAN_BOOST", "0.08"))   # additive score bump
+        FETCH_MULTIPLIER = 2                                          # over-fetch then trim
+
         try:
             query_embedding = self.embedding_service.embed_text(query)
-            scores, metadata_list = self.vector_store.search(query_embedding, top_k)
-            
+            scores, metadata_list = self.vector_store.search(
+                query_embedding, min(top_k * FETCH_MULTIPLIER, self.max_top_k)
+            )
+
             retrieved_docs = []
             for score, metadata in zip(scores, metadata_list):
-                if score >= similarity_threshold:
+                # Apply local-data boost before threshold test
+                is_lankan = metadata.get("lankan") is True
+                effective_score = score + LANKAN_BOOST if is_lankan else score
+
+                if effective_score >= similarity_threshold:
                     retrieved_docs.append({
                         "text": metadata.get("text", ""),
-                        "score": score,
+                        "score": round(effective_score, 4),
+                        "base_score": round(score, 4),
+                        "lankan": is_lankan,
                         "metadata": metadata,
                         "source": metadata.get("source")
                     })
-            
-            logger.info(f"Retrieved {len(retrieved_docs)} documents above threshold {similarity_threshold}")
-            
+
+            # Sort by boosted score descending, then trim to requested top_k
+            retrieved_docs.sort(key=lambda d: d["score"], reverse=True)
+            retrieved_docs = retrieved_docs[:top_k]
+
+            lankan_count = sum(1 for d in retrieved_docs if d.get("lankan"))
+            logger.info(
+                f"Retrieved {len(retrieved_docs)} docs above threshold {similarity_threshold} "
+                f"({lankan_count} local/lankan, boost={LANKAN_BOOST})"
+            )
+
             # Apply re-ranking if enabled
             if self.enable_reranking and retrieved_docs:
                 retrieved_docs = self._get_reranker().rerank(query, retrieved_docs, top_k=top_k)
                 logger.info(f"Re-ranked to {len(retrieved_docs)} documents")
-            
+
             context = self._build_context(retrieved_docs)
             
             return retrieved_docs, context
@@ -117,8 +138,9 @@ class RetrievalService:
             source = doc.get("source", "Unknown")
             text = doc.get("text", "")
             score = doc.get("score", 0.0)
-            context_parts.append(f"[Source {i}: {source} (relevance: {score:.3f})]\n{text}\n")
-        
+            local_tag = " [LOCAL]" if doc.get("lankan") else ""
+            context_parts.append(f"[Source {i}: {source}{local_tag} (relevance: {score:.3f})]\n{text}\n")
+
         return "\n".join(context_parts)
 
 # Global instance

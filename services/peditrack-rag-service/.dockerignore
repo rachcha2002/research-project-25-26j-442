@@ -1,0 +1,54 @@
+# ── Python cache ──────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py[cod]
+
+# ── Virtual environments ───────────────────────────────────────────────────────
+venv/
+env/
+.venv/
+ENV/
+
+# ── Testing / coverage ────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+tests/
+*.log
+
+# ── Dev tooling ───────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+.mypy_cache/
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Secrets ───────────────────────────────────────────────────────────────────
+.env
+.env.*
+
+# ── Large / generated assets not needed in the image ─────────────────────────
+colab_gpu_ingestion/
+datasets-local/
+data/
+
+# Evaluation / visualisation scripts
+evaluate_rag.bat
+visualize_evaluation.bat
+*.bat
+*.png
+check_scores.py
+debug_*.py
+evaluate_*.py
+test_*.py
+scripts/
+logs/
+
+# Docs
+*.md
+!README.md

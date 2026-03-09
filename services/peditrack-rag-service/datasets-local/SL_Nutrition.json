@@ -1,0 +1,647 @@
+[
+  {
+    "id": "SL_NUTRITION_001",
+    "lankan": true,
+    "context_tags": ["exclusive_breastfeeding", "duration", "benefits"],
+    "content": {
+      "recommendation": "Exclusively breastfeed infants from birth until the completion of six months (180 days)[cite: 1025, 1027].",
+      "maternal_support": "Mothers able to exclusively breastfeed until 180 days should be encouraged and supported to do so[cite: 1026].",
+      "benefits": "Provides all nutrient needs for full-term infants of normal birth weight, reduces diarrhea and respiratory infections, and enhances motor and cognitive development[cite: 1028, 1029, 1030]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_002",
+    "lankan": true,
+    "context_tags": ["complementary_feeding", "timing", "risks"],
+    "content": {
+      "start_time": "Introduce complementary foods immediately upon completion of 6 months[cite: 1025].",
+      "early_introduction_risk": "Introduction before four months (120 days) is harmful as the child is physiologically and developmentally unready[cite: 1036].",
+      "delayed_introduction_risk": "Delaying beyond six months adversely impacts nutrition, growth, and the ability to consume family foods by age one[cite: 1037]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_003",
+    "lankan": true,
+    "context_tags": ["breastfeeding", "expressed_milk", "storage"],
+    "content": {
+      "storage_room_temp": "Expressed Breast Milk (EBM) can be kept at room temperature for 8 hours[cite: 1042].",
+      "storage_refrigerated": "EBM can be stored in a refrigerator for 24 hours[cite: 1042].",
+      "storage_frozen": "EBM can be stored in a freezer compartment for 3 months[cite: 1042].",
+      "feeding_method": "Feed EBM using a clean cup or a cup and a tea spoon[cite: 1043]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_004",
+    "lankan": true,
+    "context_tags": ["food_texture", "energy_density", "preparation"],
+    "content": {
+      "initial_texture": "Always introduce complementary foods in a thick form from the beginning to provide more energy in smaller quantities[cite: 1048].",
+      "energy_boost": "Use 1-2 teaspoons of oil when preparing food to increase energy density[cite: 1053].",
+      "consistency_progression": "Start with soft semi-solid paste at 6 months and introduce coarsely mashed foods by the end of the 7th month[cite: 1113, 1114]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_005",
+    "lankan": true,
+    "context_tags": ["7_8_months", "feeding_frequency", "portion_size"],
+    "content": {
+      "frequency": "2-3 meals per day plus frequent breast feeds[cite: 1056].",
+      "portion_size": "Start with 2-3 teaspoons per feed, increasing gradually to slightly more than 1/2 a tea cup at each meal[cite: 1056].",
+      "snacks": "1-2 snacks may be offered depending on the child's appetite[cite: 1056]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_006",
+    "lankan": true,
+    "context_tags": ["9_11_months", "feeding_frequency", "portion_size"],
+    "content": {
+      "texture": "Coarsely chopped or mashed foods and finger foods[cite: 1056].",
+      "frequency": "3-4 meals plus breast feeds[cite: 1056].",
+      "portion_size": "About 3/4 of a tea cup at each meal[cite: 1056]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_007",
+    "lankan": true,
+    "context_tags": ["12_23_months", "family_foods", "portion_size"],
+    "content": {
+      "texture": "Family foods, chopped or mashed coarsely if necessary[cite: 1056].",
+      "frequency": "3-4 meals plus breast milk given after meals[cite: 1056].",
+      "portion_size": "1 tea cup or slightly more at each meal[cite: 1056]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_008",
+    "lankan": true,
+    "context_tags": ["iron_rich_foods", "vegetarian", "bioavailability"],
+    "content": {
+      "animal_sources": "Include fish, sprats, poultry, meat, and liver daily from the beginning of the 7th month[cite: 1067, 1068].",
+      "vegetarian_sources": "Gotukola, Sarana, Thampala, Soya, green gram, and cowpea[cite: 1069].",
+      "absorption_booster": "Include Vitamin C sources like lemon, lime, nelli, guava, banana, or papaya in the same meal to increase iron bioavailability[cite: 1070]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_009",
+    "lankan": true,
+    "context_tags": ["vitamin_a", "local_foods", "supplements"],
+    "content": {
+      "food_sources": "Liver, egg yolk, yellow pumpkin, yellow sweet potatoes, carrots, papaw, mangoes, and dark green leaves[cite: 1075].",
+      "mega_dose_infant": "100,000 IU given at 9 months (with measles vaccine), 18 months, and 3 years[cite: 1123].",
+      "mega_dose_maternal": "Postpartum mothers receive 200,000 IU within two weeks of delivery[cite: 1127]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_010",
+    "lankan": true,
+    "context_tags": ["eggs", "introduction_age", "protein"],
+    "content": {
+      "egg_yolk": "Can be introduced from the 7th month; must be well cooked (boiled or fried firm)[cite: 1076].",
+      "egg_white": "Can be introduced from the 9th month[cite: 1077].",
+      "benefit": "Eggs are a cheap source of good quality protein and can be given daily[cite: 1077]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_011",
+    "lankan": true,
+    "context_tags": ["responsive_feeding", "behavior", "development"],
+    "content": {
+      "autonomy": "Encourage children to self-feed reaching two years[cite: 1023, 1096].",
+      "interaction": "Talk lovingly during feeding and maintain eye contact[cite: 1100].",
+      "patience": "Feed children patiently and avoid forced feeding at all times[cite: 1097, 1098]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_012",
+    "lankan": true,
+    "context_tags": ["food_safety", "hygiene", "bottles"],
+    "content": {
+      "hand_washing": "Caregivers must wash hands with soap before preparation and feeding; children's hands must be washed before eating[cite: 1107].",
+      "bottles": "Avoid the use of feeding bottles[cite: 1110].",
+      "utensils": "Use clean cups, bowls, and spoons dedicated to the child[cite: 1109]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_013",
+    "lankan": true,
+    "context_tags": ["illness_feeding", "recovery", "fluids"],
+    "content": {
+      "during_illness": "Increase fluid intake and frequency of breastfeeding; offer small, energy-dense favorite foods frequently (every 2-3 hours)[cite: 1141, 1143, 1144].",
+      "after_illness": "Provide one extra meal daily for at least 2 weeks after recovery to maintain growth[cite: 1138, 1139].",
+      "symptom_management": "Manage symptoms like fever before offering food as a feverish child will refuse it[cite: 18]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_014",
+    "lankan": true,
+    "context_tags": ["growth_monitoring", "chdr", "frequency"],
+    "content": {
+      "weighing_infant": "Weigh children monthly up to two years (24 months)[cite: 1148].",
+      "weighing_child": "Weigh every three months from age two up to five years[cite: 1148].",
+      "length_height": "Measure length at 4, 9, and 18 months; measure height every 6 months after age two[cite: 1152]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_015",
+    "lankan": true,
+    "context_tags": ["snack_definition", "examples", "local_foods"],
+    "content": {
+      "definition": "A small quantity of energy-dense food or drink taken between main meals that is quick to prepare[cite: 1175].",
+      "examples_infant": "Yoghurt, curd, bread with butter/margarine, boiled gram, thriposha, or fruits[cite: 1177, 1082].",
+      "traditional_snacks": "Helapa, sago pudding, weli thalapa, and aggala can be given after one year[cite: 1178]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_016",
+    "lankan": true,
+    "context_tags": ["serving_sizes", "cereals", "potatoes"],
+    "content": {
+      "rice_cereal": "1/2 a tea cup of cooked rice or cereal equals one serving[cite: 1182].",
+      "bread": "1 slice of bread (450g loaf cut into 9 slices) equals one serving[cite: 1183].",
+      "potatoes": "2 egg-sized potatoes or 1 egg-sized sweet potato equals one serving[cite: 1185, 1186]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_017",
+    "lankan": true,
+    "context_tags": ["serving_sizes", "meat_fish", "dairy"],
+    "content": {
+      "meat_fish": "25-50g of cooked fish/chicken/meat (size of a matchbox) or 6 sprats equals one serving[cite: 1199].",
+      "milk_powder": "3 heaped teaspoons of milk powder equals one serving[cite: 1193].",
+      "cheese": "A match-box-sized piece of cheese equals one serving[cite: 1192]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_018",
+    "lankan": true,
+    "context_tags": ["thriposha", "supplementary_feeding", "maternal"],
+    "content": {
+      "infant_use": "Provided to infants with growth faltering or underweight from 6 months until one year[cite: 1121].",
+      "maternal_use": "Breastfeeding mothers receive Thriposha for a minimum of six months[cite: 1126]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_019",
+    "lankan": true,
+    "context_tags": ["iron_supplements", "preterm", "lbw"],
+    "content": {
+      "standard_dose": "2mg/kg body weight per day[cite: 1129].",
+      "preterm_lbw_start": "Begin iron supplementation from two months of age[cite: 1131, 1132].",
+      "duration": "Continue until at least one year, preferably up to 2 years[cite: 1132]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_020",
+    "lankan": true,
+    "context_tags": ["food_safety", "choking", "texture"],
+    "content": {
+      "choking_hazards": "Avoid small, rounded, hard pieces of vegetables and whole nuts or pulses[cite: 1086].",
+      "blending_warning": "Avoid blending or straining food after 8 months to encourage munching skills[cite: 1087, 1022].",
+      "finger_foods": "Introduce items like hoppers (soft center) or thin fruit slices around 8-9 months[cite: 1115]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_021",
+    "lankan": true,
+    "context_tags": ["maternal_health", "breastfeeding", "supplements"],
+    "content": {
+      "daily_supplements": "Iron, folic acid, Vitamin C, and Calcium for at least six months postpartum[cite: 1126].",
+      "vitamin_a_maternal": "200,000 IU mega dose within two weeks of delivery[cite: 1127]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_022",
+    "lankan": true,
+    "context_tags": ["dietary_restrictions", "infant", "first_year"],
+    "content": {
+      "salt_sugar": "Avoid adding salt or sugar to food during the first year[cite: 1085, 2].",
+      "honey": "Do not add honey to curd or other foods[cite: 1083]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_023",
+    "lankan": true,
+    "context_tags": ["local_foods", "iron", "sprats"],
+    "content": {
+      "sprat_prep": "Wash sprats whole (with head), air/oven dry, and grind whole to a fine texture; add one teaspoon to meals[cite: 5].",
+      "iron_importance": "Iron-rich animal foods are essential for rapid brain development in the first two years[cite: 5]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_024",
+    "lankan": true,
+    "context_tags": ["9_months", "feeding_pattern", "social"],
+    "content": {
+      "meal_amount": "Slightly more than 1/2 tea cup of coarsely chopped food, 3-4 times a day[cite: 12].",
+      "social_interaction": "Encourage the baby to sit with family members during meal times[cite: 1104, 12]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_025",
+    "lankan": true,
+    "context_tags": ["1_2_years", "daily_requirements", "protein"],
+    "content": {
+      "daily_fish_meat": "Two pieces the size of a match-box[cite: 15].",
+      "daily_sprats": "6 - 8 sprats per day[cite: 15].",
+      "daily_kunissan": "2 table spoons per day[cite: 15]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_026",
+    "lankan": true,
+    "context_tags": ["1_2_years", "daily_requirements", "dairy_veg"],
+    "content": {
+      "daily_milk_products": "1 cup of curd or yogurt per day[cite: 15].",
+      "daily_vegetables": "3 - 6 tablespoons of mixed vegetables plus 1/2 tea cup of green leaves[cite: 15].",
+      "daily_fruit": "Fruits given twice a day (e.g., one medium banana and one orange)[cite: 15]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_027",
+    "lankan": true,
+    "context_tags": ["formula_milk", "restrictions", "health_risks"],
+    "content": {
+      "medical_oversight": "Introduction of formula milk should only be decided by a doctor[cite: 21].",
+      "long_term_risks": "Formula milk in the first year can have adverse long-term health effects[cite: 21].",
+      "daily_limit_1_5yrs": "Raw amount for formula-fed infants is 400ml/day for the 1-5 year age group[cite: 1091]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_028",
+    "lankan": true,
+    "context_tags": ["complementary_feeding", "7_months_1_week", "variety"],
+    "content": {
+      "meal_composition": "Coarsely mashed rice with pulses, iron-rich animal foods, eggs, vegetables, and green leaves[cite: 9].",
+      "importance": "Various types of food and different tastes ensure nutrient needs are met and healthy eating habits develop[cite: 9]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_029",
+    "lankan": true,
+    "context_tags": ["responsive_feeding", "environment", "cues"],
+    "content": {
+      "distractions": "Minimize distractions; have a separate place to feed the child[cite: 1103, 2].",
+      "hunger_satiety": "Caregivers should be sensitive to the child's hunger and satiety cues[cite: 1097].",
+      "eye_contact": "Maintain eye-to-eye contact to encourage eating while stimulating brain development[cite: 2, 1100]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_030",
+    "lankan": true,
+    "context_tags": ["nutrition_status", "stunting", "anaemia"],
+    "content": {
+      "stunting_prev": "13.5% of children under five are stunted[cite: 1011].",
+      "underweight_prev": "29.4% of children under five are underweight[cite: 1011].",
+      "anaemia_prev": "Nearly 30% of children under five suffer from iron deficiency anaemia[cite: 1013]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_031",
+    "lankan": true,
+    "context_tags": ["complementary_feeding", "rationale", "skills"],
+    "content": {
+      "nutritional_need": "Required to meet increasing needs that breast milk alone cannot provide[cite: 1021].",
+      "munching_skill": "Trains the child to eat different tastes/consistencies to transition to family foods[cite: 1022].",
+      "self_feeding_skill": "Stimulates development-appropriate feeding skills for self-feeding by age two[cite: 1023]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_032",
+    "lankan": true,
+    "context_tags": ["first_three_days", "intro_protocol", "rice"],
+    "content": {
+      "day_1": "2-3 teaspoons of very well mashed rice mixed with expressed breast milk[cite: 3].",
+      "day_2_3": "One or two meals a day of very well mashed rice, gradually increasing the amount[cite: 3]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_033",
+    "lankan": true,
+    "context_tags": ["days_4_6", "pulses", "fruit"],
+    "content": {
+      "additions": "Start adding pulses such as dhal to the rice[cite: 4].",
+      "portion": "3-4 teaspoons at a time, twice a day[cite: 4].",
+      "fruit_intro": "One teaspoon of well mashed fruit (e.g., papaya, banana) after the rice meal[cite: 4]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_034",
+    "lankan": true,
+    "context_tags": ["serving_sizes", "vegetables", "fruit"],
+    "content": {
+      "cooked_fruit_veg": "3 tablespoons of cooked fruit vegetables (e.g., pumpkin, carrot) equals one serving[cite: 1202].",
+      "leafy_greens": "1/2 a tea cup of cooked leafy vegetables equals one serving[cite: 1203].",
+      "fresh_fruit": "1 medium banana or orange equals one serving[cite: 1200]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_035",
+    "lankan": true,
+    "context_tags": ["maternal_support", "health_workers", "resources"],
+    "content": {
+      "yellow_pages": "Parents should read the yellow pages in the CHDR for feeding guidance[cite: 21].",
+      "consultation": "Ask the Public Health Midwife or doctor to explain unclear points[cite: 21].",
+      "uniformity": "Guidelines ensure uniformity in nutrition messages given by all health personnel[cite: 1019]."
+    }
+  }
+,
+  {
+    "id": "SL_NUTRITION_036",
+    "lankan": true,
+    "context_tags": ["stunting", "prevention", "growth_faltering"],
+    "content": {
+      "stunting_peak": "Nutritional problems in Sri Lanka typically appear around the sixth month and rise steadily into the second year[cite: 1018].",
+      "primary_cause": "Incorrect complementary feeding practices are identified as a major cause for undernutrition in this age group[cite: 1018].",
+      "impact": "Early nutritional insults lead to reduced adult IQ, work capacity, and national development[cite: 1016, 1017]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_037",
+    "lankan": true,
+    "context_tags": ["feeding_skills", "developmental_milestones", "autonomy"],
+    "content": {
+      "self_feeding_goal": "Children should be trained to eat on their own by the age of two[cite: 1023, 1096].",
+      "munching_skill": "Introduction of complementary foods at 6 months helps train children to munch, easing the transition to family foods by age one[cite: 1022].",
+      "manual_dexterity": "Allowing children to touch food with washed hands encourages sensory learning[cite: 1099]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_038",
+    "lankan": true,
+    "context_tags": ["iron_deficiency", "anaemia", "statistics"],
+    "content": {
+      "anaemia_prevalence": "Nearly 30% of children under five in Sri Lanka suffer from iron deficiency anaemia[cite: 1013].",
+      "critical_sources": "Iron-rich foods like liver, sprats, meat, and fish should be introduced early (from the 7th month)[cite: 1067, 1068].",
+      "cognitive_link": "Iron is essential for rapid brain development which is fastest in the first two years of life."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_039",
+    "lankan": true,
+    "context_tags": ["food_safety", "preparation", "sprats"],
+    "content": {
+      "sprat_cleaning": "Wash sprats whole without removing the head.",
+      "processing": "Air dry, oven dry, or roast the sprats before grinding them whole to a fine texture.",
+      "storage": "Store the sprat powder in a clean bottle and add about one teaspoon to the baby's meal."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_040",
+    "lankan": true,
+    "context_tags": ["energy_density", "coconut_milk", "oils"],
+    "content": {
+      "fat_additives": "Temper food with 1-2 teaspoons of oil or butter[cite: 1053, 1078].",
+      "local_energy_source": "Cook food with thick coconut milk to increase energy content.",
+      "rationale": "Small stomach capacities in infants require energy-dense foods to meet growth needs[cite: 1048, 1059]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_041",
+    "lankan": true,
+    "context_tags": ["day_10_15", "meal_composition", "variety"],
+    "content": {
+      "mix_standard": "Rice should be mixed with a pulse (dhal/green gram) and animal food (liver/meat/sprats).",
+      "vegetable_inclusion": "Add yellow vegetables like pumpkin, carrot, or yellow sweet potatoes.",
+      "serving_frequency": "Offer 5-6 teaspoons at a time, twice a day."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_042",
+    "lankan": true,
+    "context_tags": ["day_16_30", "leafy_greens", "local_variety"],
+    "content": {
+      "local_greens": "Introduce Gotukola, Murunga leaves, Sarana, Thampala, or Mukunuwenna.",
+      "meal_rotation": "Give different items at different meals (e.g., Gotukola for lunch, Sarana for dinner).",
+      "portion": "Amount given should be about 1/4 of a tea cup, 2-3 times a day."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_043",
+    "lankan": true,
+    "context_tags": ["7_months", "texture", "coarseness"],
+    "content": {
+      "texture_milestone": "Transition to coarsely mashed rice upon completion of the 7th month.",
+      "portion_increase": "Give 1/2 tea cup at a time, 2-3 times a day.",
+      "snack_introduction": "Offer well-mashed fruit as a snack in between meals."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_044",
+    "lankan": true,
+    "context_tags": ["8_months", "jak", "breadfruit"],
+    "content": {
+      "food_diversity": "Introduce local staples like Jak and breadfruit.",
+      "portion": "Give slightly more than 1/2 tea cup of food at a time, 2-3 times a day.",
+      "fruit_portion": "Provide scraped fruit (about 1/4 tea cup) between main meals."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_045",
+    "lankan": true,
+    "context_tags": ["finger_foods", "safety", "hoppers"],
+    "content": {
+      "local_finger_foods": "Offer a small piece of hopper (soft center portion) or bread with butter.",
+      "fruit_slices": "Ripe avocado or other soft scraped fruit can be given as finger food.",
+      "supervision_rule": "The baby must never be left alone with finger foods due to choking risks."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_046",
+    "lankan": true,
+    "context_tags": ["9_months", "family_patterns", "frequency"],
+    "content": {
+      "meal_pattern": "Give a bit more than 1/2 tea cup of coarsely chopped food, 3-4 times a day.",
+      "social_inclusion": "Try to let the baby sit with family members during meal times.",
+      "breastfeeding_sequence": "Breastfeed after meals rather than before."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_047",
+    "lankan": true,
+    "context_tags": ["9_11_months", "serving_style", "diversity"],
+    "content": {
+      "serving_method": "Rice and 'curries' can be served separately and mixed while feeding.",
+      "portion": "3/4 tea cup of food at a time, 3-4 times a day.",
+      "self_feeding": "Encourage the child to touch and pick up foods independently."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_048",
+    "lankan": true,
+    "context_tags": ["1_2_years", "family_diet", "nutrition"],
+    "content": {
+      "diet_milestone": "The child should be consuming nutritious family foods.",
+      "meal_count": "Three main meals a day, with portions slightly larger than one tea cup.",
+      "daily_diversity": "Aim to include 5 different items of vegetables and fruits daily."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_049",
+    "lankan": true,
+    "context_tags": ["serving_sizes", "measurement", "matchbox"],
+    "content": {
+      "protein_visual": "Two matchbox-sized pieces of fish, chicken, meat, or liver per day.",
+      "seafood_local": "2 tablespoons of Kunissan (small shrimp) equals the daily protein requirement.",
+      "sprats_count": "6 - 8 sprats per day for a child aged 1-2 years."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_050",
+    "lankan": true,
+    "context_tags": ["serving_sizes", "dairy", "eggs"],
+    "content": {
+      "egg_count": "One hen's egg per day.",
+      "dairy_units": "1 cup of curd or yogurt daily.",
+      "breast_milk": "Give 2-3 times a day, ideally after a meal."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_051",
+    "lankan": true,
+    "context_tags": ["snacks", "energy", "definition"],
+    "content": {
+      "snack_purpose": "Snacks provide extra energy and nutrients in small amounts.",
+      "frequency_logic": "Offer 1-2 snacks a day based on the baby's hunger cues and weight gain.",
+      "example": "A piece of boiled potato with butter or a piece of boiled egg."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_052",
+    "lankan": true,
+    "context_tags": ["egg_introduction", "yolk_vs_white", "cost"],
+    "content": {
+      "intro_timeline": "Start eggs 2 weeks after beginning complementary feeding.",
+      "sequence": "Feed a little boiled egg yolk first, followed by boiled egg white about one week later.",
+      "affordability": "Eggs are a less expensive source of nutritious food that can be served daily."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_053",
+    "lankan": true,
+    "context_tags": ["illness_feeding", "fever", "recovery"],
+    "content": {
+      "fever_management": "Control symptoms like fever before feeding, as a feverish child will refuse food.",
+      "patience": "Feed an ill child with extra patience and love in small, frequent amounts.",
+      "recovery_diet": "Provide an extra meal and extra breastfeeds for about 2 weeks after recovery."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_054",
+    "lankan": true,
+    "context_tags": ["growth_assessment", "chdr", "weighing"],
+    "content": {
+      "weighing_monthly": "Weigh the child every month until their 2nd birthday.",
+      "clinical_records": "Mark all measurements in the Child Health Development Record (CHDR).",
+      "length_checks": "Measure length at 4, 9, 12, and 18 months."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_055",
+    "lankan": true,
+    "context_tags": ["special_advice", "overweight", "underweight"],
+    "content": {
+      "growth_faltering": "If a child has growth faltering, underweight, or overweight, seek special advice from healthcare staff.",
+      "formula_milk_warning": "Formula milk is discouraged and should only be used on a doctor's recommendation.",
+      "chdr_resources": "Parents should utilize the yellow pages in the CHDR for detailed guidance."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_056",
+    "lankan": true,
+    "context_tags": ["responsive_feeding", "learning", "cognitive"],
+    "content": {
+      "mealtime_learning": "During meals, point out and name different foods, show various colors, and discuss tastes.",
+      "brain_stim": "Active engagement during meals stimulates learning and brain development.",
+      "emotional_bond": "Talking lovingly encourages the baby to love meal times."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_057",
+    "lankan": true,
+    "context_tags": ["vitamin_a", "mega_dose", "postpartum"],
+    "content": {
+      "postpartum_dose": "Mothers receive 200,000 IU within two weeks of delivery or before discharge[cite: 1127].",
+      "infant_mega_dose": "100,000 IU is given at 9, 18, and 36 months[cite: 1123].",
+      "safety_interval": "Avoid supplements containing Vitamin A if a mega dose was received in the last 6 months[cite: 1124]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_058",
+    "lankan": true,
+    "context_tags": ["iron_supplements", "preterm", "dosage"],
+    "content": {
+      "lbw_start": "Low birth weight and preterm infants start iron supplements from two months of age[cite: 1131].",
+      "dosage_rule": "Standard iron dosage is 2mg per kg of body weight daily[cite: 1129].",
+      "community_dose": "In community programs, 12.5mg of elemental iron daily is recommended for 2 months[cite: 1130]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_059",
+    "lankan": true,
+    "context_tags": ["food_hygiene", "prep", "safe_storage"],
+    "content": {
+      "prep_speed": "Serve food immediately after preparation and keep it well-covered[cite: 1108].",
+      "utensil_integrity": "Child-specific cups and bowls should not be used for any other purpose[cite: 1109].",
+      "hydration": "Offer boiled, cooled water to the baby after meals."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_060",
+    "lankan": true,
+    "context_tags": ["serving_sizes", "raw_amounts", "cereals"],
+    "content": {
+      "raw_amount_cereals": "Daily requirement for children aged 1-5 is 230g of cereals[cite: 1091].",
+      "cup_volume": "A standard tea cup for measurement in Sri Lanka is 200ml[cite: 1056, 1204].",
+      "bread_standard": "A 450g loaf of bread should be cut into 9 slices for standardized serving sizes[cite: 1183]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_061",
+    "lankan": true,
+    "context_tags": ["raw_amounts", "protein", "1_5_years"],
+    "content": {
+      "daily_fish_meat_grams": "50g per day raw weight for fish or meat[cite: 1091].",
+      "daily_pulses_grams": "60g per day raw weight for lentils, pulses, or nuts[cite: 1091].",
+      "daily_fruit_grams": "100g per day raw weight for fruits[cite: 1091]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_062",
+    "lankan": true,
+    "context_tags": ["raw_amounts", "vegetables", "sugar"],
+    "content": {
+      "daily_veg_grams": "50g per day raw weight for vegetables[cite: 1091].",
+      "daily_greens_grams": "50g per day raw weight for green leafy vegetables[cite: 1091].",
+      "daily_sugar_limit": "25g per day raw weight limit for sugar[cite: 1091]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_063",
+    "lankan": true,
+    "context_tags": ["responsive_feeding", "satiety", "forced_feeding"],
+    "content": {
+      "hunger_cues": "Feed infants by being sensitive to hunger and satiety (fullness) cues[cite: 1097].",
+      "no_force": "Forced feeding must be discouraged at all times[cite: 1098].",
+      "experimentation": "If food is refused, experiment with different combinations and preparations[cite: 1101, 1102]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_064",
+    "lankan": true,
+    "context_tags": ["vegetables", "vitamin_a", "egg_yolk"],
+    "content": {
+      "yellow_produce": "Yellow pumpkin, yellow sweet potatoes, and carrots are rich in Vitamin A[cite: 1075].",
+      "yolk_timing": "Egg yolk can be introduced from the seventh month[cite: 1076].",
+      "white_timing": "Egg white should be introduced from the ninth month[cite: 1077]."
+    }
+  },
+  {
+    "id": "SL_NUTRITION_065",
+    "lankan": true,
+    "context_tags": ["citrus", "hydration", "iron_uptake"],
+    "content": {
+      "iron_boost": "Adding Vitamin C sources like lemon or lime to vegetarian meals increases iron absorption[cite: 1070].",
+      "citrus_prep": "When giving orange or mandarin, a minimal amount of water can be added[cite: 1074].",
+      "water_offering": "Sips of boiled, cooled water can be offered after meals starting at 6 months."
+    }
+  }
+]

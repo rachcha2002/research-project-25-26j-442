@@ -25,29 +25,28 @@ class GeminiLiveService {
 
             // Get conversation history for context
             const history = conversationStore.getHistory(conversationId) || [];
-            
-            // Try to get RAG context from the last user message if available
+
+            // Build a seed query from recent history to bootstrap RAG context.
+            // Only use if there is meaningful prior history (returning user).
             let ragContext = '';
-            /* DISABLE RAG TEMPORARILY TO FIX HALLUCINATIONS
-            if (history.length > 0) {
-                const lastUserMessage = [...history].reverse().find(msg => msg.role === 'user');
-                if (lastUserMessage) {
-                    try {
-                        const ragResult = await this.ragService.retrieveDocuments(
-                            lastUserMessage.content,
-                            3,
-                            0.0
-                        );
-                        if (ragResult.success && ragResult.context) {
-                            ragContext = ragResult.context;
-                            console.log('✅ Enhanced session with RAG context');
-                        }
-                    } catch (error) {
-                        console.warn('⚠️  RAG unavailable for session context:', error.message);
+            const recentUserMessages = history
+                .filter(m => m.role === 'user')
+                .slice(-2)
+                .map(m => m.content.trim())
+                .filter(t => t.length > 10);
+
+            if (recentUserMessages.length > 0) {
+                const seedQuery = recentUserMessages.join(' ');
+                try {
+                    const ragResult = await this.ragService.retrieveForVoice(seedQuery);
+                    if (ragResult.success && ragResult.count > 0) {
+                        ragContext = ragResult.context;
+                        console.log(`✅ Session seeded with RAG context (${ragResult.count} docs)`);
                     }
+                } catch (error) {
+                    console.warn('⚠️  RAG unavailable for session seed:', error.message);
                 }
             }
-            */
 
             // Build system instruction with RAG context
             const systemInstruction = this._buildSystemInstruction(ragContext, language);
@@ -135,6 +134,12 @@ class GeminiLiveService {
         }
 
         try {
+            // If a fresh RAG context was prepared from the previous transcript, inject it
+            // ONCE before the new audio bytes start arriving so Gemini picks it up
+            if (session.ragContext) {
+                await this.injectRAGContextForNextTurn(sessionId);
+            }
+
             // Convert audio buffer to base64
             const base64Audio = Buffer.from(audioData).toString('base64');
 
@@ -281,10 +286,15 @@ class GeminiLiveService {
                     
                     // Handle user input transcription (what the user said)
                     if (content.input_transcription?.text) {
-                        console.log('🗣️  User said:', content.input_transcription.text);
+                        const userText = content.input_transcription.text;
+                        console.log('🗣️  User said:', userText);
+
+                        // Fire async RAG refresh — context will be ready for the NEXT turn
+                        this.refreshRAGContext(sessionId, userText);
+
                         callback({
                             type: 'user_transcript',
-                            text: content.input_transcription.text
+                            text: userText
                         });
                     }
                     
@@ -315,6 +325,63 @@ class GeminiLiveService {
                 });
             }
         });
+    }
+
+    /**
+     * Fire-and-forget RAG refresh triggered by a user transcript.
+     *
+     * Gemini Live cannot retroactively inject context into the CURRENT turn —
+     * the model has already started generating audio. Instead, we fetch new
+     * RAG context and store it on the session so it is included in the
+     * system_instruction of the NEXT turn (via updateSessionContext).
+     *
+     * Call this as soon as you receive a 'user_transcript' event.
+     *
+     * @param {string} sessionId
+     * @param {string} transcript  — ASR text of what the user just said
+     */
+    async refreshRAGContext(sessionId, transcript) {
+        const session = this.activeSessions.get(sessionId);
+        if (!session || !transcript || transcript.trim().length < 10) return;
+
+        // Run async — do NOT await on the hot path
+        this.ragService.retrieveForVoice(transcript).then(ragResult => {
+            if (ragResult.success && ragResult.count > 0) {
+                session.ragContext = ragResult.context;
+                console.log(`🔄 RAG context refreshed for session ${sessionId} (${ragResult.count} docs)`);
+            }
+        }).catch(() => { /* ignore — voice must never block */ });
+    }
+
+    /**
+     * Inject the current session's latest RAG context as a hidden system
+     * message at the start of the next conversational turn.
+     *
+     * Call this BEFORE sending the user's next audio/text turn.
+     * If no new RAG context is available the call is a no-op.
+     *
+     * @param {string} sessionId
+     */
+    async injectRAGContextForNextTurn(sessionId) {
+        const session = this.activeSessions.get(sessionId);
+        if (!session || !session.ragContext) return;
+
+        try {
+            const contextMessage = {
+                client_content: {
+                    turns: [{
+                        role: 'user',
+                        parts: [{ text: `[Medical context for your next answer — do not read aloud]:\n${session.ragContext}` }]
+                    }],
+                    turn_complete: false   // Don't trigger a response — just add context
+                }
+            };
+            session.ws.send(JSON.stringify(contextMessage));
+            session.ragContext = '';   // Consume it — don't re-inject on every turn
+            console.log(`💉 RAG context injected for next turn in session ${sessionId}`);
+        } catch (error) {
+            console.warn('⚠️  Failed to inject RAG context:', error.message);
+        }
     }
 
     /**

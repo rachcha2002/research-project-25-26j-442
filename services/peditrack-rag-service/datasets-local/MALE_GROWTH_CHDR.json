@@ -1,0 +1,930 @@
+
+[
+  {
+    "id": "male_growth_CHDR_001",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["growth_charts", "weight_for_age", "monitoring"],
+    "content": {
+      "chart_identification": "The male weight-for-age chart is distinguished by its blue color coding and is calibrated to WHO child growth standards for boys.",
+      "green_zone": "Represents healthy growth. Boys should ideally follow a curve parallel to the median line.",
+      "yellow_zone": "Indicates 'Moderately Underweight'. Requires a review of complementary feeding and possible Thriposha supplementation.",
+      "red_zone": "Indicates 'Severely Underweight'. Requires immediate referral to a pediatrician for investigation of underlying illness or severe malnutrition."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_002",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["height_for_age", "stunting", "male_pediatrics"],
+    "content": {
+      "indicator": "Height-for-age tracks linear growth and identifies 'stunting'. Boys falling below the -2SD line are considered stunted.",
+      "long_term_impact": "Stunting in boys is linked to reduced physical work capacity and lower economic productivity in adulthood.",
+      "measurement": "Length is measured lying down until age 2; height is measured standing from age 2 to 5 years."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_003",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["birth_weight", "neonatal_standards", "boys"],
+    "content": {
+      "average_weight": "Male newborns in Sri Lanka typically weigh slightly more than females, with a healthy range often between 2.8kg and 3.6kg.",
+      "low_birth_weight_alert": "Boys born under 2.5kg must be monitored weekly by the PHM during the first month to ensure they reach the green zone quickly."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_004",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["growth_velocity", "weight_gain", "trends"],
+    "content": {
+      "trend_analysis": "The direction of the growth curve is more important than a single weight point. A horizontal line (no gain) in a growing boy is a clinical warning.",
+      "catch_up_growth": "Boys born preterm often show a rapid 'catch-up' growth phase; this should be monitored to ensure it doesn't lead to early childhood obesity."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_005",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["exclusive_breastfeeding", "nutritional_base", "boys"],
+    "content": {
+      "duration": "Exclusive breastfeeding is mandatory for the first 180 days to provide the energy density required for male infant growth velocity.",
+      "immunity": "Breast milk protects boys specifically against early diarrheal diseases, which are a major cause of growth faltering in Sri Lanka."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_006",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["vitamin_a", "megadose", "schedule"],
+    "content": {
+      "schedule": "Boys receive 100,000 IU of Vitamin A at 9 months, 18 months, and 3 years.",
+      "immune_support": "Vitamin A is critical for reducing the severity of respiratory infections in boys, helping maintain their weight during illness."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_007",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["iron_deficiency", "complementary_feeding", "brain_development"],
+    "content": {
+      "iron_sources": "From 7 months, include pounded sprats, liver, or lean meat in the boy's rice to support rapid cognitive development.",
+      "absorption": "Always add a squeeze of lime or lemon to the boy's pulses to ensure the iron is absorbed effectively."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_008",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["milestones", "gross_motor", "0_4_months"],
+    "content": {
+      "head_control": "By 4 months, a boy should have no head lag when pulled to a sitting position.",
+      "tummy_time": "When on his stomach, he should be able to lift his chest off the mat using his arms."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_009",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["milestones", "gross_motor", "6_9_months"],
+    "content": {
+      "sitting": "A male infant should sit steadily without support by 8-9 months.",
+      "rolling": "He should be able to roll from his back to his stomach and vice versa easily by 6 months."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_010",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["milestones", "standing_walking", "12_months"],
+    "content": {
+      "standing": "By 12 months, most boys should be able to stand for a few seconds without support.",
+      "cruising": "He should be able to 'cruise' (walk while holding onto furniture) by 10-11 months."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_011",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["dental_eruption", "teething", "boys"],
+    "content": {
+      "first_tooth": "The first tooth in boys usually appears between 6 and 10 months. Delay until 12 months is within normal limits but requires monitoring.",
+      "oral_hygiene": "Gum cleaning with a soft cloth should start even before the first tooth erupts."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_012",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["immunization", "booster", "18_months"],
+    "content": {
+      "vaccine": "The DPT booster and OPV 4 are given at 18 months.",
+      "record_check": "The PHM must verify that the weight is plotted at the time of vaccination to ensure the boy is healthy enough for the dose."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_013",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["bmi_for_age", "childhood_obesity", "2_5_years"],
+    "content": {
+      "overweight_risk": "Boys plotting above +2SD on the BMI-for-age chart are at high risk for adult obesity and diabetes.",
+      "intervention": "Reduce intake of 'biscuit' snacks and sweetened milk if the curve trends upward toward the purple zone."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_014",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["head_circumference", "brain_growth", "boys"],
+    "content": {
+      "measurement": "Head circumference is tracked until age 2 to ensure normal skull and brain expansion.",
+      "microcephaly_check": "A head size below the -2SD line for a boy requires a specialist referral to rule out developmental delays."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_015",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["supplementary_feeding", "thriposha", "underweight"],
+    "content": {
+      "eligibility": "Boys in the yellow or red zones of the weight chart are eligible for free Thriposha at the MOH clinic.",
+      "usage": "Thriposha should be used as a supplement to main meals, not a replacement for breast milk or rice."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_016",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["physical_growth", "linear_growth", "stunting_window"],
+    "content": {
+      "irreversibility": "Height loss (stunting) occurring in boys before age 2 is generally permanent and cannot be fully recovered later in life.",
+      "nutrition_focus": "High protein and calcium intake are essential during the 12-24 month window for male height potential."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_017",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["neonatal_check", "testicular_descent", "physical_exam"],
+    "content": {
+      "undescended_testes": "The PHM/Doctor must check if both testes are descended into the scrotum during the 1-month and 2-month newborn visits.",
+      "referral": "If testes are not felt by 6 months, a referral to a pediatric surgeon is mandatory as recorded in the CHDR clinical notes."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_018",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["monitoring", "CHDR_zones", "weight"],
+    "content": {
+      "purple_zone": "Indicates 'Obese'. Boys in this zone need a structured physical activity plan and reduction in sedentary screen time."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_019",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["adolescent_health", "growth_spurt", "boys"],
+    "content": {
+      "timing": "The male growth spurt typically occurs later than the female spurt, often between ages 12 and 15.",
+      "nutrition_demand": "Energy requirements peak during this stage; boys need increased portions of cereals and proteins."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_020",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["language_milestones", "social_development", "2_years"],
+    "content": {
+      "vocabulary": "By age 2, a boy should use at least 50 single words and start joining two words together.",
+      "social_play": "He should begin to show interest in playing near other children (parallel play)."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_021",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["preterm_charts", "blue_card", "corrected_age"],
+    "content": {
+      "pink_charts": "Preterm boys use the pink Intergrowth-21st charts until they reach 6 months of corrected age.",
+      "gestational_age": "Plotting must be done based on the weeks of pregnancy at birth (e.g., 32 weeks) rather than the calendar birthday for the first 6 months."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_022",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["field_weighing", "community_health", "boys"],
+    "content": {
+      "attendance": "Boys are weighed at the Field Weighing Post every month. Fathers are encouraged to attend to learn about nutritional needs.",
+      "CHDR_safety": "The blue card should be kept in a plastic cover to prevent damage, as it is needed for school medicals years later."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_023",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["vaccination_care", "paracetamol", "dosage"],
+    "content": {
+      "fever_management": "Boys may develop fever after the Pentavalent vaccine. Paracetamol dosage is calculated based on current weight recorded in the CHDR."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_024",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["development", "milestones", "red_flags"],
+    "content": {
+      "motor_delay": "If a boy cannot sit without support by 10 months, it is a red flag requiring a pediatric referral.",
+      "social_delay": "Lack of eye contact or not responding to his name by 12 months requires a psychosocial screening."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_025",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["responsive_feeding", "mealtime_behavior", "boys"],
+    "content": {
+      "forced_feeding": "Forcing a boy to eat can lead to a long-term aversion to healthy foods. Follow the child's hunger cues.",
+      "self_feeding": "Encourage the boy to use his hands to eat (finger foods) from 8-9 months to develop fine motor skills."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_026",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["nutrition", "energy_boost", "boys"],
+    "content": {
+      "fats": "Active boys have high energy needs. Add 1 teaspoon of coconut oil or ghee to each main meal to maintain weight gain."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_027",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["vision_screening", "red_reflex", "newborn"],
+    "content": {
+      "neonatal_vision": "The Red Reflex test is performed on male infants at birth and at 1 month to detect congenital eye issues."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_028",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["deworming", "schedule", "boys"],
+    "content": {
+      "timing": "All boys receive deworming tablets (Mebendazole) every 6 months starting from age 18 months until 5 years."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_029",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["milestones", "fine_motor", "pincer_grasp"],
+    "content": {
+      "milestone": "By 10 months, a boy should be able to pick up a small object (like a pea or crumb) using his thumb and index finger."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_030",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["dental_hygiene", "fluoride", "boys"],
+    "content": {
+      "brushing": "Use a smear of fluoride toothpaste twice a day as soon as the first tooth appears to prevent early childhood caries."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_031",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["immunization", "je_vaccine", "12_months"],
+    "content": {
+      "encephalitis": "The Japanese Encephalitis vaccine is given at 12 months to protect the boy's developing brain from viral infection."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_032",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["immunization", "mmr", "9_months"],
+    "content": {
+      "measles": "The first dose of Measles, Mumps, and Rubella (MMR) is given at 9 months. Rubella protection is important for community health."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_033",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["gross_motor", "jumping", "3_years"],
+    "content": {
+      "jumping": "By age 3, a boy should be able to jump off the ground with both feet and potentially stand on one foot for a second."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_034",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["clinical_observation", "phm_check", "clothing"],
+    "content": {
+      "height_clue": "If a boy is not outgrowing his clothes but gaining weight, his linear growth velocity is low, indicating potential stunting."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_035",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["diet", "food_groups", "variety"],
+    "content": {
+      "daily_requirement": "A boy's meal should include '4-star' nutrition: Staples, Pulses, Animal Foods, and Fruits/Vegetables."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_036",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["illness", "weight_loss", "recovery"],
+    "content": {
+      "extra_meal": "After an illness like fever or diarrhea, give the boy one extra meal every day for two weeks to regain lost weight."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_037",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["formula_milk", "clinical_note", "boys"],
+    "content": {
+      "obesity_link": "Early introduction of formula milk in boys is statistically linked to an increased risk of childhood obesity in the Sri Lankan context."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_038",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["bonding", "mental_health", "fatherhood"],
+    "content": {
+      "paternal_bond": "Active play and 'rough and tumble' play with the father support the boy's emotional regulation and physical confidence."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_039",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["statistics", "stunting_rates", "boys"],
+    "content": {
+      "national_data": "In Sri Lanka, stunting rates in boys are often higher than in girls in the 2-5 year age group, requiring vigilant monitoring of the blue card height chart."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_040",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["postpartum", "phm_visit", "newborn"],
+    "content": {
+      "visit_count": "The PHM must visit the male newborn at home on days 1, 5, and 10 to check for jaundice and feeding success."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_041",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["stool_color", "biliary_atresia", "boys"],
+    "content": {
+      "alarm_colors": "If the boy's stool is white, clay-colored, or very pale, he must be seen by a surgeon immediately (Refer to stool color chart in CHDR)."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_042",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["fIPV", "polio", "intradermal"],
+    "content": {
+      "polio_vaccine": "Boys receive two doses of Fractional Inactivated Polio Vaccine (fIPV) intradermally at 2 and 4 months."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_043",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["adolescent_bmi", "5_19_years", "thinness"],
+    "content": {
+      "undernutrition": "Boys plotting below -2SD on the 5-19 BMI chart are classified as 'Thin' and should be screened for intestinal worms or chronic illness."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_044",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["referral", "moh_role", "specialist"],
+    "content": {
+      "growth_failure": "If a boy's weight stays in the 'Yellow' zone for three consecutive months, the MOH must refer him to a Nutrition Specialist."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_045",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["maternal_health", "postpartum_vitamin_a", "boys"],
+    "content": {
+      "maternal_dose": "The mother's 200,000 IU Vitamin A dose within 14 days of the son's birth ensures he receives the nutrient via colostrum and early milk."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_046",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["pentavalent", "immunization_schedule", "boys"],
+    "content": {
+      "protection": "Protects against 5 diseases; given as a deep intramuscular injection in the boy's thigh at 2, 4, and 6 months."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_047",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["red_reflex", "eye_health", "boys"],
+    "content": {
+      "screening": "The Red Reflex test must be negative (normal red glow) in both eyes. A white reflex (leukocoria) is an emergency in a baby boy."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_048",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["stunting", "cognitive_link", "boys"],
+    "content": {
+      "intellectual_impact": "Chronic stunting in the first 24 months of a boy's life is strongly correlated with lower performance in Grade 5 scholarship exams."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_049",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["oral_health", "night_feeding", "caries"],
+    "content": {
+      "bottle_caries": "Avoid letting the boy sleep with a bottle of milk or juice to prevent severe decay of the front milk teeth."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_050",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["attachment", "stranger_anxiety", "milestones"],
+    "content": {
+      "social_milestone": "A boy showing distress when his mother leaves the room at 9 months is reaching a healthy emotional attachment milestone."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_051",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["worms", "mebendazole", "boys"],
+    "content": {
+      "parasite_control": "Mebendazole 500mg single dose is given at MOH clinics every 6 months to ensure the boy's nutrients go to growth, not parasites."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_052",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["heart_exam", "cyanosis", "newborn"],
+    "content": {
+      "heart_defect_signs": "If the boy's lips or tongue look bluish during crying, it is a clinical emergency indicating poor oxygenation."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_053",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["school_medicals", "scoliosis", "boys"],
+    "content": {
+      "smi_check": "Spinal alignment is checked in boys during Grade 7 and Grade 10 medical inspections by the School Health Team."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_054",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["median_growth", "WHO_standards", "boys"],
+    "content": {
+      "comparison": "The '0' line on the blue weight chart represents the median of the WHO multi-centre growth reference study for boys."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_055",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["thriposha", "preparation", "boys"],
+    "content": {
+      "recipe": "Mix Thriposha with scraped coconut and a small amount of sugar or jaggery to make Aggala for a nutritious snack for boys."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_056",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["school_entry", "vaccination_certificate", "boys"],
+    "content": {
+      "legal_requirement": "The CHDR's immunization page must be photocopied and submitted for the boy's school admission application."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_057",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["breastfeeding", "burping", "infant_boys"],
+    "content": {
+      "colic_prevention": "Boys often gulp air during active feeding; burping them twice per feed helps prevent tummy pain."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_058",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["color_vision", "ishihara", "grade_1"],
+    "content": {
+      "vision_check": "Male students in Grade 1 are prioritized for color vision screening as congenital color blindness is significantly more common in males."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_059",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["anaemia", "lethargy", "boys"],
+    "content": {
+      "iron_signs": "A boy who refuses to run or play and appears breathless during activity should be tested for low hemoglobin."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_060",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["plotting", "accuracy", "phm"],
+    "content": {
+      "error_check": "A vertical line on the chart (sudden gain) often indicates a plotting or weighing error rather than real growth."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_061",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["adolescence", "menarche_equivalent", "boys"],
+    "content": {
+      "puberty_signs": "The first signs of puberty in boys (testicular enlargement) are recorded by school doctors during Grade 7 SMI."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_062",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["neonatal_emergency", "sepsis_signs", "boys"],
+    "content": {
+      "lethargy_alert": "A newborn boy who is 'floppy' and has a poor suck reflex requires immediate screening for neonatal sepsis."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_063",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["language", "two-word_phrases", "milestones"],
+    "content": {
+      "milestone_24mo": "By 24 months, a boy should say phrases like 'Dada go' or 'Want milk'."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_064",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["hygiene", "foreskin", "infant_boys"],
+    "content": {
+      "care_routine": "Do not forcibly retract the foreskin in an infant boy; clean the area gently with water during daily baths."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_065",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["chdr_portability", "weighing_post", "boys"],
+    "content": {
+      "protocol": "Always present the blue card at the weighing post so the PHM can compare today's weight to last month's immediately."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_066",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["protein", "liver", "boys"],
+    "content": {
+      "iron_boost": "Steamed and mashed chicken liver is the best source of heme-iron for growing boys to prevent anaemia."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_067",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["stair_climbing", "gross_motor", "boys"],
+    "content": {
+      "milestone_21mo": "By 21 months, a boy should be able to climb stairs one step at a time while holding the wall."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_068",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["clapping", "tata", "milestones"],
+    "content": {
+      "social_9mo": "A boy should be able to wave 'Tata' and clap his hands when prompted by his parents."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_069",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["bcg_scar", "tuberculosis", "boys"],
+    "content": {
+      "verification": "The presence of a BCG scar is proof of primary vaccination; its absence must be noted in the clinical record of the CHDR."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_070",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["lost_card", "moh", "boys"],
+    "content": {
+      "replacement_fee": "A small administrative fee and an MOH visit are required to issue a duplicate blue CHDR card if the original is lost."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_071",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["puberty_growth", "calcium", "boys"],
+    "content": {
+      "bone_health": "Increased dairy (curd/yogurt) intake is vital for boys during the adolescent growth spurt to support bone density."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_072",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["jeewani", "ors", "boys"],
+    "content": {
+      "diarrhea_care": "One packet of Jeewani should be dissolved in 1 liter of cooled boiled water and given freely to the boy during bouts of diarrhea."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_073",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["sorting_skills", "cognition", "boys"],
+    "content": {
+      "milestone_36mo": "A 3-year-old boy should be able to group objects by size (big vs small)."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_074",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["burns", "safety", "kuppi_lamp"],
+    "content": {
+      "prevention": "Ensure all kerosene lamps are weighted or kept on high shelves to prevent accidental tipping by active boys."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_075",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["iron_rich_greens", "sarana", "boys"],
+    "content": {
+      "nutrition": "Sarana and Thampala are excellent local green leafy vegetables to include in a boy's lunch for iron sufficiency."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_076",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["sids_prevention", "sleep_safety", "boys"],
+    "content": {
+      "positioning": "Always place the boy on his back for sleep; avoid pillows or thick bolsters in the cot before age 1."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_077",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["fluorosis", "dental_care", "boys"],
+    "content": {
+      "prevention": "In areas with high fluoride in well water, use only a tiny smear of toothpaste for boys to prevent white spots on permanent teeth."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_078",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["clothes_size", "growth_delay", "boys"],
+    "content": {
+      "linear_growth": "Boys should outgrow their shoe size and pant length every 6-8 months during active growth phases."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_079",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["mmr_2", "booster", "boys"],
+    "content": {
+      "timing": "The second dose of MMR is given at 3 years to ensure the boy is protected before starting preschool."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_080",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["drawing_a_person", "cognition", "boys"],
+    "content": {
+      "milestone_48mo": "A 4-year-old boy should be able to draw a circle and a cross when shown how."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_081",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["goiter", "adolescent_medicals", "boys"],
+    "content": {
+      "checkup": "Thyroid gland palpation is part of the Grade 7 medical exam for boys in the Sri Lankan school health system."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_082",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["hygiene", "soap", "boys"],
+    "content": {
+      "education": "Teaching boys to wash hands after using the toilet is a key health intervention during the first school year."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_083",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["preterm_plotting", "gestational_age", "boys"],
+    "content": {
+      "standard": "Always use 'Corrected Age' for the first two years when plotting the height of a preterm boy to avoid misdiagnosing stunting."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_084",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["snacking", "appetite", "boys"],
+    "content": {
+      "habits": "Limit sugary tea between meals as it can make a boy feel 'full' and refuse his nutrient-dense lunch."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_085",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["toilet_training", "dryness", "boys"],
+    "content": {
+      "milestone_30mo": "Boys often take slightly longer than girls to achieve daytime dryness, typically between 2.5 and 3 years."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_086",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["pulse_check", "clinical_exam", "boys"],
+    "content": {
+      "femoral_pulse": "Checking for symmetrical leg pulses in boys helps detect rare congenital heart narrowings."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_087",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["speech_clarity", "development", "boys"],
+    "content": {
+      "milestone_3yrs": "By age 3, at least 75% of the boy's speech should be understood by a person who doesn't live with him."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_088",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["wasting_check", "nutrition_status", "boys"],
+    "content": {
+      "screening": "If a boy looks 'thin' despite being tall, the MO will check his weight-for-height to calculate the degree of wasting."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_089",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["sharing_toys", "socialization", "boys"],
+    "content": {
+      "milestone_36mo": "A 3-year-old boy is learning to share toys, though he may still be possessive of his favorites."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_090",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["transition", "adult_health", "19_years"],
+    "content": {
+      "final_step": "At age 19, the boy's pediatric record (CHDR) is closed, and he is advised to maintain his own health file for future medical history."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_091",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["hpv_vaccine", "boys_rationale", "schedule"],
+    "content": {
+      "prevention": "In Sri Lanka, while HPV is primarily for girls in school, boys may be advised on its benefits for preventing certain cancers later in life."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_092",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["psychosocial", "autism_red_flags", "boys"],
+    "content": {
+      "screening_18mo": "A boy not showing interest in 'peek-a-boo' or not using simple gestures (like pointing) at 18 months must be assessed for ASD."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_093",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["dental", "canines", "eruption"],
+    "content": {
+      "timing": "The canine teeth (pointy teeth) typically erupt in boys between 16 and 22 months of age."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_094",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["smi_grades", "vision", "boys"],
+    "content": {
+      "screening": "Boys in Grades 1, 4, 7, and 10 have their distance vision checked using a Snellen chart to identify myopia early."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_095",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["weight_for_length", "acute_malnutrition", "boys"],
+    "content": {
+      "sam_diagnosis": "A boy plotting below -3SD on the weight-for-length chart has Severe Acute Malnutrition and needs immediate hospitalization."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_096",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["iodine", "thyroid", "boys"],
+    "content": {
+      "check": "Goiter screening is included for boys to ensure that iodine deficiency isn't affecting their metabolic growth rates."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_097",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["umbilical_danger", "sepsis", "boys"],
+    "content": {
+      "warning": "Pus or a bad smell from the boy's belly button is a clinical sign of 'Omphalitis', a potentially fatal newborn infection."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_098",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["corrected_age", "milestones", "preterm_boys"],
+    "content": {
+      "development": "Always judge a preterm boy's milestones (like sitting or walking) by his corrected age until he is at least 2 years old."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_099",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["growth_spurt", "peak_height_velocity", "adolescent_boys"],
+    "content": {
+      "physiology": "The peak height velocity in boys often coincides with a deepening of the voice and other physical changes of puberty."
+    }
+  },
+  {
+    "id": "male_growth_CHDR_100",
+    "lankan": true,
+    "gender": "male",
+    "context_tags": ["longitudinal_record", "clinical_history", "boys"],
+    "content": {
+      "final_note": "The 19-year longitudinal record in the CHDR serves as a comprehensive medical history of the boy's growth, illnesses, and immunizations."
+    }
+  }
+]
+

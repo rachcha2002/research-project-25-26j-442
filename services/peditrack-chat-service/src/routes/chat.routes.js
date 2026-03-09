@@ -42,4 +42,8 @@ router.delete('/history/:conversationId', chatController.clearHistory);
 // Stream chat response (for real-time streaming)
 router.post('/stream', chatController.streamMessage);
 
+// RAG comparison endpoints
+router.post('/with-rag', chatController.sendMessageWithRag);
+router.post('/without-rag', chatController.sendMessageWithoutRag);
+
 module.exports = router;
