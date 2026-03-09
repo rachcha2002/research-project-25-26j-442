@@ -412,13 +412,13 @@ STRICT RULES:
                 // Use Gemini vision model
                 const { ChatGoogleGenerativeAI } = require('@langchain/google-genai');
                 const visionModel = new ChatGoogleGenerativeAI({
-                    modelName: process.env.GOOGLE_VISION_MODEL || 'gemini-1.5-flash',
+                    model: process.env.GOOGLE_VISION_MODEL || 'gemini-1.5-flash',
                     temperature: temperature || 0.7,
                     maxOutputTokens: maxTokens || 1000,
                     apiKey: process.env.GOOGLE_API_KEY,
                 });
 
-                console.log(`   Model: ${visionModel.modelName}`);
+                console.log(`   Model: ${visionModel.model}`);
                 const response = await visionModel.invoke(geminiMessages);
 
                 console.log('✅ Gemini vision response received');
@@ -427,7 +427,7 @@ STRICT RULES:
                     success: true,
                     response: response.content,
                     provider: 'google',
-                    model: visionModel.modelName
+                    model: visionModel.model
                 };
             }
 
