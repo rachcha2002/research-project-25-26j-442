@@ -465,9 +465,9 @@
                     if (msg.type === 'audio') {
                         playPcmAudio(msg.data);
                     } else if (msg.type === 'user_transcript') {
-                        setHint('You: ' + msg.text, false);
+                        // transcript hidden
                     } else if (msg.type === 'ai_transcript' || msg.type === 'text') {
-                        setHint('AI: ' + msg.text, true);
+                        // transcript hidden
                     } else if (msg.type === 'interrupted') {
                         audioQueue = []; isPlaying = false;
                         nextStartTime = audioContext ? audioContext.currentTime : 0;
