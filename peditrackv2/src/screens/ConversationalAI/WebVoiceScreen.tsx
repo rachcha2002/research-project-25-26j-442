@@ -8,7 +8,7 @@ import { Colors } from '@/constants/Colors';
 import { Audio } from 'expo-av';
 
 // Update this to match your backend IP
-const VOICE_CHAT_URL = 'https://peditrack-chat-service-production-0d1d.up.railway.app/voice-chat.html';
+const VOICE_CHAT_URL = 'https://research-project-25-26j-442-production-dc5b.up.railway.app/voice-chat.html';
 
 export default function WebVoiceScreen() {
     const [isLoading, setIsLoading] = React.useState(true);
