@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
-<!-- v2.0 App Theme -->
+<!-- v3.0 Modern -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PediTrack Live Voice</title>
+    <title>PediTrack AI</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -12,238 +12,272 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #F9FAFB;
             color: #111827;
-            min-height: 100dvh;
+            height: 100dvh;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: center;
             overflow: hidden;
         }
 
         .container {
             width: 100%;
-            max-width: 500px;
-            padding: 24px 24px 16px;
+            max-width: 420px;
+            height: 100dvh;
+            padding: 48px 32px calc(40px + env(safe-area-inset-bottom));
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 16px;
-            height: 100dvh;
-            overflow: hidden;
+            justify-content: space-between;
         }
 
-        /* Header */
-        .header {
+        /* ── TOP ── */
+        .top {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
             width: 100%;
-            text-align: center;
-            padding-top: 8px;
         }
-        .header h2 {
-            font-size: 1.5rem;
+
+        .app-title {
+            font-size: 1.6rem;
             font-weight: 700;
             color: #7C3AED;
-            margin-bottom: 6px;
+            letter-spacing: -0.3px;
         }
-        .status-badge {
-            display: inline-block;
-            padding: 5px 14px;
-            border-radius: 20px;
-            background: #F3F4F6;
-            color: #6B7280;
-            font-size: 0.85rem;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-        .status-badge.connected  { background: #DCFCE7; color: #16A34A; }
-        .status-badge.error      { background: #FEE2E2; color: #EF4444; }
-        .status-badge.connecting { background: #EDE9FE; color: #7C3AED; }
 
-        /* Visualizer */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 99px;
+            font-size: 0.82rem;
+            font-weight: 500;
+            background: #EDE9FE;
+            color: #7C3AED;
+            transition: all 0.3s ease;
+        }
+        .status-pill::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0.8;
+            flex-shrink: 0;
+        }
+        .status-pill.connected  { background: #DCFCE7; color: #16A34A; }
+        .status-pill.error      { background: #FEE2E2; color: #EF4444; }
+        .status-pill.connecting { background: #FEF9C3; color: #B45309; }
+
+        /* ── MIDDLE ── */
+        .middle {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        /* Orbit ring + visualizer */
+        .orb-wrap {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .orb-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle at 40% 35%, #c4b5fd, #7C3AED 60%, #5b21b6);
+            opacity: 0.12;
+            transition: transform 0.15s ease, opacity 0.15s ease;
+        }
+        .orb-ring.pulse-anim {
+            animation: orbPulse 2s ease-in-out infinite;
+        }
+        @keyframes orbPulse {
+            0%, 100% { transform: scale(1);    opacity: 0.12; }
+            50%       { transform: scale(1.08); opacity: 0.20; }
+        }
+
         .visualizer {
+            position: relative;
+            z-index: 2;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 5px;
-            height: 90px;
-            flex-shrink: 0;
+            width: 140px;
+            height: 60px;
         }
         .bar {
-            width: 5px;
-            background: #E8E5FF;
+            width: 4px;
             border-radius: 4px;
-            height: 8px;
-            transition: height 0.1s ease;
+            height: 6px;
+            background: #C4B5FD;
+            transition: height 0.08s ease, background 0.2s;
         }
         .bar.active {
             background: #7C3AED;
-            box-shadow: 0 0 8px rgba(124, 58, 237, 0.4);
         }
 
-        /* Transcript */
-        .transcript-area {
-            width: 100%;
-            background: #FFFFFF;
-            border: 1px solid #E5E7EB;
-            border-radius: 16px;
-            padding: 16px;
-            flex: 1;
-            overflow-y: auto;
-            text-align: left;
+        /* Hint text */
+        .hint {
             font-size: 0.95rem;
-            line-height: 1.65;
-            color: #374151;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-        }
-        .transcript-area .placeholder {
-            color: #9CA3AF;
+            color: #6B7280;
             text-align: center;
-            margin-top: 8px;
+            line-height: 1.5;
+            min-height: 44px;
+            transition: color 0.3s;
         }
-        .transcript-area .user-msg {
-            background: #EDE9FE;
-            color: #5B21B6;
-            border-radius: 12px 12px 4px 12px;
-            padding: 8px 12px;
-            margin-bottom: 10px;
-            max-width: 90%;
-            margin-left: auto;
-        }
-        .transcript-area .ai-msg {
-            background: #F3F4F6;
-            color: #111827;
-            border-radius: 12px 12px 12px 4px;
-            padding: 8px 12px;
-            margin-bottom: 10px;
-            max-width: 90%;
-        }
-        .transcript-area .msg-label {
-            font-size: 0.72rem;
-            font-weight: 600;
-            opacity: 0.6;
-            display: block;
-            margin-bottom: 2px;
+        .hint.active-hint { color: #7C3AED; font-weight: 500; }
+
+        /* ── BOTTOM ── */
+        .bottom {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
         }
 
-        /* Language row */
+        /* Language */
         .language-row {
             display: flex;
             align-items: center;
-            justify-content: center;
             gap: 10px;
+            background: #FFFFFF;
+            border: 1.5px solid #E5E7EB;
+            border-radius: 14px;
+            padding: 10px 16px;
             width: 100%;
+            max-width: 280px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.04);
         }
         .language-row label {
-            font-size: 0.88rem;
+            font-size: 0.82rem;
             color: #6B7280;
             font-weight: 500;
+            white-space: nowrap;
         }
         .language-select {
-            background: #FFFFFF;
+            flex: 1;
+            background: transparent;
             color: #111827;
-            border: 1.5px solid #D1D5DB;
-            border-radius: 10px;
-            padding: 7px 12px;
+            border: none;
             font-size: 0.9rem;
-            font-weight: 500;
+            font-weight: 600;
             outline: none;
             cursor: pointer;
-        }
-        .language-select:focus {
-            border-color: #7C3AED;
-            box-shadow: 0 0 0 3px rgba(124,58,237,0.12);
+            min-width: 0;
         }
         .language-note {
-            font-size: 0.75rem;
+            font-size: 0.73rem;
             color: #D97706;
             text-align: center;
-            min-height: 16px;
-            width: 100%;
+            min-height: 14px;
         }
 
-        /* Controls */
+        /* Buttons row */
         .controls {
             display: flex;
-            gap: 24px;
-            justify-content: center;
             align-items: center;
-            padding-bottom: calc(12px + env(safe-area-inset-bottom));
-            flex-shrink: 0;
+            justify-content: center;
+            gap: 28px;
         }
+
         .mic-btn {
-            width: 80px;
-            height: 80px;
+            width: 76px;
+            height: 76px;
             border-radius: 50%;
-            background: #7C3AED;
+            background: linear-gradient(135deg, #7C3AED, #6D28D9);
             border: none;
             color: white;
-            font-size: 30px;
+            font-size: 28px;
             cursor: pointer;
-            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.4);
-            transition: all 0.2s;
+            box-shadow: 0 6px 24px rgba(124, 58, 237, 0.45);
+            transition: transform 0.15s, box-shadow 0.15s;
             display: flex;
             align-items: center;
             justify-content: center;
         }
-        .mic-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .mic-btn:active { transform: scale(0.95); }
+        .mic-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+        .mic-btn:active   { transform: scale(0.94); }
         .mic-btn.listening {
-            background: #EF4444;
-            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
-            animation: pulse 2s infinite;
+            background: linear-gradient(135deg, #EF4444, #DC2626);
+            box-shadow: 0 6px 24px rgba(239, 68, 68, 0.45);
+            animation: micPulse 2s infinite;
         }
-        @keyframes pulse {
-            0%   { box-shadow: 0 0 0 0   rgba(239, 68, 68, 0.4); }
-            70%  { box-shadow: 0 0 0 18px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0   rgba(239, 68, 68, 0); }
+        @keyframes micPulse {
+            0%, 100% { box-shadow: 0 6px 24px rgba(239,68,68,0.45); }
+            50%       { box-shadow: 0 6px 36px rgba(239,68,68,0.7); }
         }
 
         .stop-btn {
-            width: 58px;
-            height: 58px;
+            width: 52px;
+            height: 52px;
             border-radius: 50%;
             background: #FEE2E2;
             border: none;
             color: #EF4444;
-            font-size: 22px;
+            font-size: 20px;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: background 0.2s, transform 0.15s;
             display: none;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 2px 8px rgba(239,68,68,0.15);
         }
         .stop-btn:hover  { background: #FECACA; }
-        .stop-btn:active { transform: scale(0.95); }
+        .stop-btn:active { transform: scale(0.94); }
         .stop-btn.visible { display: flex; }
 
-        /* Debug */
         .debug-info {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             color: #9CA3AF;
-            padding-bottom: 4px;
-            flex-shrink: 0;
+            min-height: 14px;
         }
 
-        @media (max-height: 720px) {
-            .container { gap: 10px; padding: 14px 16px 10px; }
-            .visualizer { height: 64px; }
-            .mic-btn { width: 68px; height: 68px; font-size: 26px; }
-            .stop-btn { width: 52px; height: 52px; font-size: 20px; }
+        @media (max-height: 680px) {
+            .container  { padding: 28px 24px 20px; }
+            .orb-wrap   { width: 150px; height: 150px; }
+            .visualizer { width: 110px; height: 44px; }
+            .middle     { gap: 24px; }
+            .app-title  { font-size: 1.35rem; }
             .debug-info { display: none; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+<div class="container">
 
-        <div class="header">
-            <h2>Voice Assistant</h2>
-            <div id="status" class="status-badge">Ready</div>
+    <!-- TOP -->
+    <div class="top">
+        <span class="app-title">PediTrack AI</span>
+        <span id="status" class="status-pill">Ready</span>
+    </div>
+
+    <!-- MIDDLE -->
+    <div class="middle">
+        <div class="orb-wrap">
+            <div class="orb-ring" id="orbRing"></div>
+            <div class="visualizer" id="visualizer"></div>
         </div>
 
-        <div class="visualizer" id="visualizer"></div>
+        <p class="hint" id="hint">Tap the mic to start talking</p>
+    </div>
 
+    <!-- BOTTOM -->
+    <div class="bottom">
         <div class="language-row">
-            <label for="languageSelect">Language</label>
+            <label for="languageSelect">🌐 Language</label>
             <select id="languageSelect" class="language-select">
                 <option value="en">English</option>
                 <option value="ta">தமிழ் (Tamil)</option>
@@ -251,10 +285,6 @@
             </select>
         </div>
         <div id="languageNote" class="language-note"></div>
-
-        <div class="transcript-area" id="transcript">
-            <p class="placeholder">Tap the microphone to start a live conversation...</p>
-        </div>
 
         <div class="controls">
             <button id="micBtn" class="mic-btn">🎙️</button>
@@ -264,336 +294,326 @@
         <div class="debug-info" id="debugInfo"></div>
     </div>
 
-    <script>
-        // ===== CONFIG =====
-        const SERVER_HOST = 'research-project-25-26j-442-production-dc5b.up.railway.app';
-        const INPUT_SAMPLE_RATE  = 16000;
-        const OUTPUT_SAMPLE_RATE = 24000;
+</div>
+<script>
+    // ===== CONFIG =====
+    const SERVER_HOST        = 'research-project-25-26j-442-production-dc5b.up.railway.app';
+    const INPUT_SAMPLE_RATE  = 16000;
+    const OUTPUT_SAMPLE_RATE = 24000;
 
-        // ===== STATE =====
-        let ws = null, audioContext = null, processor = null;
-        let mediaStream = null, isListening = false;
-        let isConnecting = false, isIntentionalClose = false;
+    // ===== STATE =====
+    let ws = null, audioContext = null, processor = null;
+    let mediaStream = null, isListening = false;
+    let isConnecting = false, isIntentionalClose = false;
 
-        // ===== DOM =====
-        const statusEl       = document.getElementById('status');
-        const micBtn         = document.getElementById('micBtn');
-        const stopBtn        = document.getElementById('stopBtn');
-        const visualizer     = document.getElementById('visualizer');
-        const transcriptEl   = document.getElementById('transcript');
-        const debugInfo      = document.getElementById('debugInfo');
-        const languageSelect = document.getElementById('languageSelect');
-        const languageNote   = document.getElementById('languageNote');
+    // ===== DOM =====
+    const statusEl       = document.getElementById('status');
+    const micBtn         = document.getElementById('micBtn');
+    const stopBtn        = document.getElementById('stopBtn');
+    const visualizer     = document.getElementById('visualizer');
+    const hintEl         = document.getElementById('hint');
+    const debugInfo      = document.getElementById('debugInfo');
+    const languageSelect = document.getElementById('languageSelect');
+    const languageNote   = document.getElementById('languageNote');
+    const orbRing        = document.getElementById('orbRing');
 
-        const LANGUAGE_LABELS = { en: 'English', ta: 'Tamil', si: 'Sinhala' };
-        let selectedLanguage = 'en';
+    const LANGUAGE_LABELS = { en: 'English', ta: 'Tamil', si: 'Sinhala' };
+    let selectedLanguage = 'en';
 
-        // Build visualizer bars
-        for (let i = 0; i < 18; i++) {
-            const bar = document.createElement('div');
-            bar.className = 'bar';
-            visualizer.appendChild(bar);
-        }
-        const bars = document.querySelectorAll('.bar');
+    // Build bars
+    for (let i = 0; i < 18; i++) {
+        const b = document.createElement('div');
+        b.className = 'bar';
+        visualizer.appendChild(b);
+    }
+    const bars = document.querySelectorAll('.bar');
 
-        // ===== LANGUAGE =====
-        function updateLanguageNote() {
-            languageNote.textContent = selectedLanguage === 'si'
-                ? 'Sinhala accuracy may be lower than English or Tamil.'
-                : '';
-        }
-        languageSelect.addEventListener('change', () => {
-            selectedLanguage = languageSelect.value;
-            updateLanguageNote();
-            if (ws && ws.readyState === WebSocket.OPEN) endCall();
+    // ===== LANGUAGE =====
+    function updateLanguageNote() {
+        languageNote.textContent = selectedLanguage === 'si'
+            ? 'Sinhala accuracy may be lower than English or Tamil.' : '';
+    }
+    languageSelect.addEventListener('change', () => {
+        selectedLanguage = languageSelect.value;
+        updateLanguageNote();
+        if (ws && ws.readyState === WebSocket.OPEN) endCall();
+    });
+
+    // ===== UI HELPERS =====
+    function updateStatus(text, type = '') {
+        statusEl.textContent = text;
+        statusEl.className = 'status-pill ' + type;
+    }
+    function setHint(text, active = false) {
+        hintEl.textContent = text;
+        hintEl.className = 'hint' + (active ? ' active-hint' : '');
+    }
+    function log(msg) {
+        console.log('[Voice]', msg);
+        debugInfo.textContent = msg;
+    }
+    function updateVisualizerLevel(level) {
+        const active = level > 0.02;
+        orbRing.classList.toggle('pulse-anim', active);
+        bars.forEach(bar => {
+            const h = active ? Math.max(6, Math.min(48, level * 260 * (Math.random() + 0.5))) : 6;
+            bar.style.height = h + 'px';
+            bar.classList.toggle('active', active);
         });
+    }
 
-        // ===== HELPERS =====
-        function updateStatus(text, type = '') {
-            statusEl.textContent = text;
-            statusEl.className = 'status-badge ' + type;
-        }
-
-        function log(msg) {
-            console.log('[Voice]', msg);
-            debugInfo.textContent = msg;
-        }
-
-        function addTranscript(label, text, className) {
-            const placeholder = transcriptEl.querySelector('.placeholder');
-            if (placeholder) placeholder.remove();
-
-            const div = document.createElement('div');
-            div.className = className;
-            div.innerHTML = `<span class="msg-label">${label}</span>${text}`;
-            transcriptEl.appendChild(div);
-            transcriptEl.scrollTop = transcriptEl.scrollHeight;
-        }
-
-        function updateVisualizerLevel(level) {
-            bars.forEach(bar => {
-                const h = Math.max(8, Math.min(70, level * 280 * (Math.random() + 0.5)));
-                bar.style.height = h + 'px';
-                bar.classList.toggle('active', level > 0.02);
-            });
-        }
-
-        // ===== AUDIO =====
-        async function initAudio() {
-            try {
-                log('Requesting microphone...');
-                mediaStream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        channelCount: 1,
-                        sampleRate: { ideal: 48000 },
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true,
-                        latency: 0.01
-                    }
-                });
-
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                await audioContext.audioWorklet.addModule('/audio-worklet.js');
-
-                const source = audioContext.createMediaStreamSource(mediaStream);
-                processor = new AudioWorkletNode(audioContext, 'audio-recorder-worklet');
-
-                processor.port.onmessage = async (event) => {
-                    if (!isListening || !ws || ws.readyState !== WebSocket.OPEN) return;
-                    const msg = event.data;
-                    if (msg.type !== 'audio') return;
-                    try {
-                        const float32 = new Float32Array(msg.data);
-                        const normalized = normalizeAudio(float32);
-                        updateVisualizerLevel(msg.rms || 0);
-                        const pcm = floatTo16BitPCM(normalized);
-                        ws.send(JSON.stringify({
-                            type: 'audio',
-                            data: arrayBufferToBase64(pcm.buffer),
-                            sampleRate: INPUT_SAMPLE_RATE
-                        }));
-                    } catch (err) { console.error('Audio error:', err); }
-                };
-
-                source.connect(processor);
-                log('Mic ready');
-                return true;
-            } catch (err) {
-                log('Mic error: ' + err.message);
-                updateStatus('Microphone Error', 'error');
-                return false;
-            }
-        }
-
-        function normalizeAudio(samples) {
-            let maxAmp = 0;
-            for (let i = 0; i < samples.length; i++) maxAmp = Math.max(maxAmp, Math.abs(samples[i]));
-            if (maxAmp <= 0.01 || maxAmp >= 0.5) return samples;
-            const gain = 0.7 / maxAmp;
-            const out = new Float32Array(samples.length);
-            for (let i = 0; i < samples.length; i++) out[i] = Math.max(-1, Math.min(1, samples[i] * gain));
-            return out;
-        }
-
-        function floatTo16BitPCM(input) {
-            const out = new Int16Array(input.length);
-            for (let i = 0; i < input.length; i++) {
-                const s = Math.max(-1, Math.min(1, input[i]));
-                out[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-            }
-            return out;
-        }
-
-        function arrayBufferToBase64(buffer) {
-            let bin = '';
-            const bytes = new Uint8Array(buffer);
-            for (let i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]);
-            return btoa(bin);
-        }
-
-        // ===== WEBSOCKET =====
-        function connectWebSocket() {
-            return new Promise((resolve, reject) => {
-                const id = 'voice-' + Math.random().toString(36).slice(2, 9) + '-' + Date.now();
-                const wsUrl = `wss://${SERVER_HOST}/ws/live?conversationId=${id}&language=${encodeURIComponent(selectedLanguage)}`;
-
-                log(`Connecting (${LANGUAGE_LABELS[selectedLanguage]})...`);
-                updateStatus('Connecting...', 'connecting');
-                isConnecting = true;
-
-                try { ws = new WebSocket(wsUrl); }
-                catch (err) { reject(err); return; }
-
-                const timeout = setTimeout(() => { ws.close(); reject(new Error('Timeout')); }, 10000);
-
-                ws.onopen = () => {
-                    clearTimeout(timeout);
-                    isConnecting = false;
-                    isIntentionalClose = false;
-                    updateStatus('Connected', 'connected');
-                    stopBtn.classList.add('visible');
-                    log('Connected');
-                    resolve();
-                };
-
-                ws.onmessage = async (event) => {
-                    try {
-                        const msg = JSON.parse(event.data);
-                        if (msg.type === 'audio') {
-                            playPcmAudio(msg.data);
-                        } else if (msg.type === 'user_transcript') {
-                            addTranscript('You', msg.text, 'user-msg');
-                        } else if (msg.type === 'ai_transcript' || msg.type === 'text') {
-                            addTranscript('AI', msg.text, 'ai-msg');
-                        } else if (msg.type === 'interrupted') {
-                            audioQueue = []; isPlaying = false;
-                            nextStartTime = audioContext ? audioContext.currentTime : 0;
-                        } else if (msg.type === 'session_created' && msg.language) {
-                            selectedLanguage = msg.language;
-                            languageSelect.value = msg.language;
-                            updateLanguageNote();
-                        } else if (msg.type === 'setup_complete') {
-                            log('Ready');
-                            transcriptEl.innerHTML = '<p class="placeholder">Listening... Speak now!</p>';
-                        } else if (msg.type === 'error') {
-                            log('Error: ' + msg.error);
-                            updateStatus('Error', 'error');
-                        }
-                    } catch (err) { console.error('Parse error:', err); }
-                };
-
-                ws.onclose = (event) => {
-                    clearTimeout(timeout);
-                    isConnecting = false; isListening = false;
-                    micBtn.classList.remove('listening');
-                    stopBtn.classList.remove('visible');
-                    ws = null;
-                    if (isIntentionalClose) {
-                        isIntentionalClose = false;
-                        updateStatus('Ready', '');
-                        transcriptEl.innerHTML = '<p class="placeholder">Call ended. Tap mic to start a new conversation.</p>';
-                    } else {
-                        updateStatus('Disconnected', 'error');
-                        transcriptEl.innerHTML = '<p class="placeholder">Connection closed. Tap mic to reconnect.</p>';
-                    }
-                    log('Disconnected');
-                };
-
-                ws.onerror = () => {
-                    clearTimeout(timeout);
-                    isConnecting = false;
-                    log('Connection failed');
-                    updateStatus('Connection Failed', 'error');
-                    reject(new Error('WebSocket error'));
-                };
-            });
-        }
-
-        // ===== CONTROLS =====
-        micBtn.onclick = async () => {
-            if (isConnecting) return;
-            if (ws && ws.readyState === WebSocket.OPEN && isListening)  { stopListening(); return; }
-            if (ws && ws.readyState === WebSocket.OPEN && !isListening) { startListening(); return; }
-
-            micBtn.disabled = true;
-            try {
-                if (!audioContext) {
-                    const ok = await initAudio();
-                    if (!ok) { micBtn.disabled = false; return; }
+    // ===== AUDIO =====
+    async function initAudio() {
+        try {
+            log('Requesting microphone...');
+            mediaStream = await navigator.mediaDevices.getUserMedia({
+                audio: {
+                    channelCount: 1,
+                    sampleRate: { ideal: 48000 },
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true,
+                    latency: 0.01
                 }
-                await connectWebSocket();
-                startListening();
-            } catch (err) {
-                log('Failed: ' + err.message);
-                updateStatus('Failed', 'error');
-            }
-            micBtn.disabled = false;
-        };
+            });
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            await audioContext.audioWorklet.addModule('/audio-worklet.js');
 
-        function startListening() {
-            if (!ws || ws.readyState !== WebSocket.OPEN) return;
-            if (audioContext && audioContext.state === 'suspended') audioContext.resume();
-            isListening = true;
-            micBtn.classList.add('listening');
-            updateStatus('Listening...', 'connected');
-            transcriptEl.innerHTML = '<p class="placeholder">Listening... Speak now!</p>';
-            log('Listening');
+            const source = audioContext.createMediaStreamSource(mediaStream);
+            processor = new AudioWorkletNode(audioContext, 'audio-recorder-worklet');
+
+            processor.port.onmessage = async (event) => {
+                if (!isListening || !ws || ws.readyState !== WebSocket.OPEN) return;
+                const msg = event.data;
+                if (msg.type !== 'audio') return;
+                try {
+                    const float32 = new Float32Array(msg.data);
+                    const normalized = normalizeAudio(float32);
+                    updateVisualizerLevel(msg.rms || 0);
+                    const pcm = floatTo16BitPCM(normalized);
+                    ws.send(JSON.stringify({
+                        type: 'audio',
+                        data: arrayBufferToBase64(pcm.buffer),
+                        sampleRate: INPUT_SAMPLE_RATE
+                    }));
+                } catch (err) { console.error('Audio err:', err); }
+            };
+            source.connect(processor);
+            log('Mic ready');
+            return true;
+        } catch (err) {
+            log('Mic error: ' + err.message);
+            updateStatus('Mic Error', 'error');
+            setHint('Microphone access denied. Please allow mic permission.');
+            return false;
         }
+    }
 
-        function stopListening() {
-            isListening = false;
-            micBtn.classList.remove('listening');
-            updateStatus('Paused', '');
-            if (ws && ws.readyState === WebSocket.OPEN)
-                ws.send(JSON.stringify({ type: 'audio_stream_end' }));
-            log('Paused');
+    function normalizeAudio(samples) {
+        let maxAmp = 0;
+        for (let i = 0; i < samples.length; i++) maxAmp = Math.max(maxAmp, Math.abs(samples[i]));
+        if (maxAmp <= 0.01 || maxAmp >= 0.5) return samples;
+        const gain = 0.7 / maxAmp;
+        const out = new Float32Array(samples.length);
+        for (let i = 0; i < samples.length; i++) out[i] = Math.max(-1, Math.min(1, samples[i] * gain));
+        return out;
+    }
+    function floatTo16BitPCM(input) {
+        const out = new Int16Array(input.length);
+        for (let i = 0; i < input.length; i++) {
+            const s = Math.max(-1, Math.min(1, input[i]));
+            out[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
         }
+        return out;
+    }
+    function arrayBufferToBase64(buffer) {
+        let bin = '';
+        const bytes = new Uint8Array(buffer);
+        for (let i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]);
+        return btoa(bin);
+    }
 
-        stopBtn.onclick = () => endCall();
+    // ===== WEBSOCKET =====
+    function connectWebSocket() {
+        return new Promise((resolve, reject) => {
+            const id = 'voice-' + Math.random().toString(36).slice(2, 9) + '-' + Date.now();
+            const wsUrl = `wss://${SERVER_HOST}/ws/live?conversationId=${id}&language=${encodeURIComponent(selectedLanguage)}`;
 
-        function endCall() {
-            isListening = false; isConnecting = false;
-            micBtn.classList.remove('listening');
-            isIntentionalClose = true;
-            if (ws) {
-                if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'audio_stream_end' }));
-                ws.close();
-            } else {
+            log(`Connecting (${LANGUAGE_LABELS[selectedLanguage]})...`);
+            updateStatus('Connecting...', 'connecting');
+            setHint('Connecting to PediTrack AI...');
+            isConnecting = true;
+
+            try { ws = new WebSocket(wsUrl); }
+            catch (err) { reject(err); return; }
+
+            const timeout = setTimeout(() => { ws.close(); reject(new Error('Timeout')); }, 10000);
+
+            ws.onopen = () => {
+                clearTimeout(timeout);
+                isConnecting = false;
                 isIntentionalClose = false;
+                updateStatus('Connected', 'connected');
+                stopBtn.classList.add('visible');
+                log('Connected');
+                resolve();
+            };
+
+            ws.onmessage = async (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    if (msg.type === 'audio') {
+                        playPcmAudio(msg.data);
+                    } else if (msg.type === 'user_transcript') {
+                        setHint('You: ' + msg.text, false);
+                    } else if (msg.type === 'ai_transcript' || msg.type === 'text') {
+                        setHint('AI: ' + msg.text, true);
+                    } else if (msg.type === 'interrupted') {
+                        audioQueue = []; isPlaying = false;
+                        nextStartTime = audioContext ? audioContext.currentTime : 0;
+                    } else if (msg.type === 'session_created' && msg.language) {
+                        selectedLanguage = msg.language;
+                        languageSelect.value = msg.language;
+                        updateLanguageNote();
+                    } else if (msg.type === 'setup_complete') {
+                        log('Ready');
+                        setHint('Listening… speak now!', true);
+                    } else if (msg.type === 'error') {
+                        log('Error: ' + msg.error);
+                        updateStatus('Error', 'error');
+                        setHint('Something went wrong. Try again.');
+                    }
+                } catch (err) { console.error('Parse error:', err); }
+            };
+
+            ws.onclose = (event) => {
+                clearTimeout(timeout);
+                isConnecting = false; isListening = false;
+                micBtn.classList.remove('listening');
+                stopBtn.classList.remove('visible');
+                orbRing.classList.remove('pulse-anim');
+                bars.forEach(b => { b.style.height = '6px'; b.classList.remove('active'); });
+                ws = null;
+                if (isIntentionalClose) {
+                    isIntentionalClose = false;
+                    updateStatus('Ready', '');
+                    setHint('Tap the mic to start talking');
+                } else {
+                    updateStatus('Disconnected', 'error');
+                    setHint('Connection lost. Tap mic to reconnect.');
+                }
+            };
+
+            ws.onerror = () => {
+                clearTimeout(timeout);
+                isConnecting = false;
+                updateStatus('Failed', 'error');
+                setHint('Connection failed. Check your network.');
+                reject(new Error('WebSocket error'));
+            };
+        });
+    }
+
+    // ===== CONTROLS =====
+    micBtn.onclick = async () => {
+        if (isConnecting) return;
+        if (ws && ws.readyState === WebSocket.OPEN && isListening)  { stopListening(); return; }
+        if (ws && ws.readyState === WebSocket.OPEN && !isListening) { startListening(); return; }
+
+        micBtn.disabled = true;
+        try {
+            if (!audioContext) {
+                const ok = await initAudio();
+                if (!ok) { micBtn.disabled = false; return; }
             }
-            audioQueue = []; isPlaying = false; nextStartTime = 0;
-            stopBtn.classList.remove('visible');
-            updateStatus('Ready', '');
+            await connectWebSocket();
+            startListening();
+        } catch (err) {
+            log('Failed: ' + err.message);
+            updateStatus('Failed', 'error');
+            setHint('Could not connect. Tap to try again.');
         }
+        micBtn.disabled = false;
+    };
 
-        // ===== AUDIO PLAYBACK =====
-        let audioQueue = [], isPlaying = false, nextStartTime = 0;
+    function startListening() {
+        if (!ws || ws.readyState !== WebSocket.OPEN) return;
+        if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+        isListening = true;
+        micBtn.classList.add('listening');
+        updateStatus('Listening...', 'connected');
+        setHint('Listening… speak now!', true);
+        log('Listening');
+    }
 
-        function playPcmAudio(base64Data) {
-            audioQueue.push(base64Data);
-            processAudioQueue();
-        }
+    function stopListening() {
+        isListening = false;
+        micBtn.classList.remove('listening');
+        orbRing.classList.remove('pulse-anim');
+        bars.forEach(b => { b.style.height = '6px'; b.classList.remove('active'); });
+        updateStatus('Paused', '');
+        setHint('Paused. Tap mic to resume.');
+        if (ws && ws.readyState === WebSocket.OPEN)
+            ws.send(JSON.stringify({ type: 'audio_stream_end' }));
+        log('Paused');
+    }
 
-        function processAudioQueue() {
-            if (isPlaying || audioQueue.length === 0) return;
-            isPlaying = true;
-            const base64Data = audioQueue.shift();
-            try {
-                const bin = atob(base64Data);
-                const bytes = new Uint8Array(bin.length);
-                for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    stopBtn.onclick = () => endCall();
 
-                const int16 = new Int16Array(bytes.buffer);
-                const float32 = new Float32Array(int16.length);
-                for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768;
-
-                const buffer = audioContext.createBuffer(1, float32.length, OUTPUT_SAMPLE_RATE);
-                buffer.getChannelData(0).set(float32);
-
-                const source = audioContext.createBufferSource();
-                source.buffer = buffer;
-                source.connect(audioContext.destination);
-
-                const now = audioContext.currentTime;
-                if (nextStartTime < now) nextStartTime = now;
-                source.start(nextStartTime);
-                nextStartTime += buffer.duration;
-
-                source.onended = () => {
-                    if (audioQueue.length === 0 && audioContext.currentTime >= nextStartTime) isPlaying = false;
-                };
-                isPlaying = false;
-                processAudioQueue();
-            } catch (e) {
-                console.error('Playback error:', e);
-                isPlaying = false;
-            }
-        }
-
-        // ===== INIT =====
+    function endCall() {
+        isListening = false; isConnecting = false;
+        micBtn.classList.remove('listening');
+        isIntentionalClose = true;
+        if (ws) {
+            if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'audio_stream_end' }));
+            ws.close();
+        } else { isIntentionalClose = false; }
+        audioQueue = []; isPlaying = false; nextStartTime = 0;
+        stopBtn.classList.remove('visible');
+        orbRing.classList.remove('pulse-anim');
+        bars.forEach(b => { b.style.height = '6px'; b.classList.remove('active'); });
         updateStatus('Ready', '');
-        log('Ready. Tap mic to start.');
-    </script>
+        setHint('Tap the mic to start talking');
+    }
+
+    // ===== PLAYBACK =====
+    let audioQueue = [], isPlaying = false, nextStartTime = 0;
+
+    function playPcmAudio(base64Data) { audioQueue.push(base64Data); processAudioQueue(); }
+
+    function processAudioQueue() {
+        if (isPlaying || audioQueue.length === 0) return;
+        isPlaying = true;
+        const base64Data = audioQueue.shift();
+        try {
+            const bin = atob(base64Data);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            const int16 = new Int16Array(bytes.buffer);
+            const float32 = new Float32Array(int16.length);
+            for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32768;
+
+            const buffer = audioContext.createBuffer(1, float32.length, OUTPUT_SAMPLE_RATE);
+            buffer.getChannelData(0).set(float32);
+            const source = audioContext.createBufferSource();
+            source.buffer = buffer;
+            source.connect(audioContext.destination);
+            const now = audioContext.currentTime;
+            if (nextStartTime < now) nextStartTime = now;
+            source.start(nextStartTime);
+            nextStartTime += buffer.duration;
+            source.onended = () => {
+                if (audioQueue.length === 0 && audioContext.currentTime >= nextStartTime) isPlaying = false;
+            };
+            isPlaying = false;
+            processAudioQueue();
+        } catch (e) { console.error('Playback error:', e); isPlaying = false; }
+    }
+
+    // ===== INIT =====
+    updateStatus('Ready', '');
+    setHint('Tap the mic to start talking');
+    log('Ready.');
+</script>
 </body>
 </html>
