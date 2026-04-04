@@ -54,8 +54,8 @@ export const API_CONFIG = {
 
   // Nutrition Extraction Service API (port 5560)
   NUTRITION_EXTRACTION_SERVICE_URL: __DEV__
-    ? `https://nutrition-extraction-service-production.up.railway.app`
-    : 'https://your-production-nutrition-extraction-service.com',
+    ? 'http://10.45.227.59:5560'
+    :`https://nutrition-extraction-service-production.up.railway.app`,
 
   // Nutrition Share / Social Feed Service (port 3007)
   SOCIAL_SERVICE_URL: __DEV__

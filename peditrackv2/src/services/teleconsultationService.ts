@@ -99,7 +99,10 @@ export const requestTeleconsultation = async (payload: TeleconsultationRequestPa
     }
     return await response.json();
   } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (!message.includes('HTTP 403')) {
     console.error('Error requesting teleconsultation:', error);
+    }
     throw error;
   }
 };

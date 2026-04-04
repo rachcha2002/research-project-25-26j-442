@@ -575,24 +575,28 @@ export const EmergencyAssessmentScreen: React.FC = () => {
             <Ionicons name="book" size={20} color={Colors.success} style={{ marginRight: 8 }} />
             <Text style={[styles.cardTitle, { color: Colors.success }]}>Context & History</Text>
           </View>
+          <Text style={{ color: Colors.inactive, marginBottom: 6 }}>Chronic conditions (asthma, epilepsy, etc.)</Text>
           <TextInput
             placeholder="Chronic conditions (asthma, epilepsy, etc.)"
             style={styles.input}
             value={chronicConditions}
             onChangeText={setChronicConditions}
           />
+          <Text style={{ color: Colors.inactive, marginBottom: 6 }}>Current medications</Text>
           <TextInput
             placeholder="Current medications"
             style={styles.input}
             value={medications}
             onChangeText={setMedications}
           />
+          <Text style={{ color: Colors.inactive, marginBottom: 6 }}>Recent travel / exposures</Text>
           <TextInput
             placeholder="Recent travel / exposures"
             style={styles.input}
             value={recentTravel}
             onChangeText={setRecentTravel}
           />
+          <Text style={{ color: Colors.inactive, marginBottom: 6 }}>Environment exposures (smoke, allergens)</Text>
           <TextInput
             placeholder="Environment exposures (smoke, allergens)"
             style={styles.input}
