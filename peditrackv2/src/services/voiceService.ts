@@ -14,7 +14,7 @@ import { API_CONFIG } from '../config/config';
  * - Better voice quality
  */
 
-//const API_BASE_URL = 'https://peditrack-chat-service-production-0d1d.up.railway.app/api';
+//const API_BASE_URL = 'https://research-project-25-26j-442-production-dc5b.up.railway.app/api';
 
 const API_BASE_URL = API_CONFIG.CHAT_SERVICE_URL;
 
