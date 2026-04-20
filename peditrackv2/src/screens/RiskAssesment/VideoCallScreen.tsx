@@ -2,28 +2,41 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, TextInput, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Track } from 'livekit-client';
 import {
   completeTeleconsultationRequest,
   getDoctorPublicProfile,
   getTeleconsultationRequest,
 } from '@/services/teleconsultationService';
-import {
-  LiveKitRoom,
-  VideoTrack,
-  registerGlobals,
-  useTracks,
-  useChat,
-} from '@livekit/react-native';
 
-registerGlobals();
+// @livekit/react-native requires native linking and does NOT work in Expo Go.
+// Import types only for TypeScript, actual runtime imports are dynamic.
+let LiveKitRoom: any = null;
+let VideoTrack: any = null;
+let useTracks: any = null;
+let useChat: any = null;
+let Track: any = null;
+
+// Try to load livekit — this will silently fail in Expo Go
+try {
+  const livekit = require('@livekit/react-native');
+  const livekitClient = require('livekit-client');
+  livekit.registerGlobals();
+  LiveKitRoom = livekit.LiveKitRoom;
+  VideoTrack = livekit.VideoTrack;
+  useTracks = livekit.useTracks;
+  useChat = livekit.useChat;
+  Track = livekitClient.Track;
+} catch (e) {
+  console.warn('[VideoCallScreen] @livekit/react-native not available (requires dev build)');
+}
 
 const DEFAULT_LIVEKIT_URL = process.env.EXPO_PUBLIC_LIVEKIT_URL || '';
 
 const VideoTiles: React.FC<{ onRemoteNameChange: (name: string | null) => void }> = ({ onRemoteNameChange }) => {
-  const cameraTracks = useTracks([Track.Source.Camera], { onlySubscribed: false });
-  const remoteTrack = cameraTracks.find((trackRef) => !trackRef.participant.isLocal);
-  const localTrack = cameraTracks.find((trackRef) => trackRef.participant.isLocal);
+  // Guard: useTracks not available outside a LiveKitRoom context or in Expo Go
+  const cameraTracks = useTracks ? useTracks([Track?.Source?.Camera], { onlySubscribed: false }) : [];
+  const remoteTrack = cameraTracks.find((trackRef: any) => !trackRef.participant.isLocal);
+  const localTrack = cameraTracks.find((trackRef: any) => trackRef.participant.isLocal);
 
   React.useEffect(() => {
     if (!remoteTrack) {
@@ -41,7 +54,7 @@ const VideoTiles: React.FC<{ onRemoteNameChange: (name: string | null) => void }
   return (
     <View style={styles.videoArea}>
       <View style={styles.remoteVideo}>
-        {remoteTrack ? (
+        {remoteTrack && VideoTrack ? (
           <VideoTrack trackRef={remoteTrack} style={styles.videoTrack} objectFit="cover" />
         ) : (
           <Text style={styles.videoText}>Waiting for doctor video...</Text>
@@ -50,7 +63,7 @@ const VideoTiles: React.FC<{ onRemoteNameChange: (name: string | null) => void }
 
       <View style={styles.localVideoWrap}>
         <View style={styles.localVideo}>
-          {localTrack ? (
+          {localTrack && VideoTrack ? (
             <VideoTrack trackRef={localTrack} style={styles.videoTrack} objectFit="cover" />
           ) : (
             <Text style={styles.localVideoText}>You</Text>
@@ -62,7 +75,9 @@ const VideoTiles: React.FC<{ onRemoteNameChange: (name: string | null) => void }
 };
 
 const InCallChat: React.FC<{ onEndCall: () => void }> = ({ onEndCall }) => {
-  const { chatMessages, send, isSending } = useChat();
+  // Guard: useChat not available outside a LiveKitRoom context or in Expo Go
+  const chatHookResult = useChat ? useChat() : { chatMessages: [], send: async () => {}, isSending: false };
+  const { chatMessages, send, isSending } = chatHookResult;
   const [chatOpen, setChatOpen] = React.useState(false);
   const [draft, setDraft] = React.useState('');
 
@@ -209,6 +224,26 @@ export const VideoCallScreen: React.FC = () => {
       active = false;
     };
   }, [requestId]);
+
+  // Guard: Show a fallback screen if LiveKit is not available (Expo Go)
+  if (!LiveKitRoom) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center', padding: 24 }]}>
+        <Text style={[styles.videoText, { textAlign: 'center', marginBottom: 16, fontSize: 20 }]}>
+          📹 Video Call
+        </Text>
+        <Text style={[styles.videoText, { textAlign: 'center', fontSize: 14 }]}>
+          Video calling requires a development build. It is not available in Expo Go.
+        </Text>
+        <TouchableOpacity
+          style={{ marginTop: 24, backgroundColor: '#6366F1', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 }}
+          onPress={() => router.back()}
+        >
+          <Text style={{ color: '#fff', fontWeight: '600' }}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   if (!canConnect) {
     return (

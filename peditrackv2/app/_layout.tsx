@@ -3,18 +3,26 @@ import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from '../src/contexts/AuthContext';
 import { BabyProvider } from '../src/contexts/BabyContext';
-import { requestPushPermissionsAsync } from '../src/services/pushNotificationService';
 import { LogBox } from 'react-native';
+import Constants from 'expo-constants';
 
 LogBox.ignoreLogs([
   'expo-notifications: Android Push notifications',
-  'expo-notifications: Android Push notifications (remote notifications) functionality provided by expo-notifications was removed from Expo Go'
+  'expo-notifications: Android Push notifications (remote notifications) functionality provided by expo-notifications was removed from Expo Go',
+  'Cannot find native module',
+  'ExponentAV',
 ]);
 
 export default function RootLayout() {
   React.useEffect(() => {
-    // Request push notification permissions on app launch
-    requestPushPermissionsAsync();
+    // Remote push notifications require a development build (not supported in Expo Go SDK 53+)
+    // Only request push permissions when running in a standalone or dev client build
+    const isExpoGo = Constants.appOwnership === 'expo';
+    if (!isExpoGo) {
+      import('../src/services/pushNotificationService').then(({ requestPushPermissionsAsync }) => {
+        requestPushPermissionsAsync();
+      });
+    }
   }, []);
   return (
     <SafeAreaProvider>

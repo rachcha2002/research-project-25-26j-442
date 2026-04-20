@@ -1,72 +1,89 @@
-import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
+// Lazy import of expo-notifications to avoid the DevicePushTokenAutoRegistration
+// side-effect that crashes Expo Go SDK 53 on Android. This file is safe to import
+// statically; the native module is only loaded when a function is actually called.
 import { Platform } from 'react-native';
 import { Medication, Vaccination } from './healthAnalyticsService';
 
-/**
- * Configure how notifications appear when the app is in the foreground.
- * We want them to show up as alerts, play a sound, and set a badge.
- */
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+type NotificationsModule = typeof import('expo-notifications');
+
+let _notificationsModule: NotificationsModule | null = null;
+
+const getNotifications = async (): Promise<NotificationsModule> => {
+  if (!_notificationsModule) {
+    _notificationsModule = await import('expo-notifications');
+    // Configure how notifications appear when the app is in the foreground.
+    // NOTE: This requires a development build (SDK 53+) for remote push on Android.
+    _notificationsModule.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+        shouldShowBanner: true,
+        shouldShowList: true,
+      }),
+    });
+  }
+  return _notificationsModule;
+};
 
 /**
  * Request necessary permissions for push notifications.
  * Safe to call multiple times (returns early if already granted).
  */
 export const requestPushPermissionsAsync = async (): Promise<boolean> => {
-  // We can skip the Device.isDevice check here since local notifications DO work on Android Emulators
-  // This allows the Bell Icon and scheduling logic to be tested locally.
+  try {
+    const Notifications = await getNotifications();
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
 
-  const { status: existingStatus } = await Notifications.getPermissionsAsync();
-  let finalStatus = existingStatus;
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
 
-  if (existingStatus !== 'granted') {
-    const { status } = await Notifications.requestPermissionsAsync();
-    finalStatus = status;
-  }
+    if (finalStatus !== 'granted') {
+      console.log('[Push] Failed to get push token for push notification!');
+      return false;
+    }
 
-  if (finalStatus !== 'granted') {
-    console.log('[Push] Failed to get push token for push notification!');
+    // Required for Android 8.0+
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('medication-reminders', {
+        name: 'Medication Reminders',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#7C3AED',
+      });
+    }
+
+    return true;
+  } catch (error) {
+    console.warn('[Push] Error requesting permissions:', error);
     return false;
   }
-
-  // Required for Android 8.0+
-  if (Platform.OS === 'android') {
-    await Notifications.setNotificationChannelAsync('medication-reminders', {
-      name: 'Medication Reminders',
-      importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#7C3AED',
-    });
-  }
-
-  return true;
 };
 
 /**
- * Cancel previously scheduled notifications for a given medication to avoid 
- * duplicates when the user edits or deletes it. We reconstruct the deterministic 
+ * Cancel previously scheduled notifications for a given medication to avoid
+ * duplicates when the user edits or deletes it. We reconstruct the deterministic
  * IDs to cancel them cleanly without needing to store them in the database.
  */
 export const cancelMedicationReminders = async (
   medicationId: string,
   previousTimes: string[]
 ) => {
-  for (const time of previousTimes) {
-    const notificationId = `med_${medicationId}_${time.replace(':', '')}`;
-    try {
-      await Notifications.cancelScheduledNotificationAsync(notificationId);
-      console.log(`[Push] Cancelled reminder: ${notificationId}`);
-    } catch (err) {
-      console.log(`[Push] Failed to cancel ${notificationId}:`, err);
+  try {
+    const Notifications = await getNotifications();
+    for (const time of previousTimes) {
+      const notificationId = `med_${medicationId}_${time.replace(':', '')}`;
+      try {
+        await Notifications.cancelScheduledNotificationAsync(notificationId);
+        console.log(`[Push] Cancelled reminder: ${notificationId}`);
+      } catch (err) {
+        console.log(`[Push] Failed to cancel ${notificationId}:`, err);
+      }
     }
+  } catch (error) {
+    console.warn('[Push] Error cancelling medication reminders:', error);
   }
 };
 
@@ -81,37 +98,42 @@ export const scheduleMedicationReminders = async (medication: Medication) => {
   const hasPermission = await requestPushPermissionsAsync();
   if (!hasPermission) return;
 
-  const dosageStr = `${medication.dosage?.amount ?? ''}${medication.dosage?.unit ?? ''}`;
-  const route = medication.route ? ` · ${medication.route.charAt(0).toUpperCase() + medication.route.slice(1)}` : '';
+  try {
+    const Notifications = await getNotifications();
+    const dosageStr = `${medication.dosage?.amount ?? ''}${medication.dosage?.unit ?? ''}`;
+    const route = medication.route ? ` · ${medication.route.charAt(0).toUpperCase() + medication.route.slice(1)}` : '';
 
-  for (const time of medication.reminderTimes) {
-    const [hourStr, minuteStr] = time.split(':');
-    const hour = parseInt(hourStr, 10);
-    const minute = parseInt(minuteStr, 10);
+    for (const time of medication.reminderTimes) {
+      const [hourStr, minuteStr] = time.split(':');
+      const hour = parseInt(hourStr, 10);
+      const minute = parseInt(minuteStr, 10);
 
-    // Deterministic ID so we can cancel it later just by knowing the Medication ID and time
-    const notificationId = `med_${medication._id}_${hourStr}${minuteStr}`;
+      // Deterministic ID so we can cancel it later just by knowing the Medication ID and time
+      const notificationId = `med_${medication._id}_${hourStr}${minuteStr}`;
 
-    try {
-      await Notifications.scheduleNotificationAsync({
-        identifier: notificationId,
-        content: {
-          title: `Time for ${medication.name}`,
-          body: `Due at ${time} (${dosageStr}${route})`,
-          data: { medicationId: medication._id, type: 'medication_reminder' },
-          sound: true,
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DAILY,
-          hour,
-          minute,
-          channelId: 'medication-reminders',
-        } as Notifications.NotificationTriggerInput,
-      });
-      console.log(`[Push] Scheduled reminder ${notificationId} for ${time} daily.`);
-    } catch (err) {
-      console.error(`[Push] Error scheduling ${notificationId}:`, err);
+      try {
+        await Notifications.scheduleNotificationAsync({
+          identifier: notificationId,
+          content: {
+            title: `Time for ${medication.name}`,
+            body: `Due at ${time} (${dosageStr}${route})`,
+            data: { medicationId: medication._id, type: 'medication_reminder' },
+            sound: true,
+          },
+          trigger: {
+            type: Notifications.SchedulableTriggerInputTypes.DAILY,
+            hour,
+            minute,
+            channelId: 'medication-reminders',
+          } as import('expo-notifications').NotificationTriggerInput,
+        });
+        console.log(`[Push] Scheduled reminder ${notificationId} for ${time} daily.`);
+      } catch (err) {
+        console.error(`[Push] Error scheduling ${notificationId}:`, err);
+      }
     }
+  } catch (error) {
+    console.warn('[Push] Error scheduling medication reminders:', error);
   }
 };
 
@@ -119,12 +141,17 @@ export const scheduleMedicationReminders = async (medication: Medication) => {
  * Cancel previously scheduled notification for a given vaccination.
  */
 export const cancelVaccinationReminder = async (vaccinationId: string) => {
-  const notificationId = `vac_${vaccinationId}`;
   try {
-    await Notifications.cancelScheduledNotificationAsync(notificationId);
-    console.log(`[Push] Cancelled vaccine reminder: ${notificationId}`);
-  } catch (err) {
-    console.log(`[Push] Failed to cancel vaccine reminder ${notificationId}:`, err);
+    const Notifications = await getNotifications();
+    const notificationId = `vac_${vaccinationId}`;
+    try {
+      await Notifications.cancelScheduledNotificationAsync(notificationId);
+      console.log(`[Push] Cancelled vaccine reminder: ${notificationId}`);
+    } catch (err) {
+      console.log(`[Push] Failed to cancel vaccine reminder ${notificationId}:`, err);
+    }
+  } catch (error) {
+    console.warn('[Push] Error cancelling vaccination reminder:', error);
   }
 };
 
@@ -161,9 +188,10 @@ export const scheduleVaccinationReminder = async (vaccination: Vaccination) => {
   const hasPermission = await requestPushPermissionsAsync();
   if (!hasPermission) return;
 
-  const notificationId = `vac_${vaccination._id}`;
-
   try {
+    const Notifications = await getNotifications();
+    const notificationId = `vac_${vaccination._id}`;
+
     await Notifications.scheduleNotificationAsync({
       identifier: notificationId,
       content: {
@@ -175,10 +203,10 @@ export const scheduleVaccinationReminder = async (vaccination: Vaccination) => {
       trigger: {
         type: Notifications.SchedulableTriggerInputTypes.DATE,
         date: reminderDate,
-      } as Notifications.NotificationTriggerInput,
+      } as import('expo-notifications').NotificationTriggerInput,
     });
     console.log(`[Push] Scheduled vaccine reminder ${notificationId} for ${reminderDate.toLocaleString()}`);
   } catch (err) {
-    console.error(`[Push] Error scheduling vaccine reminder ${notificationId}:`, err);
+    console.error(`[Push] Error scheduling vaccine reminder:`, err);
   }
 };

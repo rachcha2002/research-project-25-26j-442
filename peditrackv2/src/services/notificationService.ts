@@ -1,8 +1,30 @@
-import * as Notifications from 'expo-notifications';
+// Lazy import of expo-notifications to avoid the DevicePushTokenAutoRegistration
+// side-effect that crashes Expo Go SDK 53 on Android. The module is only loaded
+// when a notification function is actually invoked, not at startup.
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getMedications } from './healthAnalyticsService';
+
+type NotificationsModule = typeof import('expo-notifications');
+
+let _notificationsModule: NotificationsModule | null = null;
+
+const getNotifications = async (): Promise<NotificationsModule> => {
+  if (!_notificationsModule) {
+    _notificationsModule = await import('expo-notifications');
+    // Configure how notifications appear when the app is in the foreground
+    _notificationsModule.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }),
+    });
+  }
+  return _notificationsModule;
+};
 
 // Add type for reminder status
 export type ReminderStatus = 'overdue' | 'upcoming' | 'later';
@@ -13,16 +35,6 @@ export type MedicationNotification = {
   body: string;
   status: ReminderStatus;
 };
-
-// Configure how notifications should be handled when app is in foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
 
 export interface MedicationReminderData {
   medicationId: string;
@@ -55,6 +67,7 @@ export const requestNotificationPermissions = async (): Promise<boolean> => {
       return false;
     }
 
+    const Notifications = await getNotifications();
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
 
@@ -108,13 +121,14 @@ export const scheduleMedicationReminder = async (medication: {
     // First cancel any existing notifications for this medication
     await cancelMedicationReminder(medication._id);
 
+    const Notifications = await getNotifications();
     const notificationIds: string[] = [];
 
     // Schedule a notification for each reminder time
     for (const time of medication.reminderTimes) {
       const [hours, minutes] = time.split(':').map(Number);
       
-      const trigger: Notifications.DailyTriggerInput = {
+      const trigger = {
         type: Notifications.SchedulableTriggerInputTypes.DAILY,
         hour: hours,
         minute: minutes,
@@ -136,7 +150,7 @@ export const scheduleMedicationReminder = async (medication: {
           sound: 'default',
           priority: Notifications.AndroidNotificationPriority.HIGH,
         },
-        trigger,
+        trigger: trigger as Notifications.NotificationTriggerInput,
       });
 
       notificationIds.push(notificationId);
@@ -155,6 +169,7 @@ export const scheduleMedicationReminder = async (medication: {
  */
 export const cancelMedicationReminder = async (medicationId: string): Promise<void> => {
   try {
+    const Notifications = await getNotifications();
     const scheduledNotifications = await Notifications.getAllScheduledNotificationsAsync();
     
     const medicationNotifications = scheduledNotifications.filter(
@@ -176,6 +191,7 @@ export const cancelMedicationReminder = async (medicationId: string): Promise<vo
  */
 export const cancelAllMedicationReminders = async (): Promise<void> => {
   try {
+    const Notifications = await getNotifications();
     await Notifications.cancelAllScheduledNotificationsAsync();
     console.log('[Notifications] Cancelled all medication reminders');
   } catch (error) {
@@ -187,8 +203,9 @@ export const cancelAllMedicationReminders = async (): Promise<void> => {
 /**
  * Get all scheduled medication notifications
  */
-export const getScheduledMedicationReminders = async (): Promise<Notifications.NotificationRequest[]> => {
+export const getScheduledMedicationReminders = async () => {
   try {
+    const Notifications = await getNotifications();
     const scheduled = await Notifications.getAllScheduledNotificationsAsync();
     const medicationReminders = scheduled.filter(
       (notification) => notification.content.data?.type === 'medication_reminder'
@@ -207,13 +224,15 @@ export const getScheduledMedicationReminders = async (): Promise<Notifications.N
 export const setupNotificationResponseHandler = (
   onNotificationTap: (data: MedicationReminderData) => void
 ): void => {
-  Notifications.addNotificationResponseReceivedListener((response) => {
-    const rawData = response.notification.request.content.data;
-    
-    if (rawData && isMedicationReminderPayload(rawData)) {
-      console.log('[Notifications] User tapped medication reminder:', rawData);
-      onNotificationTap(rawData);
-    }
+  getNotifications().then((Notifications) => {
+    Notifications.addNotificationResponseReceivedListener((response) => {
+      const rawData = response.notification.request.content.data;
+      
+      if (rawData && isMedicationReminderPayload(rawData)) {
+        console.log('[Notifications] User tapped medication reminder:', rawData);
+        onNotificationTap(rawData);
+      }
+    });
   });
 };
 

@@ -5,7 +5,16 @@ import { WebView } from 'react-native-webview';
 import { router } from 'expo-router';
 import { ChatTopBar } from '@/components/ChatTopBar';
 import { Colors } from '@/constants/Colors';
-import { Audio } from 'expo-av';
+
+// Lazy load expo-av to prevent crash in Expo Go SDK 53 (ExponentAV native module not available)
+const getAudio = async () => {
+  try {
+    const { Audio } = await import('expo-av');
+    return Audio;
+  } catch {
+    return null;
+  }
+};
 
 // Update this to match your backend IP
 const VOICE_CHAT_URL = 'https://research-project-25-26j-442-production-dc5b.up.railway.app/voice-chat.html';
@@ -17,8 +26,14 @@ export default function WebVoiceScreen() {
     React.useEffect(() => {
         (async () => {
             try {
-                const { status } = await Audio.requestPermissionsAsync();
-                setHasPermission(status === 'granted');
+                const Audio = await getAudio();
+                if (Audio) {
+                    const { status } = await Audio.requestPermissionsAsync();
+                    setHasPermission(status === 'granted');
+                } else {
+                    // expo-av not available (Expo Go), allow WebView to load anyway
+                    setHasPermission(true);
+                }
             } catch (error) {
                 console.error('Failed to request microphone permission:', error);
                 setHasPermission(false);
@@ -44,8 +59,11 @@ export default function WebVoiceScreen() {
                     <TouchableOpacity
                         style={styles.button}
                         onPress={async () => {
-                            const { status } = await Audio.requestPermissionsAsync();
-                            setHasPermission(status === 'granted');
+                            const Audio = await getAudio();
+                            if (Audio) {
+                                const { status } = await Audio.requestPermissionsAsync();
+                                setHasPermission(status === 'granted');
+                            }
                         }}
                     >
                         <Text style={styles.buttonText}>Grant Permission</Text>

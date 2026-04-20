@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, TextInput, TouchableOpacity, Platform, Alert, Image, Modal, Keyboard, Animated } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Audio } from 'expo-av';
 import * as ImagePicker from 'expo-image-picker';
 import { Colors } from '@/constants/Colors';
 import { ChatTopBar } from '@/components/ChatTopBar';
@@ -10,6 +9,21 @@ import { sendChatMessage, sendChatMessageWithImage } from '@/services/chatServic
 // @deprecated - Old HTTP voice service. TODO: Replace with geminiLiveVoiceService for real-time streaming
 import { sendVoiceMessage } from '@/services/voiceService';
 import { chatStorageService, Conversation } from '@/services/chatStorageService';
+
+// Lazy load expo-av to prevent crash in Expo Go SDK 53 (ExponentAV native module not available)
+let AudioModule: typeof import('expo-av').Audio | null = null;
+const getAudio = async () => {
+  if (!AudioModule) {
+    try {
+      const avModule = await import('expo-av');
+      AudioModule = avModule.Audio;
+    } catch (e) {
+      console.warn('[ChatScreen] expo-av not available (requires dev build):', e);
+      return null;
+    }
+  }
+  return AudioModule;
+};
 
 interface Message {
     id: string;
@@ -26,7 +40,7 @@ export default function ChatScreen() {
     const [isTyping, setIsTyping] = useState(false);
     const [conversationId, setConversationId] = useState<string>();
     const [isRecording, setIsRecording] = useState(false);
-    const [recording, setRecording] = useState<Audio.Recording | null>(null);
+    const [recording, setRecording] = useState<any | null>(null);
     const [selectedImage, setSelectedImage] = useState<string | null>(null);
     const [showHistoryModal, setShowHistoryModal] = useState(false);
     const [conversationHistory, setConversationHistory] = useState<Conversation[]>([]);
@@ -105,10 +119,13 @@ export default function ChatScreen() {
 
     const requestPermissions = async () => {
         try {
-            // Request audio recording permission
-            const audioPermission = await Audio.requestPermissionsAsync();
-            if (!audioPermission.granted) {
-                Alert.alert('Permission Required', 'Please grant microphone permission to use voice messages.');
+            // Request audio recording permission (guarded for Expo Go SDK 53 compatibility)
+            const Audio = await getAudio();
+            if (Audio) {
+                const audioPermission = await Audio.requestPermissionsAsync();
+                if (!audioPermission.granted) {
+                    Alert.alert('Permission Required', 'Please grant microphone permission to use voice messages.');
+                }
             }
 
             // Request image library permission
@@ -236,6 +253,12 @@ export default function ChatScreen() {
 
     const startRecording = async () => {
         try {
+            const Audio = await getAudio();
+            if (!Audio) {
+                Alert.alert('Not Available', 'Voice recording requires a development build. It is not supported in Expo Go.');
+                return;
+            }
+
             // Request permissions
             const permission = await Audio.requestPermissionsAsync();
             if (!permission.granted) {

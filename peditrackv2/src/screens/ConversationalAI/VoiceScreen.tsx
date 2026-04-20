@@ -3,28 +3,37 @@ import { View, Text, StyleSheet, TouchableOpacity, Animated, Alert, ActivityIndi
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Audio } from 'expo-av';
 import { Colors } from '@/constants/Colors';
 import { useRouter } from 'expo-router';
 import { sendVoiceMessage, saveBase64Audio } from '@/services/voiceService';
 import { AnimatedRobot } from '@/components/AnimatedRobot';
 
+// Lazy load expo-av to prevent crash in Expo Go SDK 53 (ExponentAV native module not available)
+const getAudio = async () => {
+    try {
+        const { Audio } = await import('expo-av');
+        return Audio;
+    } catch {
+        return null;
+    }
+};
+
 export const VoiceScreen: React.FC = () => {
     const router = useRouter();
 
     // Voice state
-    const [recording, setRecording] = useState<Audio.Recording | null>(null);
+    const [recording, setRecording] = useState<any | null>(null);
     const [isRecording, setIsRecording] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [sound, setSound] = useState<Audio.Sound | null>(null);
+    const [sound, setSound] = useState<any | null>(null);
     const [conversationId, setConversationId] = useState<string | undefined>(undefined);
     const [statusMessage, setStatusMessage] = useState("I'm listening, Amanda.\nWhat's on your mind?");
     const [transcription, setTranscription] = useState<string>('');
     const [robotState, setRobotState] = useState<'idle' | 'listening' | 'thinking' | 'talking'>('idle');
 
     // Refs to track current audio instances
-    const recordingRef = useRef<Audio.Recording | null>(null);
-    const soundRef = useRef<Audio.Sound | null>(null);
+    const recordingRef = useRef<any | null>(null);
+    const soundRef = useRef<any | null>(null);
 
     // Update refs when state changes
     useEffect(() => {
@@ -39,6 +48,12 @@ export const VoiceScreen: React.FC = () => {
         // Request audio permissions
         (async () => {
             try {
+                const Audio = await getAudio();
+                if (!Audio) {
+                    console.warn('[VoiceScreen] expo-av not available in Expo Go');
+                    return;
+                }
+
                 const { status } = await Audio.requestPermissionsAsync();
                 if (status !== 'granted') {
                     Alert.alert(
@@ -106,6 +121,12 @@ export const VoiceScreen: React.FC = () => {
 
     const startRecording = async () => {
         try {
+            const Audio = await getAudio();
+            if (!Audio) {
+                Alert.alert('Not Available', 'Voice recording requires a development build. It is not supported in Expo Go.');
+                return;
+            }
+
             console.log('Starting recording...');
             setStatusMessage('Listening...');
             setTranscription('');
@@ -180,6 +201,9 @@ export const VoiceScreen: React.FC = () => {
 
     const playAudioResponse = async (base64Audio: string) => {
         try {
+            const Audio = await getAudio();
+            if (!Audio) return;
+
             console.log('Playing audio response...');
             setRobotState('talking');
 
