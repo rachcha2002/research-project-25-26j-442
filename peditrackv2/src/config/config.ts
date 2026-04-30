@@ -72,7 +72,7 @@ export const API_CONFIG = {
   CHAT_SERVICE_URL: 'https://research-project-25-26j-442-production-dc5b.up.railway.app/api',
 
   // Chat Service WebSocket URL (for Gemini Live Voice)
-  CHAT_SERVICE_WS_URL: 'wss://research-project-25-26j-442-production-dc5b.up.railway.app/api/voice',
+  CHAT_SERVICE_WS_URL: 'wss://research-project-25-26j-442-production-dc5b.up.railway.app/ws',
 
   // Request timeout in milliseconds
   REQUEST_TIMEOUT: 30000,
