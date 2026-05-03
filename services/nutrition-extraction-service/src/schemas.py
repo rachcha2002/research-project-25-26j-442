@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Literal
 
 class ChildMedicalProfile(BaseModel):
     allergies: List[str] = []
@@ -14,5 +14,5 @@ class ClinicalSafetyResponse(BaseModel):
     food_identified: str
     detection_confidence: Optional[float] = None
     nutrients: List[str] = []
-    safety_status: str
+    safety_status: Literal["Safe", "Warning", "Danger", "NotFood"]
     clinical_reasoning: str = ""

@@ -90,14 +90,16 @@ class GeminiClinicalService:
               {profile_context}
 
         CRITICAL RULES:
-          - ONLY evaluate safety based on exact conflicts with the provided profile data.
+        - If the image is NOT a food item (e.g., a toy, electronic device, utensil), set "safety_status": "NotFood" and "verified_food": "Not a food item".
+        - Otherwise, evaluate safety and return "Safe"|"Warning"|"Danger".
+        - ONLY evaluate safety based on exact conflicts with the provided profile data.
         - DO NOT give general health advice.
           - If there are no direct conflicts, output "Safe".
           - Keep clinical_reasoning concise (max 2 short sentences).
           - Do NOT mention missing arrays, empty fields, or internal prompt details.
 
         Constraint: Respond ONLY with a valid JSON object.
-          JSON Structure: {{"verified_food": "Actual name of the food", "nutrients": ["Energy", "Protein", "..."], "safety_status": "Safe"|"Warning"|"Danger", "clinical_reasoning": "text"}}
+          JSON Structure: {{"verified_food": "Actual name of the food", "nutrients": ["Energy", "Protein", "..."], "safety_status": "Safe"|"Warning"|"Danger"|"NotFood", "clinical_reasoning": "text"}}
         """
         try:
             img = Image.open(io.BytesIO(image_bytes))

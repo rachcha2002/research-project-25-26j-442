@@ -353,39 +353,49 @@ export const EmergencyAssessmentScreen: React.FC = () => {
             <Ionicons name="pulse" size={20} color={Colors.danger} style={{ marginRight: 8 }} />
             <Text style={[styles.cardTitle, { color: Colors.danger }]}>Vital Signs</Text>
           </View>
-          <Text style={{ color: Colors.inactive, marginBottom: 6 }}>Temperature (°C)               SpO₂ (%) (optional)</Text>
           <View style={styles.row}>
-            <TextInput
-              style={[styles.input, { flex: 1, marginRight: 8 }]}
-              placeholder="Temperature (°C)"
-              keyboardType="numeric"
-              value={temperature}
-              onChangeText={setTemperature}
-            />
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="SpO₂ (%) (optional)"
-              keyboardType="numeric"
-              value={spo2}
-              onChangeText={setSpo2}
-            />
+            <View style={{ flex: 1, marginRight: 8 }}>
+              <Text style={styles.label}>Temperature (°C)</Text>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="e.g. 38.5"
+                keyboardType="numeric"
+                value={temperature}
+                onChangeText={setTemperature}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>SpO₂ (%) (optional)</Text>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="e.g. 96"
+                keyboardType="numeric"
+                value={spo2}
+                onChangeText={setSpo2}
+              />
+            </View>
           </View>
-           <Text style={{ color: Colors.inactive, marginBottom: 6 }}>Heart rate (bpm)               Resp. rate (bpm)</Text>
           <View style={styles.row}>
-            <TextInput
-              style={[styles.input, { flex: 1, marginRight: 8 }]}
-              placeholder="Heart rate (bpm)"
-              keyboardType="numeric"
-              value={heartRate}
-              onChangeText={setHeartRate}
-            />
-            <TextInput
-              style={[styles.input, { flex: 1 }]}
-              placeholder="Resp. rate (bpm)"
-              keyboardType="numeric"
-              value={respRate}
-              onChangeText={setRespRate}
-            />
+            <View style={{ flex: 1, marginRight: 8 }}>
+              <Text style={styles.label}>Heart rate (bpm)</Text>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="e.g. 120"
+                keyboardType="numeric"
+                value={heartRate}
+                onChangeText={setHeartRate}
+              />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.label}>Resp. rate (bpm)</Text>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="e.g. 28"
+                keyboardType="numeric"
+                value={respRate}
+                onChangeText={setRespRate}
+              />
+            </View>
           </View>
           <View >
             <View style={[styles.input, { flex: 1, justifyContent: "center", backgroundColor: '#f3f4f6', borderWidth: 0 }]}> 
@@ -459,12 +469,15 @@ export const EmergencyAssessmentScreen: React.FC = () => {
                           </View>
                         )}
                         {s.selected && (
-                          <TextInput
-                            placeholder="Additional details (optional)"
-                            style={[styles.input, { marginTop: 8 }]}
-                            value={s.details}
-                            onChangeText={(text) => updateSymptomDetails(s.key, text)}
-                          />
+                          <View>
+                            <Text style={styles.label}>Additional details (optional)</Text>
+                            <TextInput
+                              placeholder="Describe what you observed"
+                              style={[styles.input, { marginTop: 2 }]}
+                              value={s.details}
+                              onChangeText={(text) => updateSymptomDetails(s.key, text)}
+                            />
+                          </View>
                         )}
                         {s.selected && s.key === "rash" && (
                           <View style={styles.rashImageBlock}>
@@ -575,24 +588,28 @@ export const EmergencyAssessmentScreen: React.FC = () => {
             <Ionicons name="book" size={20} color={Colors.success} style={{ marginRight: 8 }} />
             <Text style={[styles.cardTitle, { color: Colors.success }]}>Context & History</Text>
           </View>
+          <Text style={styles.label}>Chronic conditions</Text>
           <TextInput
             placeholder="Chronic conditions (asthma, epilepsy, etc.)"
             style={styles.input}
             value={chronicConditions}
             onChangeText={setChronicConditions}
           />
+          <Text style={styles.label}>Current medications</Text>
           <TextInput
             placeholder="Current medications"
             style={styles.input}
             value={medications}
             onChangeText={setMedications}
           />
+          <Text style={styles.label}>Recent travel</Text>
           <TextInput
             placeholder="Recent travel / exposures"
             style={styles.input}
             value={recentTravel}
             onChangeText={setRecentTravel}
           />
+          <Text style={styles.label}>Environmental exposures</Text>
           <TextInput
             placeholder="Environment exposures (smoke, allergens)"
             style={styles.input}

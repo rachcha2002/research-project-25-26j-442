@@ -69,6 +69,14 @@ export type GenerateMealPlanPayload = {
 };
 
 const BASE_URL = API_CONFIG.MEAL_RECOMMENDATION_SERVICE_URL;
+const DEFAULT_TIMEOUT_MS = API_CONFIG.REQUEST_TIMEOUT;       // 30 s
+const GENERATE_TIMEOUT_MS = 90_000;                          // 90 s — optimizer + Gemini
+
+const makeSignal = (ms: number): AbortSignal => {
+  const ctrl = new AbortController();
+  setTimeout(() => ctrl.abort(), ms);
+  return ctrl.signal;
+};
 
 const handleResponse = async <T>(response: Response): Promise<T> => {
   if (!response.ok) {
@@ -85,6 +93,7 @@ export const getTodayGeneratedPlan = async (
   const response = await fetch(url, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
+    signal: makeSignal(DEFAULT_TIMEOUT_MS),
   });
 
   if (response.status === 404) {
@@ -101,6 +110,7 @@ export const generateMealPlan = async (
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
+    signal: makeSignal(GENERATE_TIMEOUT_MS),
   });
 
   const data = await handleResponse<{ message: string; data: { daily_plan: DailyGeneratedMealPlan } }>(response);
@@ -114,6 +124,7 @@ export const submitMealFeedback = async (
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
+    signal: makeSignal(DEFAULT_TIMEOUT_MS),
   });
 
   return handleResponse<MealFeedbackResponse>(response);
