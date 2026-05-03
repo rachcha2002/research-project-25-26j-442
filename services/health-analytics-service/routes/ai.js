@@ -305,15 +305,22 @@ router.get('/risks/:babyId', async (req, res) => {
     const avgRisk = (ra.growth_disorder + ra.developmental_delay + ra.nutritional_deficiency + ra.behavioral_issue) / 4;
     const overallRisk = avgRisk < 0.30 ? 'low' : avgRisk < 0.60 ? 'moderate' : 'high';
 
+    // Helper: map a 0-1 risk score to level + color
+    const riskMeta = (score) => {
+      const level = score < 0.30 ? 'low' : score < 0.60 ? 'moderate' : 'high';
+      const color = level === 'low' ? '#10B981' : level === 'moderate' ? '#F59E0B' : '#EF4444';
+      return { score, level, color };
+    };
+
     res.json({
       overallRisk,
       overallScore: Math.round(avgRisk * 100),
       healthScore: result.health_score,
       riskCategories: {
-        growth:      { score: ra.growth_disorder, level: ra.growth_disorder > 0.6 ? 'high' : 'low' },
-        nutrition:   { score: ra.nutritional_deficiency, level: ra.nutritional_deficiency > 0.6 ? 'high' : 'low' },
-        development: { score: ra.developmental_delay, level: ra.developmental_delay > 0.6 ? 'high' : 'low' },
-        behavioral:  { score: ra.behavioral_issue, level: ra.behavioral_issue > 0.6 ? 'high' : 'low' },
+        growth:      riskMeta(ra.growth_disorder),
+        nutrition:   riskMeta(ra.nutritional_deficiency),
+        development: riskMeta(ra.developmental_delay),
+        behavioral:  riskMeta(ra.behavioral_issue),
       },
       recommendations: generateRecommendations(ra),
       confidence: 92,
