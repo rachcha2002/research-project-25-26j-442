@@ -2,11 +2,14 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+import asyncio
+import json
 import numpy as np
 from src.services.health_calculator import PediatricHealthCalculator
 from src.utils.database import Database
-from src.models.schemas import MealGenerationRequest, MealFeedback, BehavioralSeeds
+from src.models.schemas import MealGenerationRequest, MealFeedback, BehavioralSeeds, ClinicalConstraints
 from src.services.meal_engine import MealOptimizerEngine
+from src.utils.llm_client import get_clinical_constraints
 from src.controllers.meal_preferences_controller import MealPreferencesController
 from src.controllers.generated_plans_controller import GeneratedPlansController
 from src.controllers.behavioral_state_controller import BehavioralStateController
@@ -93,15 +96,36 @@ async def generate_plan(request: MealGenerationRequest):
         # First time user: initialize empty arrays
         request.behavioral_state = BehavioralSeeds(disliked_ingredients=[], liked_ingredients=[])
 
-    # 2. Run the ML Stochastic Optimizer
+    # Persist age_months so replacement-meal generation can apply the same bone safety rule
+    await profiles_col.update_one(
+        {"child_id": request.child_id},
+        {"$set": {"age_months": request.health_data.age_months}},
+        upsert=True,
+    )
+
+    # 2. Gemini LLM: derive clinical constraints from medications and conditions
+    clinical = ClinicalConstraints()
+    if request.health_data.medical_conditions or request.health_data.medications:
+        try:
+            raw = await asyncio.to_thread(
+                get_clinical_constraints,
+                request.health_data.medications,
+                request.health_data.medical_conditions,
+            )
+            parsed = json.loads(raw)
+            clinical = ClinicalConstraints(**parsed)
+        except Exception:
+            clinical = ClinicalConstraints()  # silent fallback — never block plan generation
+
+    # 3. Run the ML Stochastic Optimizer
     try:
-        optimized_result = engine.generate_optimized_plan(request)
+        optimized_result = engine.generate_optimized_plan(request, clinical_constraints=clinical)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Optimization failed: {str(e)}")
 
     optimized_result = _to_native_types(optimized_result)
 
-    # 3. Log the generated plan for your research evaluation
+    # 4. Log the generated plan for your research evaluation
     history_col = Database.get_collection("generated_plans_history")
     await history_col.insert_one({
         "child_id": request.child_id,
@@ -111,7 +135,54 @@ async def generate_plan(request: MealGenerationRequest):
         "created_at": datetime.now(timezone.utc),
     })
 
+    # 5. Update rolling variety window (last 30 items ≈ 2 days)
+    new_items = [
+        item
+        for meal_data in optimized_result["daily_plan"].values()
+        for item in meal_data["plate"].values()
+    ]
+    updated_recent = (request.behavioral_state.recent_items + new_items)[-30:]
+    await profiles_col.update_one(
+        {"child_id": request.child_id},
+        {"$set": {"behavioral_state.recent_items": updated_recent}},
+        upsert=True,
+    )
+
     return {"message": "Plan generated successfully", "data": optimized_result}
+
+
+@app.post("/test-gemini")
+async def test_gemini(payload: dict):
+    """
+    Debug endpoint: calls Gemini directly and returns the raw + parsed output.
+    Use this to verify the LLM integration is live before running generate-plan.
+    Expected payload: {"medications": [...], "medical_conditions": [...]}
+    """
+    medications = payload.get("medications", [])
+    conditions  = payload.get("medical_conditions", [])
+
+    raw = await asyncio.to_thread(get_clinical_constraints, medications, conditions)
+
+    try:
+        parsed = json.loads(raw)
+        clinical = ClinicalConstraints(**parsed)
+        return {
+            "status": "ok",
+            "raw_gemini_response": raw,
+            "parsed_constraints": clinical.model_dump(),
+        }
+    except json.JSONDecodeError:
+        return {
+            "status": "error — Gemini returned non-JSON",
+            "raw_gemini_response": raw,
+            "parsed_constraints": None,
+        }
+    except Exception as e:
+        return {
+            "status": f"error — JSON parsed but schema mismatch: {str(e)}",
+            "raw_gemini_response": raw,
+            "parsed_constraints": None,
+        }
 
 
 @app.post("/meal-feedback")
@@ -129,7 +200,10 @@ async def process_feedback(feedback: MealFeedback):
             "behavioral_state": {"disliked_ingredients": [], "liked_ingredients": []}
         }
 
-    state = profile.get("behavioral_state", {"disliked_ingredients": [], "liked_ingredients": []})
+    state = profile.get("behavioral_state", {})
+    state.setdefault("liked_ingredients", [])
+    state.setdefault("disliked_ingredients", [])
+    state.setdefault("recent_items", [])
 
     # ML Weight Updating
     for item in feedback.actioned_items:
@@ -184,6 +258,8 @@ async def process_feedback(feedback: MealFeedback):
         preferences = await MealPreferencesService.get_by_child_id(feedback.child_id)
         budget_level = preferences.budget_level if preferences and preferences.budget_level else "Medium"
         allergies = []
+        age_months = profile.get("age_months", 72) if profile else 72
+        recent_items = state.get("recent_items", [])
 
         replacement = engine.generate_replacement_meal(
             meal_type=meal_key,
@@ -192,6 +268,8 @@ async def process_feedback(feedback: MealFeedback):
             budget_level=budget_level,
             dislikes=state.get("disliked_ingredients", []),
             likes=state.get("liked_ingredients", []),
+            age_months=age_months,
+            recent_items=recent_items,
         )
 
         if not replacement:

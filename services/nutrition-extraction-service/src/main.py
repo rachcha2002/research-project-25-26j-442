@@ -77,8 +77,15 @@ async def scan_food_vision(
         img_bytes = await image.read()
         yolo_guess, confidence = yolo_service.detect_food(img_bytes)
 
-        if yolo_guess == "Unknown Food":
-            pass
+        non_food_allowlist = {"optical mouse", "mouse", "keyboard", "phone", "remote", "pen"}  # expand list
+        if yolo_guess in non_food_allowlist or confidence < 0.25:
+            return ClinicalSafetyResponse(
+                food_identified=yolo_guess,
+                detection_confidence=round(confidence, 2),
+                nutrients=[],
+                safety_status="NotFood",
+                clinical_reasoning="Detected object is not a food item."
+            )
 
         # Pass the image, the YOLO guess, AND the optional user text to Gemini
         llm_result = await gemini_service.evaluate_safety_vision(
