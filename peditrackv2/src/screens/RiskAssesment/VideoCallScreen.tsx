@@ -2,7 +2,6 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Alert, TextInput, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { Track } from 'livekit-client';
 import {
   completeTeleconsultationRequest,
   getDoctorPublicProfile,
@@ -21,9 +20,9 @@ registerGlobals();
 const DEFAULT_LIVEKIT_URL = process.env.EXPO_PUBLIC_LIVEKIT_URL || '';
 
 const VideoTiles: React.FC<{ onRemoteNameChange: (name: string | null) => void }> = ({ onRemoteNameChange }) => {
-  const cameraTracks = useTracks([Track.Source.Camera], { onlySubscribed: false });
-  const remoteTrack = cameraTracks.find((trackRef) => !trackRef.participant.isLocal);
-  const localTrack = cameraTracks.find((trackRef) => trackRef.participant.isLocal);
+  const tracks = useTracks();
+  const remoteTrack = tracks.find(t => !t.participant.isLocal);
+  const localTrack = tracks.find(t => t.participant.isLocal);
 
   React.useEffect(() => {
     if (!remoteTrack) {
@@ -134,7 +133,7 @@ const InCallChat: React.FC<{ onEndCall: () => void }> = ({ onEndCall }) => {
   );
 };
 
-export const VideoCallScreen: React.FC = () => {
+ const VideoCallScreen: React.FC = () => {
   const router = useRouter();
   const params = useLocalSearchParams<{
     token?: string;
