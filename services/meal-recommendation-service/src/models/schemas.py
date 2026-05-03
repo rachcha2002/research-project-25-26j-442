@@ -24,6 +24,12 @@ class Lifestyle(BaseModel):
 class BehavioralSeeds(BaseModel):
     disliked_ingredients: List[str] = []
     liked_ingredients: List[str] = []
+    recent_items: List[str] = []
+
+class ClinicalConstraints(BaseModel):
+    boost: List[str] = []
+    avoid: List[str] = []
+    texture_mod: str = "normal"
 
 # --- The Main API Request ---
 class MealGenerationRequest(BaseModel):
