@@ -14,8 +14,7 @@ const fetchPlaceDetails = async (placeId, apiKey) => {
   return detailsResponse.data?.result || null;
 };
 
-// Proxy endpoint for nearby hospitals
-app.get('/api/nearby-hospitals', async (req, res) => {
+const nearbyHospitalsHandler = async (req, res) => {
   const { lat, lng, radius } = req.query;
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
   if (!lat || !lng || !apiKey) {
@@ -57,10 +56,9 @@ app.get('/api/nearby-hospitals', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
+};
 
-// Proxy endpoint for travel times (Google Distance Matrix)
-app.get('/api/travel-times', async (req, res) => {
+const travelTimesHandler = async (req, res) => {
   const { originLat, originLng, destinations } = req.query;
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
 
@@ -75,10 +73,9 @@ app.get('/api/travel-times', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
+};
 
-// Proxy endpoint for place photos
-app.get('/api/place-photo', async (req, res) => {
+const placePhotoHandler = async (req, res) => {
   const { photoReference, maxwidth } = req.query;
   const apiKey = process.env.GOOGLE_PLACES_API_KEY;
 
@@ -93,8 +90,22 @@ app.get('/api/place-photo', async (req, res) => {
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }
-});
+};
 
-app.listen(PORT, () => {
-  console.log(`Proxy server running on port ${PORT}`);
-});
+app.get('/api/nearby-hospitals', nearbyHospitalsHandler);
+app.get('/api/travel-times', travelTimesHandler);
+app.get('/api/place-photo', placePhotoHandler);
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Proxy server running on port ${PORT}`);
+  });
+}
+
+module.exports = {
+  app,
+  fetchPlaceDetails,
+  nearbyHospitalsHandler,
+  travelTimesHandler,
+  placePhotoHandler,
+};
