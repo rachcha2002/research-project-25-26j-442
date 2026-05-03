@@ -45,7 +45,6 @@ const config: ExpoConfig = {
       },
     ],
     '@livekit/react-native-expo-plugin',
-    '@config-plugins/react-native-webrtc',
   ],
   experiments: {
     typedRoutes: true,
