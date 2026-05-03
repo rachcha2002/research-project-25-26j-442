@@ -25,7 +25,7 @@ const handleResponse = async <T>(response: Response): Promise<T> => {
 export const getBehavioralState = async (
   childId: string,
 ): Promise<BehavioralState> => {
-  const url = `${BASE_URL}/behavioral-state?childId=${encodeURIComponent(childId)}`;
+  const url = `${BASE_URL}/behavioral-state/?childId=${encodeURIComponent(childId)}`;
   const response = await fetch(url, {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },

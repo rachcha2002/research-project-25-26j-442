@@ -151,6 +151,40 @@ async def generate_plan(request: MealGenerationRequest):
     return {"message": "Plan generated successfully", "data": optimized_result}
 
 
+@app.post("/test-gemini")
+async def test_gemini(payload: dict):
+    """
+    Debug endpoint: calls Gemini directly and returns the raw + parsed output.
+    Use this to verify the LLM integration is live before running generate-plan.
+    Expected payload: {"medications": [...], "medical_conditions": [...]}
+    """
+    medications = payload.get("medications", [])
+    conditions  = payload.get("medical_conditions", [])
+
+    raw = await asyncio.to_thread(get_clinical_constraints, medications, conditions)
+
+    try:
+        parsed = json.loads(raw)
+        clinical = ClinicalConstraints(**parsed)
+        return {
+            "status": "ok",
+            "raw_gemini_response": raw,
+            "parsed_constraints": clinical.model_dump(),
+        }
+    except json.JSONDecodeError:
+        return {
+            "status": "error — Gemini returned non-JSON",
+            "raw_gemini_response": raw,
+            "parsed_constraints": None,
+        }
+    except Exception as e:
+        return {
+            "status": f"error — JSON parsed but schema mismatch: {str(e)}",
+            "raw_gemini_response": raw,
+            "parsed_constraints": None,
+        }
+
+
 @app.post("/meal-feedback")
 async def process_feedback(feedback: MealFeedback):
     """
