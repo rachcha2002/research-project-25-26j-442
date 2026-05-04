@@ -1,294 +1,168 @@
 'use strict';
 
-// ---------------------------------------------------------------------------
-// Config
-// ---------------------------------------------------------------------------
-
-const CACHE_TTL_MS         = parseInt(process.env.CACHE_TTL_MS         || '600000');  // 10 min
-const VOICE_CACHE_TTL_MS   = parseInt(process.env.VOICE_CACHE_TTL_MS   || '120000');  // 2 min
-const CACHE_MAX_ENTRIES    = parseInt(process.env.CACHE_MAX_ENTRIES     || '500');
-const SIMILARITY_THRESHOLD = parseFloat(process.env.QUERY_SIM_THRESHOLD || '0.85');   // Jaccard
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function normalizeQuery(query) {
-    const STOP_WORDS = new Set([
-        'a','an','the','is','are','was','were','be','been','being',
-        'have','has','had','do','does','did','will','would','could',
-        'should','may','might','shall','can','need','dare','ought',
-        'i','my','me','we','our','you','your','he','she','it','they',
-        'what','when','where','why','how','which','who','whom',
-        'and','or','but','if','because','as','until','while',
-        'of','at','by','for','with','about','against','between',
-        'into','through','during','before','after','above','below',
-        'to','from','up','down','in','out','on','off','over','under',
-    ]);
-
-    return query
-        .toLowerCase()
-        .replace(/[^a-z0-9\s]/g, '')
-        .split(/\s+/)
-        .filter(w => w.length > 1 && !STOP_WORDS.has(w))
-        .sort()
-        .join(' ');
-}
-
-function jaccardSimilarity(a, b) {
-    const setA = new Set(a.split(' '));
-    const setB = new Set(b.split(' '));
-    const intersection = [...setA].filter(t => setB.has(t)).length;
-    const union = new Set([...setA, ...setB]).size;
-    return union === 0 ? 1.0 : intersection / union;
-}
+/**
+ * RAG Caching Layer — Performance Optimization
+ *
+ * Problem:
+ *   Repeated parent queries caused slow, redundant RAG lookups.
+ *   With re-ranking enabled the retrieval pipeline takes 20-25 seconds
+ *   on CPU, which violates the strict 4-second timeout required for
+ *   the live voice path.
+ *
+ * Solution:
+ *   JS Map-based caching layer keyed on query|topK|threshold.
+ *   TTL = 5 minutes. Max 200 entries (LRU eviction).
+ *   Repeated or identical queries return instant cache hits,
+ *   bypassing the expensive RAG retrieval and re-ranking steps entirely.
+ */
 
 // ---------------------------------------------------------------------------
-// CacheEntry
+// Cache Configuration
 // ---------------------------------------------------------------------------
 
-class CacheEntry {
-    constructor(normalizedQuery, result, ttlMs) {
-        this.normalizedQuery = normalizedQuery;
-        this.result          = result;
-        this.createdAt       = Date.now();
-        this.expiresAt       = Date.now() + ttlMs;
-        this.hits            = 0;
-    }
+const CACHE_TTL_MS      = 5 * 60 * 1000;   // 5 minutes — matches slide spec
+const CACHE_MAX_ENTRIES = 200;              // Max 200 entries — matches slide spec
 
-    isExpired() {
-        return Date.now() > this.expiresAt;
-    }
+// ---------------------------------------------------------------------------
+// Cache Store
+// JS Map preserves insertion order, enabling simple LRU eviction
+// by removing the first (oldest) key when the limit is reached.
+// ---------------------------------------------------------------------------
 
-    touch() {
-        this.hits++;
-        return this;
-    }
+const ragCache = new Map();
+
+// ---------------------------------------------------------------------------
+// Build Cache Key
+//
+// Key format:  query|topK|threshold
+// Including topK and threshold ensures that the same query asked with
+// different retrieval parameters does not return a mismatched result.
+// ---------------------------------------------------------------------------
+
+function buildCacheKey(query, topK, similarityThreshold) {
+    const normalizedQuery = query.trim().toLowerCase();
+    return `${normalizedQuery}|${topK}|${similarityThreshold}`;
 }
 
 // ---------------------------------------------------------------------------
-// CacheStats
+// Get from Cache
+//
+// Returns the cached RAG result if it exists and has not expired.
+// Returns null on a cache miss so the caller falls through to the
+// actual RAG retrieval pipeline.
 // ---------------------------------------------------------------------------
 
-class CacheStats {
-    constructor() {
-        this.hits        = 0;
-        this.misses      = 0;
-        this.evictions   = 0;
-        this.expirations = 0;
-        this.startedAt   = Date.now();
-    }
+function getCached(query, topK, similarityThreshold) {
+    const key   = buildCacheKey(query, topK, similarityThreshold);
+    const entry = ragCache.get(key);
 
-    get total()   { return this.hits + this.misses; }
-    get hitRate() { return this.total === 0 ? 0 : (this.hits / this.total * 100).toFixed(1); }
-
-    summary() {
-        const uptime = Math.round((Date.now() - this.startedAt) / 1000);
-        return {
-            uptime_s:    uptime,
-            hits:        this.hits,
-            misses:      this.misses,
-            evictions:   this.evictions,
-            expirations: this.expirations,
-            hit_rate:    `${this.hitRate}%`,
-        };
-    }
-}
-
-// ---------------------------------------------------------------------------
-// RAGQueryCache
-// ---------------------------------------------------------------------------
-
-class RAGQueryCache {
-    constructor() {
-        this._store = new Map();
-        this._stats = new CacheStats();
-
-        this._sweepInterval = setInterval(() => this._sweep(), 2 * 60 * 1000);
-        this._sweepInterval.unref?.();
-    }
-
-    get(query) {
-        const key = normalizeQuery(query);
-
-        if (this._store.has(key)) {
-            const entry = this._store.get(key);
-            if (entry.isExpired()) {
-                this._store.delete(key);
-                this._stats.expirations++;
-                this._stats.misses++;
-                return null;
-            }
-            this._stats.hits++;
-            return { ...entry.touch().result, _cache: { hit: true, type: 'exact', hits: entry.hits } };
-        }
-
-        for (const [storedKey, entry] of this._store.entries()) {
-            if (entry.isExpired()) continue;
-            const sim = jaccardSimilarity(key, storedKey);
-            if (sim >= SIMILARITY_THRESHOLD) {
-                this._stats.hits++;
-                return { ...entry.touch().result, _cache: { hit: true, type: 'similar', similarity: sim.toFixed(2), hits: entry.hits } };
-            }
-        }
-
-        this._stats.misses++;
+    if (!entry) {
+        // Cache miss — no entry exists for this key
         return null;
     }
 
-    set(query, result, ttlMs = CACHE_TTL_MS) {
-        const key = normalizeQuery(query);
-
-        if (!this._store.has(key) && this._store.size >= CACHE_MAX_ENTRIES) {
-            const oldest = this._store.keys().next().value;
-            this._store.delete(oldest);
-            this._stats.evictions++;
-        }
-
-        this._store.set(key, new CacheEntry(key, result, ttlMs));
+    const isExpired = Date.now() > entry.expiresAt;
+    if (isExpired) {
+        // Entry existed but its 5-minute TTL has elapsed — treat as miss
+        ragCache.delete(key);
+        return null;
     }
 
-    async getOrFetch(query, fetchFn, ttlMs = CACHE_TTL_MS) {
-        const cached = this.get(query);
-        if (cached) {
-            console.log(`⚡ RAG cache HIT  [${cached._cache.type}]  "${query.substring(0, 60)}"`);
-            return cached;
-        }
-
-        console.log(`🔍 RAG cache MISS — fetching: "${query.substring(0, 60)}"`);
-        const result = await fetchFn();
-        if (result && result.success) {
-            this.set(query, result, ttlMs);
-        }
-        return result;
-    }
-
-    invalidate(query) {
-        const key = normalizeQuery(query);
-        return this._store.delete(key);
-    }
-
-    flush() {
-        this._store.clear();
-        console.log('🗑️  RAG cache flushed');
-    }
-
-    stats() {
-        return { ...this._stats.summary(), size: this._store.size, max: CACHE_MAX_ENTRIES };
-    }
-
-    _sweep() {
-        let removed = 0;
-        for (const [key, entry] of this._store.entries()) {
-            if (entry.isExpired()) {
-                this._store.delete(key);
-                removed++;
-                this._stats.expirations++;
-            }
-        }
-        if (removed > 0) {
-            console.log(`🧹 RAG cache sweep: removed ${removed} expired entries (${this._store.size} remaining)`);
-        }
-    }
+    // Cache hit — return stored result instantly (0ms vs 20-25s cold fetch)
+    console.log(`⚡ RAG cache HIT: "${query.substring(0, 60)}" [topK=${topK}]`);
+    return entry.result;
 }
 
 // ---------------------------------------------------------------------------
-// CachedRAGService
+// Set to Cache
+//
+// Stores a RAG result under the composite key query|topK|threshold.
+// Applies LRU eviction if the 200-entry limit is reached before inserting.
 // ---------------------------------------------------------------------------
 
-class CachedRAGService {
-    constructor(ragService) {
-        this._rag   = ragService;
-        this._cache = new RAGQueryCache();
+function setCached(query, topK, similarityThreshold, result) {
+    const key = buildCacheKey(query, topK, similarityThreshold);
+
+    // LRU eviction: when at capacity, delete the oldest inserted entry
+    if (!ragCache.has(key) && ragCache.size >= CACHE_MAX_ENTRIES) {
+        const oldestKey = ragCache.keys().next().value;
+        ragCache.delete(oldestKey);
+        console.log(`🗑️  RAG cache evicted oldest entry (limit: ${CACHE_MAX_ENTRIES})`);
     }
 
-    async retrieveDocuments(query, topK = 6, similarityThreshold = 0.0) {
-        return this._cache.getOrFetch(
-            query,
-            () => this._rag.retrieveDocuments(query, topK, similarityThreshold),
-            CACHE_TTL_MS
-        );
-    }
+    ragCache.set(key, {
+        result,
+        cachedAt:  Date.now(),
+        expiresAt: Date.now() + CACHE_TTL_MS,
+    });
 
-    async retrieveForVoice(query) {
-        return this._cache.getOrFetch(
-            query,
-            () => this._rag.retrieveForVoice(query),
-            VOICE_CACHE_TTL_MS
-        );
-    }
-
-    async healthCheck() { return this._rag.healthCheck(); }
-    async getStats()    { return this._rag.getStats(); }
-
-    cacheStats() { return this._cache.stats(); }
-    flushCache() { return this._cache.flush(); }
-}
-
-let _cachedRAGServiceInstance = null;
-
-function getCachedRAGService() {
-    if (!_cachedRAGServiceInstance) {
-        const { getRagService } = require('../services/rag.service');
-        _cachedRAGServiceInstance = new CachedRAGService(getRagService());
-    }
-    return _cachedRAGServiceInstance;
+    console.log(`💾 RAG cache SET: "${query.substring(0, 60)}" (size: ${ragCache.size}/${CACHE_MAX_ENTRIES})`);
 }
 
 // ---------------------------------------------------------------------------
-// RedisConversationStore
+// getOrFetch — Main Entry Point
+//
+// 1. Check the cache using the composite key.
+// 2. On hit  → return instantly (bypasses RAG + re-ranker entirely).
+// 3. On miss → call fetchFn() which runs the full RAG pipeline,
+//              then store the result in cache before returning.
+//
+// This is the function that would be called from rag.service.js
+// in place of the direct axios POST to /api/rag/retrieve.
 // ---------------------------------------------------------------------------
 
-class RedisConversationStore {
-    constructor(redisClient) {
-        this._redis   = redisClient;
-        this._prefix  = 'chat:conv:';
-        this._ttlSec  = 3600 * 24;
-        this._maxMsgs = 100;
+async function getOrFetch(query, topK, similarityThreshold, fetchFn) {
+    // Step 1: Check cache
+    const cached = getCached(query, topK, similarityThreshold);
+    if (cached) {
+        return cached;  // Instant return — no RAG call made
     }
 
-    _key(conversationId) {
-        return `${this._prefix}${conversationId}`;
+    // Step 2: Cache miss — run the full retrieval pipeline (20-25s with re-ranker)
+    console.log(`🔍 RAG cache MISS — running retrieval: "${query.substring(0, 60)}"`);
+    const result = await fetchFn();
+
+    // Step 3: Store successful results so the next identical query is instant
+    if (result && result.success) {
+        setCached(query, topK, similarityThreshold, result);
     }
 
-    async getHistory(conversationId) {
-        const raw = await this._redis.get(this._key(conversationId));
-        return raw ? JSON.parse(raw) : [];
-    }
+    return result;
+}
 
-    async getConversation(conversationId) {
-        return this.getHistory(conversationId);
-    }
+// ---------------------------------------------------------------------------
+// invalidate — Force remove a specific query from cache
+//
+// Called when the knowledge base is updated so stale results
+// are not served for queries that were cached before the update.
+// ---------------------------------------------------------------------------
 
-    async saveConversation(conversationId, messages) {
-        const trimmed = messages.slice(-this._maxMsgs);
-        await this._redis.set(this._key(conversationId), JSON.stringify(trimmed), 'EX', this._ttlSec);
-    }
+function invalidate(query, topK, similarityThreshold) {
+    const key = buildCacheKey(query, topK, similarityThreshold);
+    ragCache.delete(key);
+}
 
-    async addMessage(conversationId, message) {
-        const history = await this.getHistory(conversationId);
-        history.push(message);
-        await this.saveConversation(conversationId, history);
-        return history;
-    }
+// ---------------------------------------------------------------------------
+// flush — Wipe the entire cache
+//
+// Useful after a bulk knowledge base re-ingestion.
+// ---------------------------------------------------------------------------
 
-    async clearHistory(conversationId) {
-        await this._redis.del(this._key(conversationId));
-    }
+function flush() {
+    ragCache.clear();
+    console.log('🗑️  RAG cache flushed');
+}
 
-    async clearConversation(conversationId) {
-        return this.clearHistory(conversationId);
-    }
+// ---------------------------------------------------------------------------
+// stats — Inspect current cache state
+// ---------------------------------------------------------------------------
 
-    async getConversationCount() {
-        const keys = await this._redis.keys(`${this._prefix}*`);
-        return keys.length;
-    }
-
-    async clearAll() {
-        const keys = await this._redis.keys(`${this._prefix}*`);
-        if (keys.length > 0) await this._redis.del(...keys);
-    }
+function stats() {
+    return {
+        size:        ragCache.size,
+        max_entries: CACHE_MAX_ENTRIES,
+        ttl_ms:      CACHE_TTL_MS,
+    };
 }
 
 // ---------------------------------------------------------------------------
@@ -296,10 +170,10 @@ class RedisConversationStore {
 // ---------------------------------------------------------------------------
 
 module.exports = {
-    RAGQueryCache,
-    CachedRAGService,
-    getCachedRAGService,
-    RedisConversationStore,
-    normalizeQuery,
-    jaccardSimilarity,
+    getOrFetch,
+    getCached,
+    setCached,
+    invalidate,
+    flush,
+    stats,
 };
