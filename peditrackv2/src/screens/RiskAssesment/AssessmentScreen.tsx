@@ -72,9 +72,6 @@ export const EmergencyAssessmentScreen: React.FC = () => {
     "Alert"
   );
 
-  // Pain scale
-  const [pain, setPain] = useState<number>(0);
-
   // Symptoms list with severity & details
   const initialSymptoms: Symptom[] = [
     { key: "fast_breathing", label: "Fast breathing" },
@@ -198,6 +195,116 @@ export const EmergencyAssessmentScreen: React.FC = () => {
     }
   };
 
+  // ED-PEWS Validation Helpers
+  const validateVitalRange = (value: string, fieldName: string): { valid: boolean; error?: string } => {
+    if (!value || value.trim() === "") {
+      return { valid: true }; // Optional field, empty is OK
+    }
+
+    const num = Number(value);
+    if (Number.isNaN(num)) {
+      return { valid: false, error: `${fieldName} must be a valid number. You entered: "${value}"` };
+    }
+
+    // Pediatric plausible ranges
+    if (fieldName === "Temperature") {
+      if (num < 35 || num > 41) {
+        return { valid: false, error: `Temperature ${num}°C is outside plausible pediatric range (35-41°C). Please verify.` };
+      }
+    } else if (fieldName === "Heart rate") {
+      if (num < 40 || num > 220) {
+        return { valid: false, error: `Heart rate ${num} bpm is outside plausible pediatric range (40-220 bpm). Please verify.` };
+      }
+    } else if (fieldName === "Respiratory rate") {
+      if (num < 10 || num > 80) {
+        return { valid: false, error: `Respiratory rate ${num} bpm is outside plausible pediatric range (10-80 bpm). Please verify.` };
+      }
+    } else if (fieldName === "SpO2") {
+      if (num < 50 || num > 100) {
+        return { valid: false, error: `SpO₂ ${num}% is outside plausible range (50-100%). Please verify.` };
+      }
+    }
+
+    return { valid: true };
+  };
+
+  const checkEDPEWSCompleteness = (): { isIncomplete: boolean; message?: string; providedCount?: number } => {
+    const vitalsProvided = [
+      temperature.trim() !== "",
+      heartRate.trim() !== "",
+      respRate.trim() !== "",
+      spo2.trim() !== "",
+    ];
+    const providedCount = vitalsProvided.filter((v) => v).length;
+
+    // If user provided some but not all vitals, warn them but allow submission
+    if (providedCount > 0 && providedCount < 4) {
+      return {
+        isIncomplete: true,
+        message: `ED-PEWS Assessment is incomplete (${providedCount}/4 vital signs provided). For better triage results in this low-resource setting, please provide all available vital signs. Proceed anyway?`,
+        providedCount,
+      };
+    }
+
+    return { isIncomplete: false };
+  };
+
+  const validateConsistency = (): { consistent: boolean; warning?: string } => {
+    // If AVPU is "Pain" or "Unresponsive", flag it as a concern
+    if (avpu === "Unresponsive" && !dangerSigns.includes("unresponsive")) {
+      return {
+        consistent: false,
+        warning: `Child is marked as Unresponsive (AVPU). This is a danger sign. Please mark "Unresponsive / Not waking" in the danger signs section to ensure proper escalation.`,
+      };
+    }
+
+    // If danger signs present, AVPU should NOT be "Alert"
+    if (dangerSigns.length > 0 && avpu === "Alert") {
+      return {
+        consistent: false,
+        warning: `Danger signs are selected, but responsiveness is set to "Alert". Please verify the child's actual state and update AVPU if needed.`,
+      };
+    }
+
+    return { consistent: true };
+  };
+
+  const validateAllInputs = (): boolean => {
+    // Validate individual vital ranges
+    const tempCheck = validateVitalRange(temperature, "Temperature");
+    if (!tempCheck.valid) {
+      Alert.alert("Invalid Temperature", tempCheck.error || "Please enter a valid temperature.");
+      return false;
+    }
+
+    const hrCheck = validateVitalRange(heartRate, "Heart rate");
+    if (!hrCheck.valid) {
+      Alert.alert("Invalid Heart Rate", hrCheck.error || "Please enter a valid heart rate.");
+      return false;
+    }
+
+    const rrCheck = validateVitalRange(respRate, "Respiratory rate");
+    if (!rrCheck.valid) {
+      Alert.alert("Invalid Respiratory Rate", rrCheck.error || "Please enter a valid respiratory rate.");
+      return false;
+    }
+
+    const spo2Check = validateVitalRange(spo2, "SpO2");
+    if (!spo2Check.valid) {
+      Alert.alert("Invalid SpO2", spo2Check.error || "Please enter a valid SpO2 value.");
+      return false;
+    }
+
+    // Check consistency
+    const consistency = validateConsistency();
+    if (!consistency.consistent) {
+      Alert.alert("Triage Consistency Warning", consistency.warning || "Please review the selected values.");
+      return false;
+    }
+
+    return true;
+  };
+
   // Basic validation & submit
   const handleSubmit = async () => {
     if (isSubmitting) return;
@@ -213,7 +320,29 @@ export const EmergencyAssessmentScreen: React.FC = () => {
       return;
     }
 
-    // Prepare features
+    // Validate ED-PEWS vitals (ranges and consistency)
+    if (!validateAllInputs()) {
+      return;
+    }
+
+    // Check ED-PEWS completeness (non-blocking, but warn user)
+    const completeness = checkEDPEWSCompleteness();
+    if (completeness.isIncomplete) {
+      return Alert.alert(
+        "Incomplete ED-PEWS Data",
+        completeness.message,
+        [
+          { text: "Cancel", onPress: () => {}, style: "cancel" },
+          { text: "Continue Anyway", onPress: () => proceedWithSubmission() },
+        ]
+      );
+    }
+
+    // If ED-PEWS is complete, proceed directly
+    proceedWithSubmission();
+  };
+
+  const proceedWithSubmission = async () => {
     const selectedSymptoms = symptoms.filter((s) => s.selected).map((s) => ({
       key: s.key,
       severity: s.severity ?? "moderate",
@@ -259,7 +388,6 @@ export const EmergencyAssessmentScreen: React.FC = () => {
         spo2_percent: spo2 ? Number(spo2) : null,
 
         avpu: avpu,
-        pain_score: pain,
       },
       symptoms: selectedSymptoms,
       danger_signs: dangerSigns,

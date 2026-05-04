@@ -23,7 +23,6 @@ export interface AssessmentPayload {
     respiratory_rate_bpm: number | null;
     spo2_percent: number | null;
     avpu: 'Alert' | 'Voice' | 'Pain' | 'Unresponsive';
-    pain_score: number;
   };
   symptoms: Array<{ key: string; severity: string; details: string }>;
   danger_signs: string[];
@@ -86,7 +85,6 @@ export interface AssessmentReportResponse {
       respRate: number | null;
       spo2: number | null;
       avpu: string | null;
-      pain: number | null;
     };
     feeding: {
       feedingNormally: string;
