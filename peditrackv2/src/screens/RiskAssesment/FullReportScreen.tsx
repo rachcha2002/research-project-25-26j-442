@@ -155,7 +155,6 @@ export const FullReportScreen: React.FC = () => {
               <p><span class="label">RR:</span> ${escapeHtml(reportAssessment.vitals.respRate)} bpm</p>
               <p><span class="label">SpO₂:</span> ${escapeHtml(reportAssessment.vitals.spo2)} %</p>
               <p><span class="label">AVPU:</span> ${escapeHtml(reportAssessment.vitals.avpu)}</p>
-              <p><span class="label">Pain:</span> ${escapeHtml(reportAssessment.vitals.pain)}</p>
             </div>
           </div>
 
